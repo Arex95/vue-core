@@ -7,7 +7,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: 'src/index.ts',
-      name: 'Arex Vue Core',
+      name: 'ArexVueCore',
       fileName: (format) => `arex-vue-core.${format}.js`
     },
     rollupOptions: {
