@@ -1,4 +1,3 @@
-import {handleError} from '~/core/utils/errors';
 import axios, {
     AxiosResponse,
     AxiosError,
@@ -127,5 +126,3 @@ export default class AxiosService {
         delete this.instance.defaults.headers.common[key];
     }
 }
-
-export const axiosService = new AxiosService();

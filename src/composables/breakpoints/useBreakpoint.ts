@@ -1,5 +1,5 @@
 import { breakpointsTailwind, useBreakpoints, useWindowSize } from '@vueuse/core';
-import { ref, onUnmounted, watch } from 'vue';
+import { ref, watch } from 'vue';
 
 let notified = false;
 /**

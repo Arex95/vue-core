@@ -2,7 +2,7 @@ import { useQuery, UseQueryOptions } from '@tanstack/vue-query'
 import { AxiosInstance, AxiosRequestConfig } from 'axios'
 import { ref, watch, onMounted } from 'vue'
 import { onServerPrefetch } from 'vue'
-import type { ExtendedQueryOptions } from 'core/types/ExtendedQueryOptions'
+import type { ExtendedQueryOptions } from '../../types'
 
 /**
  * Custom composable for integrating Axios requests with Vue Query.
