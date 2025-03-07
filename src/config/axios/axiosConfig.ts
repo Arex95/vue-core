@@ -1,4 +1,3 @@
-import {handleError} from '../../utils'
 import axios, {
     AxiosResponse,
     AxiosError,

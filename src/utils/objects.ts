@@ -7,7 +7,7 @@ export function proxyToPlainObject(proxy: ProxyConstructor): any {
     if (!proxy) return {};
     const plainObject: any = {};
     for (const property of Object.keys(proxy)) {
-        plainObject[property] = proxy[property];
+        plainObject[property] = (proxy as any)[property];
     }
     return plainObject;
 }
@@ -144,14 +144,14 @@ export function filterObjectByKeys(obj: Record<string, any>, keys: string[]): Re
  * @returns {Object} The merged object.
  */
 export function deepMerge<T>(target: T, source: Partial<T>): T {
-    if (typeof target !== 'object' || typeof source !== 'object') {
+    if (target === null || typeof target !== 'object' || typeof source !== 'object') {
         return target;
     }
 
     for (const key in source) {
         if (Object.prototype.hasOwnProperty.call(source, key)) {
             if (source[key] && typeof source[key] === 'object') {
-                if (!target[key]) {
+                if (target && !target[key]) {
                     Object.assign(target, { [key]: {} });
                 }
                 deepMerge(target[key], source[key] as any);

@@ -1,3 +1,5 @@
+import { useTimeoutFn } from '@vueuse/core';
+
 /**
  * Creates a debounced asynchronous validator function.
  *
@@ -9,7 +11,6 @@ export function debounceAsyncValidator(
     validator: (value: any, debounce: () => Promise<void>) => Promise<void>,
     delay: number
 ): (value: any) => Promise<void> {
-  let currentTimer: NodeJS.Timeout | null = null;
   let currentPromiseReject: ((reason?: any) => void) | null = null;
 
   /**
@@ -19,23 +20,24 @@ export function debounceAsyncValidator(
    */
   function debounce(): Promise<void> {
     return new Promise((resolve, reject) => {
-      if (currentTimer) {
-        clearTimeout(currentTimer);
-      }
-      currentTimer = setTimeout(() => {
-        currentTimer = null;
+      const { start, stop } = useTimeoutFn(() => {
         currentPromiseReject = null;
         resolve();
       }, delay);
+
+      if (currentPromiseReject) {
+        currentPromiseReject(new Error('replaced'));
+      }
+
       currentPromiseReject = reject;
+      start();
     });
   }
 
-  return function (value: any): Promise<void> {
-    if (currentTimer) {
-      currentPromiseReject?.(new Error('replaced'));
-      clearTimeout(currentTimer);
-      currentTimer = null;
+  return function (this: any, value: any): Promise<void> {
+    if (currentPromiseReject) {
+      currentPromiseReject(new Error('replaced'));
+      currentPromiseReject = null;
     }
 
     return validator.call(this, value, debounce);
@@ -52,17 +54,21 @@ export function debounceAsync<T extends (...args: any[]) => Promise<any>>(
     func: T,
     wait: number
 ): (...args: Parameters<T>) => Promise<ReturnType<T>> {
-  let timeout: NodeJS.Timeout | null = null;
+  let timeoutReject: ((reason?: any) => void) | null = null;
 
   return function(this: any, ...args: Parameters<T>): Promise<ReturnType<T>> {
-    if (timeout) {
-      clearTimeout(timeout);
+    if (timeoutReject) {
+      timeoutReject(new Error('replaced'));
+      timeoutReject = null;
     }
 
     return new Promise((resolve, reject) => {
-      timeout = setTimeout(() => {
+      const { start } = useTimeoutFn(() => {
         func.apply(this, args).then(resolve).catch(reject);
       }, wait);
+
+      timeoutReject = reject;
+      start();
     });
   } as T;
 }
@@ -77,7 +83,7 @@ export function debounceAsyncWithImmediate<T extends (...args: any[]) => Promise
     func: T,
     wait: number
 ): (...args: Parameters<T>) => Promise<ReturnType<T>> {
-  let timeout: NodeJS.Timeout | null = null;
+  let timeoutReject: ((reason?: any) => void) | null = null;
   let callNow = true;
 
   return function(this: any, ...args: Parameters<T>): Promise<ReturnType<T>> {
@@ -86,19 +92,24 @@ export function debounceAsyncWithImmediate<T extends (...args: any[]) => Promise
     if (callNow) {
       callNow = false;
       return func.apply(context, args).finally(() => {
-        timeout = setTimeout(() => {
+        const { start } = useTimeoutFn(() => {
           callNow = true;
         }, wait);
+        start();
       });
     } else {
-      if (timeout) {
-        clearTimeout(timeout);
+      if (timeoutReject) {
+        timeoutReject(new Error('replaced'));
+        timeoutReject = null;
       }
 
       return new Promise((resolve, reject) => {
-        timeout = setTimeout(() => {
+        const { start } = useTimeoutFn(() => {
           func.apply(context, args).then(resolve).catch(reject);
         }, wait);
+
+        timeoutReject = reject;
+        start();
       });
     }
   } as T;
@@ -111,22 +122,26 @@ export function debounceAsyncWithImmediate<T extends (...args: any[]) => Promise
  * @returns {Function} The debounced function.
  */
 export function debounceLeading<T extends (...args: any[]) => void>(func: T, wait: number): T {
-  let timeout: NodeJS.Timeout | null = null;
+  let timeoutReject: ((reason?: any) => void) | null = null;
 
   return function(this: any, ...args: Parameters<T>): void {
     const context = this;
 
-    if (!timeout) {
+    if (!timeoutReject) {
       func.apply(context, args);
     }
 
-    if (timeout) {
-      clearTimeout(timeout);
+    if (timeoutReject) {
+      timeoutReject(new Error('replaced'));
+      timeoutReject = null;
     }
 
-    timeout = setTimeout(() => {
-      timeout = null;
+    const { start } = useTimeoutFn(() => {
+      timeoutReject = null;
     }, wait);
+
+    timeoutReject = () => {};
+    start();
   } as T;
 }
 
@@ -137,18 +152,22 @@ export function debounceLeading<T extends (...args: any[]) => void>(func: T, wai
  * @returns {Function} The debounced function.
  */
 export function debounceTrailing<T extends (...args: any[]) => void>(func: T, wait: number): T {
-  let timeout: NodeJS.Timeout | null = null;
+  let timeoutReject: ((reason?: any) => void) | null = null;
 
   return function(this: any, ...args: Parameters<T>): void {
     const context = this;
 
-    if (timeout) {
-      clearTimeout(timeout);
+    if (timeoutReject) {
+      timeoutReject(new Error('replaced'));
+      timeoutReject = null;
     }
 
-    timeout = setTimeout(() => {
+    const { start } = useTimeoutFn(() => {
       func.apply(context, args);
     }, wait);
+
+    timeoutReject = () => {};
+    start();
   } as T;
 }
 
@@ -159,24 +178,28 @@ export function debounceTrailing<T extends (...args: any[]) => void>(func: T, wa
  * @returns {Function} The debounced function.
  */
 export function debounceLeadingTrailing<T extends (...args: any[]) => void>(func: T, wait: number): T {
-  let timeout: NodeJS.Timeout | null = null;
+  let timeoutReject: ((reason?: any) => void) | null = null;
   let lastCall = 0;
 
   return function(this: any, ...args: Parameters<T>): void {
     const context = this;
     const now = Date.now();
 
-    if (timeout) {
-      clearTimeout(timeout);
+    if (timeoutReject) {
+      timeoutReject(new Error('replaced'));
+      timeoutReject = null;
     }
 
     if (now - lastCall >= wait) {
       func.apply(context, args);
       lastCall = now;
     } else {
-      timeout = setTimeout(() => {
+      const { start } = useTimeoutFn(() => {
         func.apply(context, args);
       }, wait - (now - lastCall));
+
+      timeoutReject = () => {};
+      start();
     }
   } as T;
 }
@@ -188,13 +211,20 @@ export function debounceLeadingTrailing<T extends (...args: any[]) => void>(func
  * @returns {Function} The debounced function.
  */
 export function debounce<T extends (...args: any[]) => void>(func: T, wait: number): T {
-  let timeout: number | undefined;
+  let timeoutReject: ((reason?: any) => void) | null = null;
 
   return function(this: any, ...args: Parameters<T>): void {
-    if (timeout) {
-      clearTimeout(timeout);
+    if (timeoutReject) {
+      timeoutReject(new Error('replaced'));
+      timeoutReject = null;
     }
-    timeout = window.setTimeout(() => func.apply(this, args), wait);
+
+    const { start } = useTimeoutFn(() => {
+      func.apply(this, args);
+    }, wait);
+
+    timeoutReject = () => {};
+    start();
   } as T;
 }
 

@@ -115,6 +115,7 @@ export function removeClickOutside(element: HTMLElement): void {
  */
 export function disableF12Key(): void {
     const handler = function (event: KeyboardEvent): boolean {
+        return true;
         if (
             event.keyCode === 123 || // F12
             (event.ctrlKey && event.shiftKey && (event.keyCode === 73 || event.keyCode === 74)) // Ctrl + Shift + I or Ctrl + Shift + J
@@ -139,6 +140,7 @@ export function toggleTabNavigation(enable: boolean): void {
                 event.preventDefault();
                 return false;
             }
+            return true;
         };
     }
 }
