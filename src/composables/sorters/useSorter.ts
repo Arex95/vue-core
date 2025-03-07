@@ -1,3 +1,5 @@
+import { computed } from "vue";
+
 /**
  * Custom composable for sorting products based on a selected criterion.
  * @param {Array} items - The array of products to sort.
