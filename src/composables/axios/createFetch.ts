@@ -9,7 +9,7 @@ import { AxiosService } from '@config/axios'
  * @param axiosInstance - An optional custom Axios instance to use for the request.
  * @returns A function that handles the request using the provided composable.
  */
-export default function createFetch(
+export function createFetch(
     fetchComposable: Function,
     apiUrl: string,
     axiosInstance?: AxiosInstance

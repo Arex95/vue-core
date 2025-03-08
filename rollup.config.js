@@ -1,25 +1,18 @@
-import { fileURLToPath } from 'url'
-import { dirname, resolve } from 'path'
 import typescript from '@rollup/plugin-typescript'
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
-
 export default {
-  input: resolve(__dirname, 'src/index.ts'),
+  input: 'src/index.ts',
   output: [
     {
-      file: 'dist/vue-core.cjs.js',
+      file: 'dist/index.js',
       format: 'cjs',
-      exports: 'named',
+      exports: 'named'
     },
     {
-      file: 'dist/vue-core.esm.js',
-      format: 'esm',
-    },
+      file: 'dist/index.mjs',
+      format: 'esm'
+    }
   ],
-  plugins: [
-    typescript(),
-  ],
-  external: ['vue', '@tanstack/vue-query', 'axios', '@vueuse/core'],
+  external: ['vue', 'axios', '@tanstack/vue-query', '@vueuse/core'],
+  plugins: [typescript()]
 }

@@ -7,7 +7,7 @@ import { AxiosInstance, AxiosRequestConfig } from 'axios';
  * @param {AxiosRequestConfig} axiosRequest - Configuration for the Axios request.
  * @returns {Promise<T>} A promise with the result of the API request.
  */
-export default async function axiosFetch<T>(
+export async function axiosFetch<T>(
     axios: AxiosInstance,
     axiosRequest: AxiosRequestConfig
 ): Promise<T> {
