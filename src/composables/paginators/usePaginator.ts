@@ -8,7 +8,7 @@ import { computed, Ref } from "vue";
  * @param pageSize - Reactive ref for number of items per page.
  * @returns An object with pagination controls.
  */
-export default function usePagination(page: Ref<number>, total: Ref<number>, pageSize: Ref<number>) {
+export function usePagination(page: Ref<number>, total: Ref<number>, pageSize: Ref<number>) {
     // Calculate the total number of pages
     const totalPages = computed(() => Math.ceil(total.value / pageSize.value));
 

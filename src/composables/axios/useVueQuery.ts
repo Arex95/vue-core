@@ -13,7 +13,7 @@ import type { ExtendedQueryOptions } from '../../types'
  * @param {ExtendedQueryOptions<T>} [queryOptions] - Optional Vue Query options with server execution flag.
  * @returns {object} Composable functions and query state for managing API requests.
  */
-export default function useVueQuery<T>(
+export function useVueQuery<T>(
   axios: AxiosInstance,
   axiosRequest: AxiosRequestConfig,
   queryOptions?: ExtendedQueryOptions

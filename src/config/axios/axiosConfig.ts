@@ -9,7 +9,7 @@ import axios, {
  * AxiosService class encapsulates the Axios configuration and logic.
  * It manages request and response interceptors and provides methods for making HTTP requests.
  */
-export default class AxiosService {
+export class AxiosService {
     private readonly instance: AxiosInstance;
     private cancelTokenSource: CancelTokenSource;
     private activeRequests: number = 0; // Track active requests

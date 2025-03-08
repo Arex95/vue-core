@@ -11,7 +11,7 @@ import { computed } from "vue";
  *
  * @returns {Object[]} - The filtered list of objects.
  */
-export default function useFilter<T extends Record<string, any>>(
+export function useFilter<T extends Record<string, any>>(
     items: T[],
     filterConfig: {
         field: string;

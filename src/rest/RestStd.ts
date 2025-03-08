@@ -2,7 +2,7 @@
  * A standard REST API interface for handling basic CRUD operations.
  * This class can be instantiated with a resource endpoint and a fetch composable for API requests.
  */
-export default class RestStd {
+export class RestStd {
     static resource: string;
     static fetchComposable: Function;
 
