@@ -5,8 +5,7 @@ import { getAxiosInstance } from '@config/axios'
 /**
  * Creates a fetchComposable for Axios requests with an optional custom instance.
  * @param fetchComposable - The composable to use for the request (can be any fetch function).
- * @param apiUrl - The base URL for the Axios instance.
- * @param axiosInstance - An optional custom Axios instance to use for the request.
+ * @param axiosCustomInstance - An optional custom Axios instance to use for the request.
  * @returns A function that handles the request using the provided composable.
  */
 export function createFetch(
