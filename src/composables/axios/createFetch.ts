@@ -1,6 +1,6 @@
 import { AxiosInstance, AxiosRequestConfig } from 'axios'
 import { UseQueryOptions } from '@tanstack/vue-query'
-import { AxiosService } from '@config/axios'
+import { getAxiosInstance } from '@config/axios'
 
 /**
  * Creates a fetchComposable for Axios requests with an optional custom instance.
@@ -11,11 +11,9 @@ import { AxiosService } from '@config/axios'
  */
 export function createFetch(
     fetchComposable: Function,
-    apiUrl: string,
-    axiosInstance?: AxiosInstance
+    axiosCustomInstance?: AxiosInstance
 ) {
-    const instance = axiosInstance || new AxiosService(apiUrl).getAxiosInstance()
-
+    const instance = axiosCustomInstance || getAxiosInstance()
     return (
         axiosRequestConfig: AxiosRequestConfig,
         options?: UseQueryOptions
