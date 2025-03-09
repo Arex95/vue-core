@@ -1,7 +1,7 @@
 /**
  * Tipos de errores permitidos
  */
-export type ErrorType =
+export type ErrorType = 
   | 'warning'
   | 'error'
   | 'critical'
@@ -10,6 +10,12 @@ export type ErrorType =
   | 'network'
   | 'authentication'
   | 'runtime'
+  | 'type'
+  | 'reference'
+  | 'syntax'
+  | 'range'
+  | 'eval'
+  | 'uri';
 
 /**
  * Métodos disponibles para pasar errores a la ruta

@@ -11,12 +11,15 @@ import { ERROR_MESSAGES, ERROR_STYLES } from '@/constants'
  * @returns Mensaje user-friendly del error
  */
 export function handleError(
-  error: string | Error | null | undefined,
+  error: unknown,
   redirect = false,
   route: string = '/error',
   passMethod: ErrorPassMethod = 'query'
 ) {
-  if (!error) return
+  if (!(error instanceof Error)) {
+    console.error("Unrecognized error:", error)
+    return
+  }
 
   const router = useRouter()
   const type: ErrorType = inferErrorType(error)
@@ -43,6 +46,8 @@ export function handleError(
 
 /**
  * Infiera el tipo de error basado en su mensaje o nombre.
+ * @param error - El error que se desea analizar.
+ * @returns El tipo de error determinado.
  */
 function inferErrorType(error: string | Error): ErrorType {
   const msg = typeof error === 'string' ? error : error.message
