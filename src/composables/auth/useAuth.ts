@@ -3,21 +3,26 @@ import { computed } from 'vue'
 import { jwtDecode } from 'jwt-decode'
 import { getAxiosInstance } from '@config/axios'
 import { handleError } from '@utils/errors'
+import { getTokenConfig } from '@config/global/tokenConfig'
+import { getEndpointsConfig } from '@config/global/endpointsConfig'
 
 let axiosInstance = getAxiosInstance()
+const tokenConfig = getTokenConfig()
+const endpointsConfig = getEndpointsConfig()
 
 let config = {
-  endpoints: {
-    login: 'login',
-    refresh: 'refresh',
-    logout: 'logout'
-  },
-  storageKeys: {
-    token: 'app_storage_token',
-    refreshToken: 'app_storage_refresh_token'
-  }
+  endpoints: endpointsConfig,
+  storageKeys: tokenConfig,
 }
 
+/**
+ * Función para configurar los endpoints y las claves de almacenamiento globalmente.
+ * Permite modificar los valores predeterminados de los endpoints y claves de almacenamiento.
+ * 
+ * @param {Object} options - Configuración personalizada.
+ * @param {Object} options.endpoints - Endpoints personalizados para login, refresh y logout.
+ * @param {Object} options.storageKeys - Claves personalizadas para el almacenamiento de tokens.
+ */
 export function configureAuth(options: {
   endpoints?: { login?: string, refresh?: string, logout?: string },
   storageKeys?: { token?: string, refreshToken?: string }
@@ -72,8 +77,8 @@ function getDecryptedValue(key: string, secretKey: string) {
 }
 
 export function useAuth(secretKey: string) {
-  const jwt = computed(() => getDecryptedValue(config.storageKeys.token, secretKey))
-  const refresh_token = computed(() => getDecryptedValue(config.storageKeys.refreshToken, secretKey))
+  const jwt = computed(() => getDecryptedValue(config.storageKeys.ACCESS_TOKEN, secretKey))
+  const refresh_token = computed(() => getDecryptedValue(config.storageKeys.REFRESH_TOKEN, secretKey))
 
   const tokenExpiry = computed(() => {
     if (!jwt.value) return null
@@ -88,9 +93,9 @@ export function useAuth(secretKey: string) {
 
   const login = async (params = {}) => {
     try {
-      const response = await axiosInstance.post(config.endpoints.login, params)
-      await storeEncryptedItem(config.storageKeys.token, response.data.token, secretKey)
-      await storeEncryptedItem(config.storageKeys.refreshToken, response.data.refresh_token, secretKey)
+      const response = await axiosInstance.post(config.endpoints.LOGIN, params)
+      await storeEncryptedItem(config.storageKeys.ACCESS_TOKEN, response.data.token, secretKey)
+      await storeEncryptedItem(config.storageKeys.REFRESH_TOKEN, response.data.refresh_token, secretKey)
       return response
     } catch (error) {
       handleError(error, false)
@@ -100,9 +105,9 @@ export function useAuth(secretKey: string) {
 
   const refresh = async () => {
     try {
-      const response = await axiosInstance.post(config.endpoints.refresh, {})
-      await storeEncryptedItem(config.storageKeys.token, response.data.token, secretKey)
-      await storeEncryptedItem(config.storageKeys.refreshToken, response.data.refresh_token, secretKey)
+      const response = await axiosInstance.post(config.endpoints.REFRESH, {})
+      await storeEncryptedItem(config.storageKeys.ACCESS_TOKEN, response.data.token, secretKey)
+      await storeEncryptedItem(config.storageKeys.REFRESH_TOKEN, response.data.refresh_token, secretKey)
       return response
     } catch (error) {
       handleError(error, false)
@@ -112,7 +117,7 @@ export function useAuth(secretKey: string) {
 
   const logout = async (params = {}) => {
     try {
-      await axiosInstance.post(config.endpoints.logout, params)
+      await axiosInstance.post(config.endpoints.LOGOUT, params)
     } catch (error) {
       handleError(error, false)
     } finally {

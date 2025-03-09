@@ -4,23 +4,29 @@ import axios, {
     AxiosInstance,
     CancelTokenSource,
     InternalAxiosRequestConfig,
-} from 'axios';
+} from 'axios'
+
+import { handleError } from '@utils/errors'
+import { getTokenConfig } from '@config/global/tokenConfig'
+import { getEndpointsConfig } from '@config/global/endpointsConfig'
 
 /**
  * AxiosService class encapsulates the Axios configuration and logic.
  * It manages request and response interceptors and provides methods for making HTTP requests.
  */
 export class AxiosService {
-    private readonly instance: AxiosInstance;
-    private cancelTokenSource: CancelTokenSource;
-    private activeRequests: number = 0; // Track active requests
+    private readonly instance: AxiosInstance
+    private cancelTokenSource: CancelTokenSource
+    private activeRequests: number = 0
+    private refreshTokenInProgress: boolean = false
+    private readonly refreshTokenUrl: string
 
     /**
      * Initializes the AxiosService instance by creating an Axios instance with default configuration
      * and setting up request and response interceptors.
      */
     constructor(url: string, headers: Record<string, string> = {}) {
-        this.cancelTokenSource = axios.CancelToken.source();
+        this.cancelTokenSource = axios.CancelToken.source()
 
         this.instance = axios.create({
             baseURL: url ?? '',
@@ -33,66 +39,89 @@ export class AxiosService {
                 ...headers,
             },
             withCredentials: false,
-        });
+        })
 
-        this.initializeInterceptors();
+        const endpointsConfig = getEndpointsConfig()
+        this.refreshTokenUrl = endpointsConfig.REFRESH
+
+        this.initializeInterceptors()
     }
 
     /**
      * Initializes request and response interceptors for the Axios instance.
      */
     private initializeInterceptors() {
+        const { ACCESS_TOKEN, REFRESH_TOKEN } = getTokenConfig()
+
         this.instance.interceptors.request.use(
             (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
-                const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+                const token = typeof window !== 'undefined' ? localStorage.getItem(ACCESS_TOKEN) : null
                 if (token && config.headers) {
-                    (config.headers as Record<string, string>).Authorization = `Bearer ${token}`;
+                    (config.headers as Record<string, string>).Authorization = `Bearer ${token}`
                 }
-                config.cancelToken = this.cancelTokenSource.token;
-                this.activeRequests++;
-                return config;
+                config.cancelToken = this.cancelTokenSource.token
+                this.activeRequests++
+                return config
             },
             (error: AxiosError) => {
-                console.error('Request error:', error.message);
-                this.activeRequests++;
-                return Promise.reject(error);
+                handleError(error, false)
+                this.activeRequests++
+                return Promise.reject(error)
             }
-        );
+        )
 
         this.instance.interceptors.response.use(
             (response: AxiosResponse) => {
-                this.activeRequests--;
-                return response;
+                this.activeRequests--
+                return response
             },
-            (error: unknown) => {
-                if (axios.isCancel(error)) {
-                    console.warn('Request canceled:', (error as AxiosError).message);
-                } else if (axios.isAxiosError(error)) {
-                    console.error('Response error:', error.response?.status, error.message);
-                    if (error.response?.status === 401) {
-                        this.handleUnauthorized();
+            async (error: AxiosError) => {
+                this.activeRequests--
+
+                // Check for unauthorized access (401)
+                if (axios.isAxiosError(error) && error.response?.status === 401 && !this.refreshTokenInProgress) {
+                    const refreshToken = localStorage.getItem(REFRESH_TOKEN)
+
+                    if (refreshToken) {
+                        this.refreshTokenInProgress = true
+                        try {
+                            // Attempt to refresh the token
+                            const refreshResponse = await axios.post(this.refreshTokenUrl, { refreshToken })
+
+                            const { token: newAccessToken } = refreshResponse.data
+                            if (newAccessToken) {
+                                // Save the new access token
+                                localStorage.setItem(ACCESS_TOKEN, newAccessToken)
+
+                                // Retry the original request with the new token
+                                if (error.config && error.config.headers) {
+                                    error.config.headers['Authorization'] = `Bearer ${newAccessToken}`
+                                }
+                                this.refreshTokenInProgress = false
+                                if (error.config) {
+                                    return this.instance(error.config)
+                                }
+                            }
+                        } catch (refreshError) {
+                            handleError(refreshError, false)
+                            this.refreshTokenInProgress = false
+                            localStorage.removeItem(ACCESS_TOKEN)
+                            localStorage.removeItem(REFRESH_TOKEN)
+                        }
                     }
-                } else {
-                    console.error('Unexpected error:', error);
                 }
-                this.activeRequests--;
-                return Promise.reject(error);
+
+                handleError(error, false)
+                return Promise.reject(error)
             }
-        );
+        )
     }
 
     /**
      * Returns the number of active requests.
      */
     public getActiveRequests(): number {
-        return this.activeRequests;
-    }
-
-    /**
-     * Handles unauthorized access errors (401).
-     */
-    private handleUnauthorized() {
-        console.warn('Unauthorized access - redirecting to login.');
+        return this.activeRequests
     }
 
     /**
@@ -100,15 +129,15 @@ export class AxiosService {
      * @returns {AxiosInstance} The configured Axios instance.
      */
     public getAxiosInstance(): AxiosInstance {
-        return this.instance;
+        return this.instance
     }
 
     /**
      * Cancels all ongoing requests.
      */
     public cancelAllRequests() {
-        this.cancelTokenSource.cancel('Operation canceled by the user.');
-        this.cancelTokenSource = axios.CancelToken.source();
+        this.cancelTokenSource.cancel('Operation canceled by the user.')
+        this.cancelTokenSource = axios.CancelToken.source()
     }
 
     /**
@@ -117,7 +146,7 @@ export class AxiosService {
      * @param {string} value - The header value.
      */
     public setHeader(key: string, value: string) {
-        this.instance.defaults.headers.common[key] = value;
+        this.instance.defaults.headers.common[key] = value
     }
 
     /**
@@ -125,6 +154,6 @@ export class AxiosService {
      * @param {string} key - The header key to remove.
      */
     public removeHeader(key: string) {
-        delete this.instance.defaults.headers.common[key];
+        delete this.instance.defaults.headers.common[key]
     }
 }
