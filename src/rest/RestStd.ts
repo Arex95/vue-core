@@ -1,10 +1,32 @@
-/**
- * A standard REST API interface for handling basic CRUD operations.
- * This class can be instantiated with a resource endpoint and a fetch composable for API requests.
- */
+import { objectToFormData } from '@/utils'
+import { ContentTypeEnum } from '@/constants'
+
 export class RestStd {
-    static resource: string;
-    static fetchComposable: Function;
+    static resource: string
+    static isFormData: boolean = false
+    static headers: Record<string, string> = {}
+    static fetchComposable: Function
+
+    /**
+     * Set global headers for all requests.
+     * @param headers Object containing headers to be set globally.
+     */
+    static setHeaders(headers: Record<string, string>) {
+        this.headers = { ...this.headers, ...headers }
+    }
+
+    /**
+     * Convert data to FormData if isFormData is true, otherwise return the data as is.
+     * @param data Data to be converted.
+     * @returns Data in FormData format or as is.
+     */
+    static transformData(data: any) {
+        if (this.isFormData) {
+            const formData = objectToFormData(data)
+            return formData
+        }
+        return data
+    }
 
     /**
      * Fetch a list of items from the server.
@@ -18,7 +40,8 @@ export class RestStd {
             method: 'GET',
             url: this.resource,
             params,
-        }, options);
+            headers: this.headers,
+        }, options)
     }
 
     /**
@@ -34,7 +57,8 @@ export class RestStd {
             method: 'GET',
             url: `${this.resource}/${id}`,
             params,
-        }, options);
+            headers: this.headers,
+        }, options)
     }
 
     /**
@@ -45,11 +69,16 @@ export class RestStd {
      * @returns The result of the fetch composable (typically a promise).
      */
     static create<T>(data: any, options: object = {}) {
+        const transformedData = this.transformData(data)
         return this.fetchComposable({
             method: 'POST',
             url: this.resource,
-            data,
-        }, options);
+            data: transformedData,
+            headers: {
+                ...this.headers,
+                'Content-Type': this.isFormData ? ContentTypeEnum.FORM_DATA : ContentTypeEnum.JSON,
+            },
+        }, options)
     }
 
     /**
@@ -61,11 +90,16 @@ export class RestStd {
      * @returns The result of the fetch composable (typically a promise).
      */
     static update<T>(id: string | number, data: any, options: object = {}) {
+        const transformedData = this.transformData(data)
         return this.fetchComposable({
             method: 'PUT',
             url: `${this.resource}/${id}`,
-            data,
-        }, options);
+            data: transformedData,
+            headers: {
+                ...this.headers,
+                'Content-Type': this.isFormData ? ContentTypeEnum.FORM_DATA : ContentTypeEnum.JSON,
+            },
+        }, options)
     }
 
     /**
@@ -77,11 +111,16 @@ export class RestStd {
      * @returns The result of the fetch composable (typically a promise).
      */
     static patch<T>(id: string | number, data: any, options: object = {}) {
+        const transformedData = this.transformData(data)
         return this.fetchComposable({
             method: 'PATCH',
             url: `${this.resource}/${id}`,
-            data,
-        }, options);
+            data: transformedData,
+            headers: {
+                ...this.headers,
+                'Content-Type': this.isFormData ? ContentTypeEnum.FORM_DATA : ContentTypeEnum.JSON,
+            },
+        }, options)
     }
 
     /**
@@ -95,7 +134,8 @@ export class RestStd {
         return this.fetchComposable({
             method: 'DELETE',
             url: `${this.resource}/${id}`,
-        }, options);
+            headers: this.headers,
+        }, options)
     }
 
     /**
@@ -104,7 +144,6 @@ export class RestStd {
      * @param method HTTP method (GET, POST, etc.).
      * @param params Query parameters.
      * @param data Request body data.
-     * @param token Authorization token (optional).
      * @param options Additional options for the fetch composable.
      * @returns The result of the fetch composable (typically a promise).
      */
@@ -114,11 +153,16 @@ export class RestStd {
         data?: any,
         options: object = {}
     ) {
+        const transformedData = this.transformData(data)
         return this.fetchComposable({
             method: method,
             url: this.resource,
             params: params,
-            data: data,
-        }, options);
+            data: transformedData,
+            headers: {
+                ...this.headers,
+                'Content-Type': this.isFormData ? ContentTypeEnum.FORM_DATA : ContentTypeEnum.JSON,
+            },
+        }, options)
     }
 }
