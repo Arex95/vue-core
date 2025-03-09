@@ -1,55 +1,58 @@
-import type { ErrorType } from "@types/ErrorType";
+import { useRouter } from 'vue-router'
+import { ErrorType, ErrorPassMethod } from '@/types'
+import { ERROR_MESSAGES, ERROR_STYLES } from '@/constants'
 
+/**
+ * Maneja y registra errores en la consola, además de permitir redirecciones configurables.
+ * @param error - Error capturado (string o Error)
+ * @param redirect - `true` si se quiere redirigir a una página de error
+ * @param route - Ruta personalizada para la página de error (por defecto: `/error`)
+ * @param passMethod - Método para pasar el error a la ruta (`query`, `localStorage`, `sessionStorage`)
+ * @returns Mensaje user-friendly del error
+ */
 export function handleError(
-  error: string | Error | null | undefined
+  error: string | Error | null | undefined,
+  redirect = false,
+  route: string = '/error',
+  passMethod: ErrorPassMethod = 'query'
 ) {
-  // Return early if the error is null or undefined
-  if (error == null) {
-    return;
+  if (!error) return
+
+  const router = useRouter()
+  const type: ErrorType = inferErrorType(error)
+  const message = ERROR_MESSAGES[type] || 'Error desconocido.'
+
+  // Mostrar el error en la consola con estilos
+  console.log(`%c[${type.toUpperCase()}] ${message}`, ERROR_STYLES[type])
+
+  // Pasar el error según el método elegido
+  if (redirect) {
+    if (passMethod === 'query') {
+      router.push({ path: route, query: { errorMessage: encodeURIComponent(message) } })
+    } else if (passMethod === 'localStorage') {
+      localStorage.setItem('errorMessage', message)
+      router.push(route)
+    } else if (passMethod === 'sessionStorage') {
+      sessionStorage.setItem('errorMessage', message)
+      router.push(route)
+    }
   }
 
-  const type: ErrorType = inferErrorType(error);
+  return message
+}
 
-  /**
-   * Infers the error type based on the error object.
-   *
-   * @param {string | Error} error - The error to classify.
-   * @returns {ErrorType} The inferred error type.
-   */
-  function inferErrorType(error: string | Error): ErrorType {
-    if (typeof error === 'string') {
-      return 'error';
-    }
+/**
+ * Infiera el tipo de error basado en su mensaje o nombre.
+ */
+function inferErrorType(error: string | Error): ErrorType {
+  const msg = typeof error === 'string' ? error : error.message
 
-    if (error.name === 'ValidationError') {
-      return 'validation';
-    }
-    if (error.name === 'NetworkError' || (error.message && error.message.includes('Network'))) {
-      return 'network';
-    }
-    if (error.name === 'AuthenticationError' || (error.message && error.message.includes('Unauthorized'))) {
-      return 'authentication';
-    }
-    if (error.message && error.message.includes('Component')) {
-      return 'component';
-    }
-    if (error.message && error.message.includes('Runtime')) {
-      return 'runtime';
-    }
+  if (typeof error === 'string') return 'error'
+  if (error.name === 'ValidationError') return 'validation'
+  if (error.name === 'NetworkError' || msg.includes('Network')) return 'network'
+  if (error.name === 'AuthenticationError' || msg.includes('Unauthorized')) return 'authentication'
+  if (msg.includes('Component')) return 'component'
+  if (msg.includes('Runtime')) return 'runtime'
 
-    return 'error';
-  }
-
-  /**
-   * Applies styles to the error message for console output.
-   *
-   * @param {ErrorType} type - The type of the error.
-   * @param {string | Error} error - The error message or object.
-   * @returns {string} The styled error message.
-   */
-  function getStyledMessage(type: ErrorType, error: string | Error): string {
-    const message = typeof error === 'string' ? error : error?.message || 'Unknown error';
-    const style = 'color: red; font-weight: bold;';
-    return `%c[${type.toUpperCase()}] ${message}` + style;
-  }
+  return 'error'
 }
