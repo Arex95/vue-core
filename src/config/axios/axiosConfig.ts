@@ -5,6 +5,7 @@ import axios, {
     CancelTokenSource,
     InternalAxiosRequestConfig,
 } from 'axios';
+
 /**
  * AxiosService class encapsulates the Axios configuration and logic.
  * It manages request and response interceptors and provides methods for making HTTP requests.
@@ -18,15 +19,18 @@ export class AxiosService {
      * Initializes the AxiosService instance by creating an Axios instance with default configuration
      * and setting up request and response interceptors.
      */
-    constructor(url: string) {
+    constructor(url: string, headers: Record<string, string> = {}) {
         this.cancelTokenSource = axios.CancelToken.source();
 
         this.instance = axios.create({
-            baseURL: url??'',
+            baseURL: url ?? '',
             timeout: 300000,
             headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0',
+                ...headers,
             },
             withCredentials: false,
         });
@@ -49,7 +53,6 @@ export class AxiosService {
                 return config;
             },
             (error: AxiosError) => {
-                // handleError(error);
                 console.error('Request error:', error.message);
                 this.activeRequests++;
                 return Promise.reject(error);
@@ -65,7 +68,6 @@ export class AxiosService {
                 if (axios.isCancel(error)) {
                     console.warn('Request canceled:', (error as AxiosError).message);
                 } else if (axios.isAxiosError(error)) {
-                    // handleError(error);
                     console.error('Response error:', error.response?.status, error.message);
                     if (error.response?.status === 401) {
                         this.handleUnauthorized();
