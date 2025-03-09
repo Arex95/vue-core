@@ -165,4 +165,20 @@ export class RestStd {
             },
         }, options)
     }
+
+    /**
+     * Save method that decides whether to create or update based on the presence of 'id'.
+     * It calls either create or update based on the data.
+     *
+     * @param data The data for the item to create or update.
+     * @param options Additional options for the fetch composable.
+     * @returns The result of the fetch composable (typically a promise).
+     */
+    static save<T>(data: any, options: object = {}) {
+        if (data.id) {
+            return this.update(data.id, data, options)
+        } else {
+            return this.create(data, options)
+        }
+    }
 }
