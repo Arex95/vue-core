@@ -44,31 +44,33 @@ const decrypt = (value: string, key: string) => {
   return bytes.toString(CryptoJS.enc.Utf8)
 }
 
-const storeEncryptedItem = async (key: string, value: any, secretKey: string, attempt = 0): Promise<void> => {
-  if (typeof window !== 'undefined' && window.localStorage) {
+const storeEncryptedItem = async (key: string, value: any, secretKey: string, isRememberMe: boolean, attempt = 0): Promise<void> => {
+  const storage = isRememberMe ? localStorage : sessionStorage
+  if (typeof window !== 'undefined' && storage) {
     try {
-      localStorage.setItem(key, encrypt(value, secretKey))
+      storage.setItem(key, encrypt(value, secretKey))
       return
     } catch (error) {
       handleError(error, false)
       if (attempt < 5) {
         await new Promise(resolve => setTimeout(resolve, 100))
-        return await storeEncryptedItem(key, value, secretKey, attempt + 1)
+        return await storeEncryptedItem(key, value, secretKey, isRememberMe, attempt + 1)
       }
-      throw new Error(`LocalStorage not available for key ${key} after multiple attempts`)
+      throw new Error(`Storage not available for key ${key} after multiple attempts`)
     }
   } else {
     if (attempt < 5) {
       await new Promise(resolve => setTimeout(resolve, 100))
-      return await storeEncryptedItem(key, value, secretKey, attempt + 1)
+      return await storeEncryptedItem(key, value, secretKey, isRememberMe, attempt + 1)
     }
-    throw new Error(`LocalStorage not available for key ${key} after multiple attempts`)
+    throw new Error(`Storage not available for key ${key} after multiple attempts`)
   }
 }
 
-function getDecryptedValue(key: string, secretKey: string) {
+function getDecryptedValue(key: string, secretKey: string, isRememberMe: boolean) {
+  const storage = isRememberMe ? localStorage : sessionStorage
   try {
-    const value = localStorage.getItem(key)
+    const value = storage.getItem(key)
     return value ? decrypt(value, secretKey) : null
   } catch (error) {
     handleError(error, false)
@@ -77,8 +79,8 @@ function getDecryptedValue(key: string, secretKey: string) {
 }
 
 export function useAuth(secretKey: string) {
-  const jwt = computed(() => getDecryptedValue(config.storageKeys.ACCESS_TOKEN, secretKey))
-  const refresh_token = computed(() => getDecryptedValue(config.storageKeys.REFRESH_TOKEN, secretKey))
+  const jwt = computed(() => getDecryptedValue(config.storageKeys.ACCESS_TOKEN, secretKey, false))
+  const refresh_token = computed(() => getDecryptedValue(config.storageKeys.REFRESH_TOKEN, secretKey, false))
 
   const tokenExpiry = computed(() => {
     if (!jwt.value) return null
@@ -91,11 +93,11 @@ export function useAuth(secretKey: string) {
     }
   })
 
-  const login = async (params = {}) => {
+  const login = async (params = {}, isRememberMe: boolean) => {
     try {
       const response = await axiosInstance.post(config.endpoints.LOGIN, params)
-      await storeEncryptedItem(config.storageKeys.ACCESS_TOKEN, response.data.token, secretKey)
-      await storeEncryptedItem(config.storageKeys.REFRESH_TOKEN, response.data.refresh_token, secretKey)
+      await storeEncryptedItem(config.storageKeys.ACCESS_TOKEN, response.data.token, secretKey, isRememberMe)
+      await storeEncryptedItem(config.storageKeys.REFRESH_TOKEN, response.data.refresh_token, secretKey, isRememberMe)
       return response
     } catch (error) {
       handleError(error, false)
@@ -106,8 +108,8 @@ export function useAuth(secretKey: string) {
   const refresh = async () => {
     try {
       const response = await axiosInstance.post(config.endpoints.REFRESH, {})
-      await storeEncryptedItem(config.storageKeys.ACCESS_TOKEN, response.data.token, secretKey)
-      await storeEncryptedItem(config.storageKeys.REFRESH_TOKEN, response.data.refresh_token, secretKey)
+      await storeEncryptedItem(config.storageKeys.ACCESS_TOKEN, response.data.token, secretKey, false)
+      await storeEncryptedItem(config.storageKeys.REFRESH_TOKEN, response.data.refresh_token, secretKey, false)
       return response
     } catch (error) {
       handleError(error, false)
@@ -128,6 +130,7 @@ export function useAuth(secretKey: string) {
 
   const cleanStorage = async () => {
     (Object.keys(config.storageKeys) as (keyof typeof config.storageKeys)[]).forEach(key => {
+      sessionStorage.removeItem(config.storageKeys[key])
       localStorage.removeItem(config.storageKeys[key])
     })
   }
