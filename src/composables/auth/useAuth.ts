@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { jwtDecode } from 'jwt-decode'
 import { getAxiosInstance } from '@config/axios'
 import { handleError } from '@utils/errors'
-import { getTokenConfig } from '@config/global/tokenConfig'
+import { getTokenConfig, getSecretKey } from '@config/global/tokenConfig'
 import { getEndpointsConfig } from '@config/global/endpointsConfig'
 
 let axiosInstance = getAxiosInstance()
@@ -78,7 +78,7 @@ function getDecryptedValue(key: string, secretKey: string, isRememberMe: boolean
   }
 }
 
-export function useAuth(secretKey: string) {
+export function useAuth(secretKey: string = getSecretKey()) {
   const jwt = computed(() => getDecryptedValue(config.storageKeys.ACCESS_TOKEN, secretKey, false))
   const refresh_token = computed(() => getDecryptedValue(config.storageKeys.REFRESH_TOKEN, secretKey, false))
 
