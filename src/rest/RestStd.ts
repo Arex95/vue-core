@@ -1,5 +1,5 @@
 import { objectToFormData } from '@/utils'
-import { ContentTypeEnum } from '@/constants'
+import { ContentTypeEnum } from '@/enums'
 
 export class RestStd {
     static resource: string
