@@ -5,28 +5,26 @@ import { getAxiosInstance } from '@config/axios'
 import { handleError } from '@utils/errors'
 import { getTokenConfig, getSecretKey } from '@config/global/tokenConfig'
 import { getEndpointsConfig } from '@config/global/endpointsConfig'
+import { AuthConfig } from "@/types";
 
 let axiosInstance = getAxiosInstance()
 const tokenConfig = getTokenConfig()
 const endpointsConfig = getEndpointsConfig()
 
-let config = {
+let config: AuthConfig = {
   endpoints: endpointsConfig,
   storageKeys: tokenConfig,
 }
 
 /**
- * Función para configurar los endpoints y las claves de almacenamiento globalmente.
- * Permite modificar los valores predeterminados de los endpoints y claves de almacenamiento.
- * 
- * @param {Object} options - Configuración personalizada.
- * @param {Object} options.endpoints - Endpoints personalizados para login, refresh y logout.
- * @param {Object} options.storageKeys - Claves personalizadas para el almacenamiento de tokens.
+ * Configures authentication settings globally.
+ * Allows modifying default endpoints and storage keys.
+ *
+ * @param {Object} options - Custom configuration options.
+ * @param {Object} [options.endpoints] - Custom endpoints for login, refresh, and logout.
+ * @param {Object} [options.storageKeys] - Custom storage keys for tokens.
  */
-export function configureAuth(options: {
-  endpoints?: { login?: string, refresh?: string, logout?: string },
-  storageKeys?: { token?: string, refreshToken?: string }
-}) {
+export function configureAuth(options: AuthConfig) {
   if (options.endpoints) {
     config.endpoints = { ...config.endpoints, ...options.endpoints }
   }
@@ -35,38 +33,92 @@ export function configureAuth(options: {
   }
 }
 
+/**
+ * Encrypts a value using AES encryption.
+ *
+ * @param {string} value - The value to encrypt.
+ * @param {string} key - The encryption key.
+ * @returns {string} The encrypted string.
+ */
 const encrypt = (value: string, key: string) => {
   return CryptoJS.AES.encrypt(value, key).toString()
 }
 
+/**
+ * Decrypts an AES encrypted value.
+ *
+ * @param {string} value - The encrypted value.
+ * @param {string} key - The encryption key.
+ * @returns {string} The decrypted string.
+ */
 const decrypt = (value: string, key: string) => {
-  const bytes = CryptoJS.AES.decrypt(value, key)
-  return bytes.toString(CryptoJS.enc.Utf8)
-}
+  const bytes = CryptoJS.AES.decrypt(value, key);
+  return bytes.toString(CryptoJS.enc.Utf8);
+};
 
-const storeEncryptedItem = async (key: string, value: any, secretKey: string, isRememberMe: boolean, attempt = 0): Promise<void> => {
-  const storage = isRememberMe ? localStorage : sessionStorage
-  if (typeof window !== 'undefined' && storage) {
+/**
+ * Stores an encrypted value in sessionStorage or localStorage.
+ *
+ * @param {string} key - Storage key.
+ * @param {any} value - Value to store.
+ * @param {string} secretKey - Encryption key.
+ * @param {boolean} isRememberMe - Whether to store in localStorage.
+ * @param {number} [attempt=0] - Retry attempt count.
+ * @returns {Promise<void>} 
+ */
+const storeEncryptedItem = async (
+  value: string,
+  key: string,
+  secretKey: string,
+  isRememberMe: boolean,
+  attempt: number = 0
+) => {
+  const storage = isRememberMe ? localStorage : sessionStorage;
+  if (typeof window !== "undefined" && storage) {
     try {
-      storage.setItem(key, encrypt(value, secretKey))
-      return
+      storage.setItem(key, encrypt(value, secretKey));
+      return;
     } catch (error) {
-      handleError(error, false)
+      handleError(error, false);
       if (attempt < 5) {
-        await new Promise(resolve => setTimeout(resolve, 100))
-        return await storeEncryptedItem(key, value, secretKey, isRememberMe, attempt + 1)
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        return await storeEncryptedItem(
+          key,
+          value,
+          secretKey,
+          isRememberMe,
+          attempt + 1
+        );
       }
-      throw new Error(`Storage not available for key ${key} after multiple attempts`)
+      throw new Error(
+        `Storage not available for key ${key} after multiple attempts`
+      );
     }
   } else {
     if (attempt < 5) {
-      await new Promise(resolve => setTimeout(resolve, 100))
-      return await storeEncryptedItem(key, value, secretKey, isRememberMe, attempt + 1)
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      return await storeEncryptedItem(
+        key,
+        value,
+        secretKey,
+        isRememberMe,
+        attempt + 1
+      );
     }
-    throw new Error(`Storage not available for key ${key} after multiple attempts`)
+    throw new Error(
+      `Storage not available for key ${key} after multiple attempts`
+    );
   }
-}
+};
 
+/**
+ * Retrieves and decrypts a stored value.
+ *
+ * @param {string} key - Storage key.
+ * @param {string} secretKey - Decryption key.
+ * @param {boolean} isRememberMe - Whether to retrieve from localStorage.
+ * @returns {string|null} The decrypted value or null.
+ */
 function getDecryptedValue(key: string, secretKey: string, isRememberMe: boolean) {
   const storage = isRememberMe ? localStorage : sessionStorage
   try {
@@ -78,14 +130,23 @@ function getDecryptedValue(key: string, secretKey: string, isRememberMe: boolean
   }
 }
 
-export function useAuth(secretKey: string = getSecretKey()) {
+/**
+ * Provides authentication utilities.
+ *
+ * @param {string} [secretKey=getSecretKey()] - Encryption key.
+ * @returns {Object} Auth composable methods and properties.
+ */
+export function useAuth(secretKey = getSecretKey()) {
   const jwt = computed(() => getDecryptedValue(config.storageKeys.ACCESS_TOKEN, secretKey, false))
   const refresh_token = computed(() => getDecryptedValue(config.storageKeys.REFRESH_TOKEN, secretKey, false))
 
+  /**
+   * Computes token expiration timestamp.
+   */
   const tokenExpiry = computed(() => {
     if (!jwt.value) return null
     try {
-      const decoded: { exp: number } = jwtDecode(<string>jwt.value)
+      const decoded = jwtDecode(jwt.value)
       return decoded.exp * 1000
     } catch (error) {
       handleError(error, false)
@@ -93,6 +154,9 @@ export function useAuth(secretKey: string = getSecretKey()) {
     }
   })
 
+  /**
+   * Handles user login.
+   */
   const login = async (params = {}, isRememberMe: boolean) => {
     try {
       const response = await axiosInstance.post(config.endpoints.LOGIN, params)
@@ -105,6 +169,9 @@ export function useAuth(secretKey: string = getSecretKey()) {
     }
   }
 
+  /**
+   * Refreshes authentication token.
+   */
   const refresh = async () => {
     try {
       const response = await axiosInstance.post(config.endpoints.REFRESH, {})
@@ -117,6 +184,9 @@ export function useAuth(secretKey: string = getSecretKey()) {
     }
   }
 
+  /**
+   * Logs out the user.
+   */
   const logout = async (params = {}) => {
     try {
       await axiosInstance.post(config.endpoints.LOGOUT, params)
@@ -128,43 +198,37 @@ export function useAuth(secretKey: string = getSecretKey()) {
     }
   }
 
+  /**
+   * Clears stored authentication data.
+   */
   const cleanStorage = async () => {
-    (Object.keys(config.storageKeys) as (keyof typeof config.storageKeys)[]).forEach(key => {
+    Object.keys(config.storageKeys).forEach(key => {
       sessionStorage.removeItem(config.storageKeys[key])
       localStorage.removeItem(config.storageKeys[key])
     })
   }
 
+  /**
+   * Verifies token validity.
+   */
   const verifyToken = async () => {
     if (!jwt.value) {
-      handleError('TOKEN_MISSING: No se encontró un token válido', true, '/auth-error', 'query')
+      handleError('TOKEN_MISSING: No valid token found', true, '/auth-error', 'query')
       await cleanStorage()
-      throw new Error('TOKEN_MISSING: No se encontró un token válido')
+      throw new Error('TOKEN_MISSING: No valid token found')
     }
-
     try {
-      const decoded: { exp: number } = jwtDecode(<string>jwt.value)
-      const now = Date.now()
-
-      if (decoded.exp * 1000 < now) {
+      const decoded = jwtDecode(jwt.value)
+      if (decoded.exp * 1000 < Date.now()) {
         handleError('TOKEN_EXPIRED', false)
         await refresh()
       }
     } catch (error) {
-      handleError('TOKEN_INVALID: No se pudo verificar el token', true, '/auth-error', 'query')
+      handleError('TOKEN_INVALID: Token verification failed', true, '/auth-error', 'query')
       await cleanStorage()
-      throw new Error('TOKEN_INVALID: No se pudo verificar el token')
+      throw new Error('TOKEN_INVALID: Token verification failed')
     }
   }
 
-  return {
-    jwt,
-    refresh_token,
-    tokenExpiry,
-    login,
-    refresh,
-    logout,
-    cleanStorage,
-    verifyToken
-  }
+  return { jwt, refresh_token, tokenExpiry, login, refresh, logout, cleanStorage, verifyToken }
 }

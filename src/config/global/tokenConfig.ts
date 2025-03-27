@@ -1,48 +1,56 @@
-let secretKey: string = '12345678901234567890123456789012'
+import { TokenConfig } from "@/types"
 
-interface TokenConfig {
-  readonly ACCESS_TOKEN: string
-  readonly REFRESH_TOKEN: string
-}
+let secretKey: string = "12345678901234567890123456789012";
 
 let tokenConfig: TokenConfig = Object.freeze({
-  ACCESS_TOKEN: 'authToken',
-  REFRESH_TOKEN: 'refreshToken',
-})
+  ACCESS_TOKEN: "authToken",
+  REFRESH_TOKEN: "refreshToken",
+});
 
 /**
- * Configura las claves globales para los tokens de acceso y refresh.
- * Una vez establecidas, no pueden ser modificadas.
- * @param accessTokenKey - Nombre de la clave del token de acceso.
- * @param refreshTokenKey - Nombre de la clave del refresh token.
+ * Configures the global keys for access and refresh tokens.
+ * Once set, they cannot be modified.
+ *
+ * @param {string} accessTokenKey - The name of the access token key.
+ * @param {string} refreshTokenKey - The name of the refresh token key.
+ *
+ * @returns {void} Does not return anything but freezes the token configuration object.
  */
-export function setTokenConfig(accessTokenKey: string, refreshTokenKey: string) {
+export function setTokenConfig(
+  accessTokenKey: string,
+  refreshTokenKey: string
+): void {
   tokenConfig = Object.freeze({
     ACCESS_TOKEN: accessTokenKey,
     REFRESH_TOKEN: refreshTokenKey,
-  })
+  });
 }
 
 /**
- * Obtiene la configuración actual de las claves de tokens.
- * @returns Configuración de los tokens.
+ * Retrieves the current token configuration.
+ *
+ * @returns {TokenConfig} The configuration of the access and refresh token keys.
  */
 export function getTokenConfig(): TokenConfig {
-  return tokenConfig
+  return tokenConfig;
 }
 
 /**
- * Establece la clave secreta para su uso en autenticación.
- * @param key - Nueva clave secreta.
+ * Sets the secret key for use in authentication.
+ *
+ * @param {string} key - The new secret key.
+ *
+ * @returns {void} Does not return anything, but updates the secret key.
  */
-export function setSecretKey(key: string) {
-  secretKey = key
+export function setSecretKey(key: string): void {
+  secretKey = key;
 }
 
 /**
- * Obtiene la clave secreta actual.
- * @returns Clave secreta configurada.
+ * Retrieves the current secret key.
+ *
+ * @returns {string} The configured secret key.
  */
 export function getSecretKey(): string {
-  return secretKey
+  return secretKey;
 }
