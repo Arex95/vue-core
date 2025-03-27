@@ -13,7 +13,9 @@
     "dist"
   ],
   "scripts": {
-    "build": "rollup -c"
+    "build": "rollup -c",
+    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
+    "release": "npm version patch && npm run changelog && git add CHANGELOG.md package.json package-lock.json && git commit -m 'chore(release): update changelog' && git push && npm publish"
   },
   "repository": {
     "type": "git",
@@ -43,6 +45,7 @@
     "@rollup/plugin-typescript": "^12.1.2",
     "@types/crypto-js": "^4.2.2",
     "@types/node": "^22.13.10",
+    "conventional-changelog-cli": "^5.0.0",
     "eslint": "^9.23.0",
     "eslint-plugin-vue": "^10.0.0",
     "globals": "^16.0.0",
