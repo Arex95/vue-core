@@ -15,7 +15,7 @@
   "scripts": {
     "build": "rollup -c",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
-    "release": "npm version patch && npm run changelog && git add CHANGELOG.md package.json package-lock.json && git commit -m 'chore(release): update changelog' && git push && npm publish"
+    "release": "npm version patch && npm run changelog && git add CHANGELOG.md package.json package-lock.json && git commit -m \"chore(release): update changelog\" && git push && npm publish"
   },
   "repository": {
     "type": "git",
