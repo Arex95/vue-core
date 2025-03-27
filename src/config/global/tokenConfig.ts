@@ -5,7 +5,7 @@ let secretKey: string = "12345678901234567890123456789012";
 let tokenConfig: TokenConfig = Object.freeze({
   ACCESS_TOKEN: "authToken",
   REFRESH_TOKEN: "refreshToken",
-});
+})
 
 /**
  * Configures the global keys for access and refresh tokens.
@@ -23,7 +23,7 @@ export function setTokenConfig(
   tokenConfig = Object.freeze({
     ACCESS_TOKEN: accessTokenKey,
     REFRESH_TOKEN: refreshTokenKey,
-  });
+  })
 }
 
 /**

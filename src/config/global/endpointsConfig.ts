@@ -4,7 +4,7 @@ let endpointsConfig: EndpointsConfig = {
   LOGIN: "/login",
   REFRESH: "/refresh",
   LOGOUT: "/logout",
-};
+}
 
 /**
  * Configures authentication endpoint URLs globally.
@@ -25,7 +25,7 @@ export function configureEndpoints(
     LOGIN: loginEndpoint,
     REFRESH: refreshEndpoint,
     LOGOUT: logoutEndpoint,
-  });
+  })
 }
 
 /**

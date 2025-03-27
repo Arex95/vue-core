@@ -5,7 +5,7 @@ let sessionId: string = uuidv4()
 
 let sessionConfig: SessionConfig = Object.freeze({
   SESSION_ID: sessionId,
-});
+})
 
 /**
  * Configures the session identifier for the active browser session.

@@ -5,7 +5,7 @@ import { getAxiosInstance } from '@config/axios'
 import { handleError } from '@utils/errors'
 import { getTokenConfig, getSecretKey } from '@config/global/tokenConfig'
 import { getEndpointsConfig } from '@config/global/endpointsConfig'
-import { AuthConfig } from "@/types";
+import { AuthConfig, TokenConfig } from "@/types";
 
 let axiosInstance = getAxiosInstance()
 const tokenConfig = getTokenConfig()
@@ -147,7 +147,7 @@ export function useAuth(secretKey = getSecretKey()) {
     if (!jwt.value) return null
     try {
       const decoded = jwtDecode(jwt.value)
-      return decoded.exp * 1000
+      return decoded.exp ? decoded.exp * 1000 : null
     } catch (error) {
       handleError(error, false)
       return null
@@ -202,7 +202,7 @@ export function useAuth(secretKey = getSecretKey()) {
    * Clears stored authentication data.
    */
   const cleanStorage = async () => {
-    Object.keys(config.storageKeys).forEach(key => {
+    (Object.keys(config.storageKeys) as (keyof TokenConfig)[]).forEach(key => {
       sessionStorage.removeItem(config.storageKeys[key])
       localStorage.removeItem(config.storageKeys[key])
     })
@@ -219,7 +219,7 @@ export function useAuth(secretKey = getSecretKey()) {
     }
     try {
       const decoded = jwtDecode(jwt.value)
-      if (decoded.exp * 1000 < Date.now()) {
+      if (decoded.exp ? decoded.exp * 1000 < Date.now() : false) {
         handleError('TOKEN_EXPIRED', false)
         await refresh()
       }
@@ -230,5 +230,14 @@ export function useAuth(secretKey = getSecretKey()) {
     }
   }
 
-  return { jwt, refresh_token, tokenExpiry, login, refresh, logout, cleanStorage, verifyToken }
+  return {
+    jwt,
+    refresh_token,
+    tokenExpiry,
+    login,
+    refresh,
+    logout,
+    cleanStorage,
+    verifyToken
+  }
 }
