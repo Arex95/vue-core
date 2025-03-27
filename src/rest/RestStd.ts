@@ -35,7 +35,7 @@ export class RestStd {
      * @param options Additional options for the fetch composable.
      * @returns The result of the fetch composable (typically a promise).
      */
-    static getMany<T>(params?: Record<string, any>, options: object = {}) {
+    static getAll<T>(params?: Record<string, any>, options: object = {}) {
         return this.fetchComposable({
             method: 'GET',
             url: this.resource,
