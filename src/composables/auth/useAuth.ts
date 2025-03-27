@@ -7,11 +7,11 @@ import { getTokenConfig, getSecretKey } from '@config/global/tokenConfig'
 import { getEndpointsConfig } from '@config/global/endpointsConfig'
 import { AuthConfig, TokenConfig } from "@/types";
 
-let axiosInstance = getAxiosInstance()
+const axiosInstance = getAxiosInstance()
 const tokenConfig = getTokenConfig()
 const endpointsConfig = getEndpointsConfig()
 
-let config: AuthConfig = {
+const config: AuthConfig = {
   endpoints: endpointsConfig,
   storageKeys: tokenConfig,
 }

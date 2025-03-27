@@ -31,21 +31,26 @@
     "@tanstack/vue-query": ">=5.0.0",
     "@vueuse/core": ">=12.8.2",
     "axios": ">=1.6.0",
+    "uuid": ">=11.1.0",
     "vue": ">=3.0.0",
-    "vue-router": ">=4.5.0",
-    "uuid": ">=11.1.0"
+    "vue-router": ">=4.5.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.23.0",
     "@rollup/plugin-commonjs": "^28.0.3",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.0",
     "@rollup/plugin-typescript": "^12.1.2",
     "@types/crypto-js": "^4.2.2",
     "@types/node": "^22.13.10",
+    "eslint": "^9.23.0",
+    "eslint-plugin-vue": "^10.0.0",
+    "globals": "^16.0.0",
     "rollup": "^4.35.0",
     "ts-node": "^10.9.2",
     "tslib": "^2.8.1",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.28.0"
   },
   "dependencies": {
     "@tanstack/vue-query": ">=5.0.0",
@@ -53,7 +58,7 @@
     "axios": ">=1.6.0",
     "crypto-js": "^4.2.0",
     "jwt-decode": "^4.0.0",
-    "uuid": "^11.1.0",
+    "uuid": ">=11.1.0",
     "vue": ">=3.0.0",
     "vue-router": ">=4.5.0"
   }
