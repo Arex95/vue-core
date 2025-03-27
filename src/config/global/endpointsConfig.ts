@@ -16,7 +16,7 @@ let endpointsConfig: EndpointsConfig = {
  *
  * @returns {void} Does not return anything but freezes the endpoint configuration object.
  */
-export function configureEndpoints(
+export function configEndpoints(
   loginEndpoint: string,
   refreshEndpoint: string,
   logoutEndpoint: string

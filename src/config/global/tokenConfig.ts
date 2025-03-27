@@ -16,7 +16,7 @@ let tokenConfig: TokenConfig = Object.freeze({
  *
  * @returns {void} Does not return anything but freezes the token configuration object.
  */
-export function setTokenConfig(
+export function configTokens(
   accessTokenKey: string,
   refreshTokenKey: string
 ): void {

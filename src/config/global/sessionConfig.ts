@@ -15,7 +15,7 @@ let sessionConfig: SessionConfig = Object.freeze({
  *
  * @returns {void} Does not return anything, but freezes the session configuration.
  */
-export function setSessionConfig(sessionIdParam: string): void {
+export function configSession(sessionIdParam: string): void {
   sessionConfig = Object.freeze({
     SESSION_ID: sessionIdParam,
   })
@@ -37,7 +37,7 @@ export function getSessionConfig(): string {
  */
 export function regenerateSessionId(): void {
   sessionId = uuidv4()
-  setSessionConfig(sessionId)
+  configSession(sessionId);
 }
 
 /**
