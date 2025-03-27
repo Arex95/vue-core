@@ -12,7 +12,7 @@
       "@/*": ["src/*"],
       "@composables/*": ["src/composables/*"],
       "@config/*": ["src/config/*"],
-      "@constants/*": ["src/constants/*"],
+      "@constants/*": ["src/enums/*"],
       "@rest/*": ["src/rest/*"],
       "@types/*": ["src/types/*"],
       "@utils/*": ["src/utils/*"]

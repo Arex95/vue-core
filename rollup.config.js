@@ -8,6 +8,6 @@ export default {
       format: 'esm'
     }
   ],
-  external: ['vue', 'axios', '@tanstack/vue-query', '@vueuse/core'],
+  external: ['vue', 'vue-router', 'axios', '@tanstack/vue-query', '@vueuse/core'],
   plugins: [typescript()]
 }

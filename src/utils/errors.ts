@@ -1,6 +1,6 @@
 import { useRouter } from 'vue-router'
 import { ErrorType, ErrorPassMethod } from '@/types'
-import { ERROR_MESSAGES, ERROR_STYLES } from '@/constants'
+import { ERROR_MESSAGES, ERROR_STYLES } from '@/enums'
 
 /**
  * Maneja y registra errores en la consola, además de permitir redirecciones configurables.
