@@ -1,4 +1,35 @@
-# 1.1.0 (2025-03-27)
+## [1.1.5](https://github.com/Arex95/npm-arex-core/compare/v1.1.4...v1.1.5) (2025-06-11)
+
+
+### Bug Fixes
+
+* rename tokenConfig to tokensConfig and update related imports; add isAuthenticated computed property ([40543a7](https://github.com/Arex95/npm-arex-core/commit/40543a75afbb02a811b0aac8d9bfcfd919de7c91))
+
+
+
+## [1.1.4](https://github.com/Arex95/npm-arex-core/compare/v1.1.3...v1.1.4) (2025-03-27)
+
+
+### Bug Fixes
+
+* update npm publish command to include public access ([200bd08](https://github.com/Arex95/npm-arex-core/commit/200bd0811ae1e7b9837d0d056b1bde903791cf87))
+
+
+
+## [1.1.3](https://github.com/Arex95/npm-arex-core/compare/v1.1.2...v1.1.3) (2025-03-27)
+
+
+
+## [1.1.2](https://github.com/Arex95/npm-arex-core/compare/v1.1.1...v1.1.2) (2025-03-27)
+
+
+### Bug Fixes
+
+* correct quotation marks in release script for consistency ([b6c29d6](https://github.com/Arex95/npm-arex-core/commit/b6c29d6b6e381f4bbf7e5a89dfcd0d09aa7e516d))
+
+
+
+## [1.1.1](https://github.com/Arex95/npm-arex-core/compare/4810753807f85f957c589abcbdd03b1b09eaee06...v1.1.1) (2025-03-27)
 
 
 ### Bug Fixes
@@ -8,6 +39,7 @@
 
 ### Features
 
+* add changelog and release scripts to automate versioning and documentation ([02ea2bb](https://github.com/Arex95/npm-arex-core/commit/02ea2bb188259bd41dacf14ef8e90d20ca113ae0))
 * add configuration types for session, token, and endpoints ([769d7f1](https://github.com/Arex95/npm-arex-core/commit/769d7f10fc07788a95d2f85e7da6f46783da31ee))
 * add ESLint configuration and update dependencies for improved code quality ([14b7602](https://github.com/Arex95/npm-arex-core/commit/14b7602197a148a1b973f5d02a03a83bafd19d14))
 * add global headers and data transformation for REST API form data requests ([4810753](https://github.com/Arex95/npm-arex-core/commit/4810753807f85f957c589abcbdd03b1b09eaee06))
