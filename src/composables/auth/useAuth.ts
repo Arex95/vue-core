@@ -3,17 +3,17 @@ import { computed } from 'vue'
 import { jwtDecode } from 'jwt-decode'
 import { getAxiosInstance } from '@config/axios'
 import { handleError } from '@utils/errors'
-import { getTokenConfig, getSecretKey } from '@config/global/tokenConfig'
+import { getTokenConfig, getSecretKey } from '@/config/global/tokensConfig'
 import { getEndpointsConfig } from '@config/global/endpointsConfig'
-import { AuthConfig, TokenConfig } from "@/types";
+import { AuthConfig, TokensConfig } from "@/types";
 
 const axiosInstance = getAxiosInstance()
-const tokenConfig = getTokenConfig()
+const tokensConfig = getTokenConfig()
 const endpointsConfig = getEndpointsConfig()
 
 const config: AuthConfig = {
   endpoints: endpointsConfig,
-  storageKeys: tokenConfig,
+  storageKeys: tokensConfig,
 }
 
 /**
@@ -155,6 +155,19 @@ export function useAuth(secretKey = getSecretKey()) {
   })
 
   /**
+   * Checks if the user is authenticated.
+   */
+  const isAuthenticated = computed(() => {
+    if (!jwt.value || jwt.value.length === 0) {
+      return false
+    }
+    if (tokenExpiry.value === null) {
+      return false
+    }
+    return tokenExpiry.value > Date.now()
+  })
+
+  /**
    * Handles user login.
    */
   const login = async (params = {}, isRememberMe: boolean) => {
@@ -202,7 +215,7 @@ export function useAuth(secretKey = getSecretKey()) {
    * Clears stored authentication data.
    */
   const cleanStorage = async () => {
-    (Object.keys(config.storageKeys) as (keyof TokenConfig)[]).forEach(key => {
+    (Object.keys(config.storageKeys) as (keyof TokensConfig)[]).forEach(key => {
       sessionStorage.removeItem(config.storageKeys[key])
       localStorage.removeItem(config.storageKeys[key])
     })
@@ -231,6 +244,7 @@ export function useAuth(secretKey = getSecretKey()) {
   }
 
   return {
+    isAuthenticated,
     jwt,
     refresh_token,
     tokenExpiry,

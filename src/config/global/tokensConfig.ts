@@ -1,8 +1,8 @@
-import { TokenConfig } from "@/types"
+import { TokensConfig } from "@/types"
 
 let secretKey: string = "12345678901234567890123456789012";
 
-let tokenConfig: TokenConfig = Object.freeze({
+let tokensConfig: TokensConfig = Object.freeze({
   ACCESS_TOKEN: "authToken",
   REFRESH_TOKEN: "refreshToken",
 })
@@ -16,11 +16,11 @@ let tokenConfig: TokenConfig = Object.freeze({
  *
  * @returns {void} Does not return anything but freezes the token configuration object.
  */
-export function configTokens(
+export function configTokenKeys(
   accessTokenKey: string,
   refreshTokenKey: string
 ): void {
-  tokenConfig = Object.freeze({
+  tokensConfig = Object.freeze({
     ACCESS_TOKEN: accessTokenKey,
     REFRESH_TOKEN: refreshTokenKey,
   })
@@ -29,10 +29,10 @@ export function configTokens(
 /**
  * Retrieves the current token configuration.
  *
- * @returns {TokenConfig} The configuration of the access and refresh token keys.
+ * @returns {TokensConfig} The configuration of the access and refresh token keys.
  */
-export function getTokenConfig(): TokenConfig {
-  return tokenConfig;
+export function getTokenConfig(): TokensConfig {
+  return tokensConfig;
 }
 
 /**
