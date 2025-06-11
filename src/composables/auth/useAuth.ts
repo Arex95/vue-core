@@ -231,15 +231,19 @@ export function useAuth(secretKey = getSecretKey()) {
       throw new Error('TOKEN_MISSING: No valid token found')
     }
     try {
-      const decoded = jwtDecode(jwt.value)
+      const decoded = jwtDecode(jwt.value);
       if (decoded.exp ? decoded.exp * 1000 < Date.now() : false) {
-        handleError('TOKEN_EXPIRED', false)
-        await refresh()
+        handleError("TOKEN_EXPIRED", false);
+        await refresh();
       }
-    } catch (error) {
-      handleError('TOKEN_INVALID: Token verification failed', true, '/auth-error', 'query')
-      await cleanStorage()
-      throw new Error('TOKEN_INVALID: Token verification failed')
+    } catch (error: unknown) {
+      let errorMessage = "TOKEN_INVALID: Token verification failed";
+      if (error instanceof Error) {
+        errorMessage = `${errorMessage} - ${error.message}`;
+      }
+      handleError(errorMessage, true, "/auth-error", "query");
+      await cleanStorage();
+      throw new Error(errorMessage);
     }
   }
 
