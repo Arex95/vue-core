@@ -1,3 +1,12 @@
+## [1.1.10](https://github.com/Arex95/npm-arex-core/compare/v1.1.9...v1.1.10) (2025-06-11)
+
+
+### Bug Fixes
+
+* **auth:** enhance error handling in useAuth for token verification ([9750cf8](https://github.com/Arex95/npm-arex-core/commit/9750cf829d87dd618ecb39e5ae568c835b9ec643))
+
+
+
 ## [1.1.9](https://github.com/Arex95/npm-arex-core/compare/v1.1.8...v1.1.9) (2025-06-11)
 
 
