@@ -1,6 +1,6 @@
-import { TokenConfig, EndpointsConfig } from "@/types";
+import { TokensConfig, EndpointsConfig } from "@/types";
 
 export type AuthConfig = {
   endpoints: EndpointsConfig;
-  storageKeys: TokenConfig;
+  storageKeys: TokensConfig;
 }
