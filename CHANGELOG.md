@@ -1,3 +1,12 @@
+## [1.1.11](https://github.com/Arex95/npm-arex-core/compare/v1.1.10...v1.1.11) (2025-06-11)
+
+
+### Bug Fixes
+
+* **auth:** correct type import for storageKeys in AuthConfig ([244cd78](https://github.com/Arex95/npm-arex-core/commit/244cd787863a9df57518a1737cd770827d0d5d98))
+
+
+
 ## [1.1.10](https://github.com/Arex95/npm-arex-core/compare/v1.1.9...v1.1.10) (2025-06-11)
 
 
