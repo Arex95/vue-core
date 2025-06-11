@@ -1,5 +1,5 @@
 import { breakpointsTailwind, useBreakpoints, useWindowSize } from '@vueuse/core';
-import { ref, onUnmounted, watch } from 'vue';
+import { ref, watch } from 'vue';
 
 let notified = false;
 /**
@@ -7,7 +7,7 @@ let notified = false;
  *
  * @returns {Object} An object containing the breakpoints and their states.
  */
-export default function useBreakpoint() {
+export function useBreakpoint() {
     const breakpoints = useBreakpoints(breakpointsTailwind);
 
     const current = breakpoints.current();

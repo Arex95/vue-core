@@ -1,3 +1,5 @@
+import { computed } from "vue";
+
 /**
  * A composable function that filters objects based on a specific field and criteria.
  *
@@ -9,7 +11,7 @@
  *
  * @returns {Object[]} - The filtered list of objects.
  */
-export default function useFilter<T extends Record<string, any>>(
+export function useFilter<T extends Record<string, any>>(
     items: T[],
     filterConfig: {
         field: string;

@@ -1,11 +1,22 @@
 {
   "compilerOptions": {
     "target": "ESNext",
+    "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
     "moduleResolution": "Node",
     "declaration": true,
     "outDir": "dist",
-    "strict": true
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@composables/*": ["src/composables/*"],
+      "@config/*": ["src/config/*"],
+      "@constants/*": ["src/enums/*"],
+      "@rest/*": ["src/rest/*"],
+      "@types/*": ["src/types/*"],
+      "@utils/*": ["src/utils/*"]
+    }
   },
   "include": [
     "src"
