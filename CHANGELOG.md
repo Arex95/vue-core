@@ -1,3 +1,25 @@
+## [1.1.8](https://github.com/Arex95/npm-arex-core/compare/v1.1.7...v1.1.8) (2025-06-11)
+
+
+### Bug Fixes
+
+* update changelog script to output to CHANGELOG.md and reset versioning ([ca2b873](https://github.com/Arex95/npm-arex-core/commit/ca2b87305b87c60c66a746fb8bd2a2c4cf572ab8))
+
+
+
+## [1.1.7](https://github.com/Arex95/npm-arex-core/compare/v1.1.6...v1.1.7) (2025-06-11)
+
+
+### Features
+
+* add auth exports to composables and ensure sorters are included ([9f0b9a5](https://github.com/Arex95/npm-arex-core/commit/9f0b9a5584bee7efce9b65b1eed7068f4ac7599d))
+
+
+
+## [1.1.6](https://github.com/Arex95/npm-arex-core/compare/v1.1.5...v1.1.6) (2025-06-11)
+
+
+
 ## [1.1.5](https://github.com/Arex95/npm-arex-core/compare/v1.1.4...v1.1.5) (2025-06-11)
 
 
