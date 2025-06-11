@@ -7,7 +7,7 @@ import axios, {
 } from 'axios'
 
 import { handleError } from '@utils/errors'
-import { getTokenConfig } from '@config/global/tokenConfig'
+import { getTokenConfig } from '@/config/global/tokensConfig'
 import { getEndpointsConfig } from '@config/global/endpointsConfig'
 
 /**
