@@ -1,39 +1,41 @@
-let endpointsConfig = {
-    LOGIN: '/login',
-    REFRESH: '/refresh',
-    LOGOUT: '/logout',
+import { EndpointsConfig } from "@/types"
+
+let endpointsConfig: EndpointsConfig = {
+  LOGIN: "/login",
+  REFRESH: "/refresh",
+  LOGOUT: "/logout",
 }
 
 /**
- * Configura las URLs de los endpoints de autenticación globalmente.
- * Esta función congela el objeto para evitar modificaciones posteriores.
- * 
- * @param {string} loginEndpoint - URL del endpoint para el login.
- * @param {string} refreshEndpoint - URL del endpoint para el refresh token.
- * @param {string} logoutEndpoint - URL del endpoint para el logout.
- * 
- * @returns {void} No retorna nada, pero congela el objeto de configuración de endpoints.
+ * Configures authentication endpoint URLs globally.
+ * This function freezes the object to prevent further modifications.
+ *
+ * @param {string} loginEndpoint - URL of the login endpoint.
+ * @param {string} refreshEndpoint - URL of the refresh token endpoint.
+ * @param {string} logoutEndpoint - URL of the logout endpoint.
+ *
+ * @returns {void} Does not return anything but freezes the endpoint configuration object.
  */
-export function configureEndpoints(
-    loginEndpoint: string, 
-    refreshEndpoint: string, 
-    logoutEndpoint: string
+export function configEndpoints(
+  loginEndpoint: string,
+  refreshEndpoint: string,
+  logoutEndpoint: string
 ): void {
-    endpointsConfig = Object.freeze({
-        LOGIN: loginEndpoint,
-        REFRESH: refreshEndpoint,
-        LOGOUT: logoutEndpoint,
-    })
+  endpointsConfig = Object.freeze({
+    LOGIN: loginEndpoint,
+    REFRESH: refreshEndpoint,
+    LOGOUT: logoutEndpoint,
+  })
 }
 
 /**
- * Obtiene las URLs de los endpoints de autenticación configurados.
- * 
- * @returns {Object} Objeto con las URLs de los endpoints configurados.
- * @returns {string} returns.LOGIN - URL del endpoint de login.
- * @returns {string} returns.REFRESH - URL del endpoint de refresh token.
- * @returns {string} returns.LOGOUT - URL del endpoint de logout.
+ * Retrieves the configured authentication endpoint URLs.
+ *
+ * @returns {EndpointsConfig} An object containing the configured authentication endpoints.
+ * @property {string} LOGIN - URL of the login endpoint.
+ * @property {string} REFRESH - URL of the refresh token endpoint.
+ * @property {string} LOGOUT - URL of the logout endpoint.
  */
-export function getEndpointsConfig() {
-    return endpointsConfig
+export function getEndpointsConfig(): EndpointsConfig {
+  return endpointsConfig;
 }

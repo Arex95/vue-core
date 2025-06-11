@@ -1,6 +1,6 @@
 {
   "name": "@arex95/vue-core",
-  "version": "1.0.8",
+  "version": "1.1.9",
   "description": "Opinionated Vue Core",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -13,7 +13,9 @@
     "dist"
   ],
   "scripts": {
-    "build": "rollup -c"
+    "build": "rollup -c",
+    "changelog": "conventional-changelog -p angular -o CHANGELOG.md -r 0",
+    "release": "npm version patch && npm run changelog && git add CHANGELOG.md package.json package-lock.json && git commit -m \"chore(release): update changelog\" && git push && npm publish --access public"
   },
   "repository": {
     "type": "git",
@@ -31,28 +33,36 @@
     "@tanstack/vue-query": ">=5.0.0",
     "@vueuse/core": ">=12.8.2",
     "axios": ">=1.6.0",
+    "uuid": ">=11.1.0",
     "vue": ">=3.0.0",
     "vue-router": ">=4.5.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.23.0",
     "@rollup/plugin-commonjs": "^28.0.3",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.0",
     "@rollup/plugin-typescript": "^12.1.2",
     "@types/crypto-js": "^4.2.2",
     "@types/node": "^22.13.10",
+    "conventional-changelog-cli": "^5.0.0",
+    "eslint": "^9.23.0",
+    "eslint-plugin-vue": "^10.0.0",
+    "globals": "^16.0.0",
     "rollup": "^4.35.0",
     "ts-node": "^10.9.2",
     "tslib": "^2.8.1",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.28.0"
   },
   "dependencies": {
-    "crypto-js": "^4.2.0",
-    "jwt-decode": "^4.0.0",
-    "vue-router": ">=4.5.0",
     "@tanstack/vue-query": ">=5.0.0",
     "@vueuse/core": ">=12.8.2",
     "axios": ">=1.6.0",
-    "vue": ">=3.0.0"
+    "crypto-js": "^4.2.0",
+    "jwt-decode": "^4.0.0",
+    "uuid": ">=11.1.0",
+    "vue": ">=3.0.0",
+    "vue-router": ">=4.5.0"
   }
 }

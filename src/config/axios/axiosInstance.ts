@@ -7,7 +7,7 @@ let axiosInstance: AxiosService;
  * Configures the global Axios instance with a base URL.
  * @param {string} baseURL - The base URL for the Axios instance.
  */
-export const configureAxios = (baseURL: string): void => {
+export const configAxios = (baseURL: string): void => {
   axiosInstance = new AxiosService(baseURL);
 };
 
