@@ -1,20 +1,20 @@
-import * as CryptoJS from 'crypto-js'
-import { computed } from 'vue'
-import { jwtDecode } from 'jwt-decode'
-import { getAxiosInstance } from '@config/axios'
-import { handleError } from '@utils/errors'
-import { getTokenConfig, getSecretKey } from '@/config/global/tokensConfig'
-import { getEndpointsConfig } from '@config/global/endpointsConfig'
+import { computed } from "vue";
+import { jwtDecode } from "jwt-decode";
+import { getAxiosInstance } from "@config/axios";
+import { handleError } from "@utils/errors";
+import { getTokenConfig, getSecretKey } from "@/config/global/tokensConfig";
+import { getEndpointsConfig } from "@config/global/endpointsConfig";
 import { AuthConfig, TokensConfig } from "@/types";
+import { computedAsync } from "@vueuse/core";
 
-const axiosInstance = getAxiosInstance()
-const tokensConfig = getTokenConfig()
-const endpointsConfig = getEndpointsConfig()
+const axiosInstance = getAxiosInstance();
+const tokensConfig = getTokenConfig();
+const endpointsConfig = getEndpointsConfig();
 
 const config: AuthConfig = {
   endpoints: endpointsConfig,
   storageKeys: tokensConfig,
-}
+};
 
 /**
  * Configures authentication settings globally.
@@ -26,57 +26,109 @@ const config: AuthConfig = {
  */
 export function configureAuth(options: AuthConfig) {
   if (options.endpoints) {
-    config.endpoints = { ...config.endpoints, ...options.endpoints }
+    config.endpoints = { ...config.endpoints, ...options.endpoints };
   }
   if (options.storageKeys) {
-    config.storageKeys = { ...config.storageKeys, ...options.storageKeys }
+    config.storageKeys = { ...config.storageKeys, ...options.storageKeys };
   }
 }
 
-/**
- * Encrypts a value using AES encryption.
- *
- * @param {string} value - The value to encrypt.
- * @param {string} key - The encryption key.
- * @returns {string} The encrypted string.
- */
-const encrypt = (value: string, key: string) => {
-  return CryptoJS.AES.encrypt(value, key).toString()
+function ab2hex(buffer: Uint8Array): string {
+  return Array.from(buffer)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function hex2ab(hex: string): Uint8Array {
+  return new Uint8Array(
+    hex.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16))
+  );
+}
+
+async function importKey(secretKey: string): Promise<CryptoKey> {
+  const encoder = new TextEncoder();
+  const keyMaterial = await crypto.subtle.digest(
+    "SHA-256",
+    encoder.encode(secretKey)
+  );
+  return await crypto.subtle.importKey(
+    "raw",
+    keyMaterial,
+    { name: "AES-CBC", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
 }
 
 /**
- * Decrypts an AES encrypted value.
+ * Encrypts a value using AES-256 CBC encryption with Web Cryptography API.
+ * The IV is generated randomly for each encryption and prepended to the ciphertext.
  *
- * @param {string} value - The encrypted value.
- * @param {string} key - The encryption key.
- * @returns {string} The decrypted string.
+ * @param {string} value - The value to encrypt.
+ * @param {string} secretKey - The encryption key string.
+ * @returns {Promise<string>} A promise that resolves to the encrypted string (hex IV + hex ciphertext).
  */
-const decrypt = (value: string, key: string) => {
-  const bytes = CryptoJS.AES.decrypt(value, key);
-  return bytes.toString(CryptoJS.enc.Utf8);
+const encrypt = async (value: string, secretKey: string): Promise<string> => {
+  const key = await importKey(secretKey);
+  const textEncoder = new TextEncoder();
+  const data = textEncoder.encode(value);
+  const iv = crypto.getRandomValues(new Uint8Array(16));
+
+  const encryptedContentBuffer = await crypto.subtle.encrypt(
+    { name: "AES-CBC", iv: iv },
+    key,
+    data
+  );
+
+  const encryptedContentUint8 = new Uint8Array(encryptedContentBuffer);
+
+  return ab2hex(iv) + ab2hex(encryptedContentUint8);
+};
+
+/**
+ * Decrypts an AES-256 CBC encrypted value using Web Cryptography API.
+ * The IV is extracted from the beginning of the encrypted string.
+ *
+ * @param {string} value - The encrypted string (hex IV + hex ciphertext).
+ * @param {string} secretKey - The decryption key string.
+ * @returns {Promise<string>} A promise that resolves to the decrypted string.
+ */
+const decrypt = async (value: string, secretKey: string): Promise<string> => {
+  const key = await importKey(secretKey);
+  const iv = hex2ab(value.substring(0, 32));
+  const encryptedData = hex2ab(value.substring(32));
+
+  const decryptedContent = await crypto.subtle.decrypt(
+    { name: "AES-CBC", iv: iv },
+    key,
+    encryptedData
+  );
+
+  return new TextDecoder().decode(decryptedContent);
 };
 
 /**
  * Stores an encrypted value in sessionStorage or localStorage.
  *
  * @param {string} key - Storage key.
- * @param {any} value - Value to store.
+ * @param {string} value - Value to store.
  * @param {string} secretKey - Encryption key.
  * @param {boolean} isRememberMe - Whether to store in localStorage.
  * @param {number} [attempt=0] - Retry attempt count.
- * @returns {Promise<void>} 
+ * @returns {Promise<void>}
  */
 const storeEncryptedItem = async (
-  value: string,
   key: string,
+  value: string,
   secretKey: string,
   isRememberMe: boolean,
   attempt: number = 0
-) => {
+): Promise<void> => {
   const storage = isRememberMe ? localStorage : sessionStorage;
   if (typeof window !== "undefined" && storage) {
     try {
-      storage.setItem(key, encrypt(value, secretKey));
+      const encryptedValue = await encrypt(value, secretKey);
+      storage.setItem(key, encryptedValue);
       return;
     } catch (error) {
       handleError(error, false);
@@ -117,16 +169,21 @@ const storeEncryptedItem = async (
  * @param {string} key - Storage key.
  * @param {string} secretKey - Decryption key.
  * @param {boolean} isRememberMe - Whether to retrieve from localStorage.
- * @returns {string|null} The decrypted value or null.
+ * @returns {Promise<string|null>} The decrypted value or null.
  */
-function getDecryptedValue(key: string, secretKey: string, isRememberMe: boolean) {
-  const storage = isRememberMe ? localStorage : sessionStorage
+async function getDecryptedValue(
+  key: string,
+  secretKey: string,
+  isRememberMe: boolean
+): Promise<string | null> {
+  const storage = isRememberMe ? localStorage : sessionStorage;
   try {
-    const value = storage.getItem(key)
-    return value ? decrypt(value, secretKey) : null
+    const value = storage.getItem(key);
+    if (!value) return null;
+    return await decrypt(value, secretKey);
   } catch (error) {
-    handleError(error, false)
-    return null
+    handleError(error, false);
+    return null;
   }
 }
 
@@ -137,98 +194,141 @@ function getDecryptedValue(key: string, secretKey: string, isRememberMe: boolean
  * @returns {Object} Auth composable methods and properties.
  */
 export function useAuth(secretKey = getSecretKey()) {
-  const jwt = computed(() => getDecryptedValue(config.storageKeys.ACCESS_TOKEN, secretKey, false))
-  const refresh_token = computed(() => getDecryptedValue(config.storageKeys.REFRESH_TOKEN, secretKey, false))
+  const jwt = computedAsync(
+    async () =>
+      await getDecryptedValue(
+        config.storageKeys.ACCESS_TOKEN,
+        secretKey,
+        false
+      ),
+    null
+  );
+  const refresh_token = computedAsync(
+    async () =>
+      await getDecryptedValue(
+        config.storageKeys.REFRESH_TOKEN,
+        secretKey,
+        false
+      ),
+    null
+  );
 
   /**
    * Computes token expiration timestamp.
    */
   const tokenExpiry = computed(() => {
-    if (!jwt.value) return null
+    if (!jwt.value) return null;
     try {
-      const decoded = jwtDecode(jwt.value)
-      return decoded.exp ? decoded.exp * 1000 : null
+      const decoded = jwtDecode(jwt.value);
+      return decoded.exp ? decoded.exp * 1000 : null;
     } catch (error) {
-      handleError(error, false)
-      return null
+      handleError(error, false);
+      return null;
     }
-  })
+  });
 
   /**
    * Checks if the user is authenticated.
    */
   const isAuthenticated = computed(() => {
     if (!jwt.value || jwt.value.length === 0) {
-      return false
+      return false;
     }
     if (tokenExpiry.value === null) {
-      return false
+      return false;
     }
-    return tokenExpiry.value > Date.now()
-  })
+    return tokenExpiry.value > Date.now();
+  });
 
   /**
    * Handles user login.
    */
   const login = async (params = {}, isRememberMe: boolean) => {
     try {
-      const response = await axiosInstance.post(config.endpoints.LOGIN, params)
-      await storeEncryptedItem(config.storageKeys.ACCESS_TOKEN, response.data.token, secretKey, isRememberMe)
-      await storeEncryptedItem(config.storageKeys.REFRESH_TOKEN, response.data.refresh_token, secretKey, isRememberMe)
-      return response
+      const response = await axiosInstance.post(config.endpoints.LOGIN, params);
+      await storeEncryptedItem(
+        config.storageKeys.ACCESS_TOKEN,
+        response.data.token,
+        secretKey,
+        isRememberMe
+      );
+      await storeEncryptedItem(
+        config.storageKeys.REFRESH_TOKEN,
+        response.data.refresh_token,
+        secretKey,
+        isRememberMe
+      );
+      return response;
     } catch (error) {
-      handleError(error, false)
-      throw error
+      handleError(error, false);
+      throw error;
     }
-  }
+  };
 
   /**
    * Refreshes authentication token.
    */
   const refresh = async () => {
     try {
-      const response = await axiosInstance.post(config.endpoints.REFRESH, {})
-      await storeEncryptedItem(config.storageKeys.ACCESS_TOKEN, response.data.token, secretKey, false)
-      await storeEncryptedItem(config.storageKeys.REFRESH_TOKEN, response.data.refresh_token, secretKey, false)
-      return response
+      const response = await axiosInstance.post(config.endpoints.REFRESH, {});
+      await storeEncryptedItem(
+        config.storageKeys.ACCESS_TOKEN,
+        response.data.token,
+        secretKey,
+        false
+      );
+      await storeEncryptedItem(
+        config.storageKeys.REFRESH_TOKEN,
+        response.data.refresh_token,
+        secretKey,
+        false
+      );
+      return response;
     } catch (error) {
-      handleError(error, false)
-      await logout()
+      handleError(error, false);
+      await logout();
     }
-  }
+  };
 
   /**
    * Logs out the user.
    */
   const logout = async (params = {}) => {
     try {
-      await axiosInstance.post(config.endpoints.LOGOUT, params)
+      await axiosInstance.post(config.endpoints.LOGOUT, params);
     } catch (error) {
-      handleError(error, false)
+      handleError(error, false);
     } finally {
-      await cleanStorage()
-      location.reload()
+      await cleanStorage();
+      location.reload();
     }
-  }
+  };
 
   /**
    * Clears stored authentication data.
    */
   const cleanStorage = async () => {
-    (Object.keys(config.storageKeys) as (keyof TokensConfig)[]).forEach(key => {
-      sessionStorage.removeItem(config.storageKeys[key])
-      localStorage.removeItem(config.storageKeys[key])
-    })
-  }
+    (Object.keys(config.storageKeys) as (keyof TokensConfig)[]).forEach(
+      (key) => {
+        sessionStorage.removeItem(config.storageKeys[key]);
+        localStorage.removeItem(config.storageKeys[key]);
+      }
+    );
+  };
 
   /**
    * Verifies token validity.
    */
   const verifyToken = async () => {
     if (!jwt.value) {
-      handleError('TOKEN_MISSING: No valid token found', true, '/auth-error', 'query')
-      await cleanStorage()
-      throw new Error('TOKEN_MISSING: No valid token found')
+      handleError(
+        "TOKEN_MISSING: No valid token found",
+        true,
+        "/auth-error",
+        "query"
+      );
+      await cleanStorage();
+      throw new Error("TOKEN_MISSING: No valid token found");
     }
     try {
       const decoded = jwtDecode(jwt.value);
@@ -245,7 +345,7 @@ export function useAuth(secretKey = getSecretKey()) {
       await cleanStorage();
       throw new Error(errorMessage);
     }
-  }
+  };
 
   return {
     isAuthenticated,
@@ -256,6 +356,6 @@ export function useAuth(secretKey = getSecretKey()) {
     refresh,
     logout,
     cleanStorage,
-    verifyToken
-  }
+    verifyToken,
+  };
 }
