@@ -1,6 +1,6 @@
 {
   "name": "@arex95/vue-core",
-  "version": "1.1.16",
+  "version": "1.1.17",
   "description": "Opinionated Vue Core",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -16,9 +16,9 @@
     "build": "rollup -c",
     "changelog": "conventional-changelog -p angular -o CHANGELOG.md -r 0",
     "release": "npm version patch && npm run changelog && git add CHANGELOG.md package.json package-lock.json && git commit -m \"chore(release): update changelog\" && git push && npm publish --access public",
-    "test": "vitest",           
-    "test:watch": "vitest --watch", 
-    "test:ui": "vitest --ui"  
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:ui": "vitest --ui"
   },
   "repository": {
     "type": "git",
