@@ -1,3 +1,12 @@
+## [1.1.13](https://github.com/Arex95/npm-arex-core/compare/v1.1.12...v1.1.13) (2025-06-12)
+
+
+### Bug Fixes
+
+* **auth:** restore axios instance initialization in useAuth function ([e4e14e8](https://github.com/Arex95/npm-arex-core/commit/e4e14e84c60c70572a8e2bc5f322c78c0d8b5484))
+
+
+
 ## [1.1.12](https://github.com/Arex95/npm-arex-core/compare/v1.1.11...v1.1.12) (2025-06-12)
 
 
