@@ -242,6 +242,8 @@ export function useAuth(secretKey = getSecretKey()) {
         secretKey,
         isRememberMe
       );
+
+      await jwt.value;
       return response;
     } catch (error) {
       handleError(error, false);
