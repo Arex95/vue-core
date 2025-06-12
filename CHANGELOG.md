@@ -1,3 +1,12 @@
+## [1.1.15](https://github.com/Arex95/npm-arex-core/compare/v1.1.14...v1.1.15) (2025-06-12)
+
+
+### Bug Fixes
+
+* **auth:** ensure JWT promise resolves before returning response ([b7f73ca](https://github.com/Arex95/npm-arex-core/commit/b7f73ca6878a4244392ac2814e7daf699418960d))
+
+
+
 ## [1.1.14](https://github.com/Arex95/npm-arex-core/compare/v1.1.13...v1.1.14) (2025-06-12)
 
 
