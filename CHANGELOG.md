@@ -1,3 +1,12 @@
+## [1.1.17](https://github.com/Arex95/npm-arex-core/compare/v1.1.16...v1.1.17) (2025-06-12)
+
+
+### Features
+
+* **auth:** add encryption utilities and tests ([b935dc7](https://github.com/Arex95/npm-arex-core/commit/b935dc736a5973a12c6e044db8ae39d15a034fe3))
+
+
+
 ## [1.1.16](https://github.com/Arex95/npm-arex-core/compare/v1.1.15...v1.1.16) (2025-06-12)
 
 
