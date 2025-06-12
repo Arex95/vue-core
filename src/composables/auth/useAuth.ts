@@ -7,31 +7,6 @@ import { getEndpointsConfig } from "@config/global/endpointsConfig";
 import { AuthConfig, TokensConfig } from "@/types";
 import { computedAsync } from "@vueuse/core";
 
-const tokensConfig = getTokenConfig();
-const endpointsConfig = getEndpointsConfig();
-
-const config: AuthConfig = {
-  endpoints: endpointsConfig,
-  storageKeys: tokensConfig,
-};
-
-/**
- * Configures authentication settings globally.
- * Allows modifying default endpoints and storage keys.
- *
- * @param {Object} options - Custom configuration options.
- * @param {Object} [options.endpoints] - Custom endpoints for login, refresh, and logout.
- * @param {Object} [options.storageKeys] - Custom storage keys for tokens.
- */
-export function configureAuth(options: AuthConfig) {
-  if (options.endpoints) {
-    config.endpoints = { ...config.endpoints, ...options.endpoints };
-  }
-  if (options.storageKeys) {
-    config.storageKeys = { ...config.storageKeys, ...options.storageKeys };
-  }
-}
-
 function ab2hex(buffer: Uint8Array): string {
   return Array.from(buffer)
     .map((b) => b.toString(16).padStart(2, "0"))
@@ -195,6 +170,13 @@ async function getDecryptedValue(
 export function useAuth(secretKey = getSecretKey()) {
 
   const axiosInstance = getAxiosInstance();
+  const tokensConfig = getTokenConfig();
+  const endpointsConfig = getEndpointsConfig();
+
+  const config: AuthConfig = {
+    endpoints: endpointsConfig,
+    storageKeys: tokensConfig,
+  };
   
   const jwt = computedAsync(
     async () =>
@@ -250,7 +232,7 @@ export function useAuth(secretKey = getSecretKey()) {
       const response = await axiosInstance.post(config.endpoints.LOGIN, params);
       await storeEncryptedItem(
         config.storageKeys.ACCESS_TOKEN,
-        response.data.token,
+        response.data.access_token,
         secretKey,
         isRememberMe
       );
