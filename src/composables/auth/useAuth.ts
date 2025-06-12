@@ -1,7 +1,7 @@
 import { jwtDecode } from "jwt-decode";
 import { getAxiosInstance } from "@config/axios";
 import { handleError } from "@utils/errors";
-import { getTokenConfig, getSecretKey } from "@/config/global/tokensConfig";
+import { getTokenConfig, getSecretKey } from "@config/global/tokensConfig";
 import { getEndpointsConfig } from "@config/global/endpointsConfig";
 import { AuthConfig, TokensConfig } from "@/types";
 
@@ -22,8 +22,12 @@ function ab2hex(buffer: Uint8Array): string {
  * @returns {Uint8Array} The Uint8Array representation.
  */
 function hex2ab(hex: string): Uint8Array {
+  const matches = hex.match(/.{1,2}/g);
+  if (!matches) {
+    return new Uint8Array([]);
+  }
   return new Uint8Array(
-    hex.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16))
+    matches.map((byte) => parseInt(byte, 16))
   );
 }
 
@@ -427,5 +431,10 @@ export function useAuth(secretKey = getSecretKey()) {
     logout,
     cleanStorage,
     verifyToken,
+    ab2hex,
+    hex2ab,
+    importKey,
+    encrypt,
+    decrypt,
   };
 }
