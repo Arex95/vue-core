@@ -1,3 +1,12 @@
+## [1.1.12](https://github.com/Arex95/npm-arex-core/compare/v1.1.11...v1.1.12) (2025-06-12)
+
+
+### Features
+
+* **auth:** enhance encryption methods and update dependencies ([b0d32fc](https://github.com/Arex95/npm-arex-core/commit/b0d32fc8064afd9254a27bfcefa7035151d3d407))
+
+
+
 ## [1.1.11](https://github.com/Arex95/npm-arex-core/compare/v1.1.10...v1.1.11) (2025-06-11)
 
 
