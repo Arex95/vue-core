@@ -1,3 +1,12 @@
+## [1.1.16](https://github.com/Arex95/npm-arex-core/compare/v1.1.15...v1.1.16) (2025-06-12)
+
+
+### Bug Fixes
+
+* **apiActivity:** improve session timeout handling and add JWT check for activity monitoring ([0969b4d](https://github.com/Arex95/npm-arex-core/commit/0969b4dfc65085a7ce43ee6ce1ff07f237034c7d))
+
+
+
 ## [1.1.15](https://github.com/Arex95/npm-arex-core/compare/v1.1.14...v1.1.15) (2025-06-12)
 
 
