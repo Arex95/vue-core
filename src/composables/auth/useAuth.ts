@@ -7,7 +7,6 @@ import { getEndpointsConfig } from "@config/global/endpointsConfig";
 import { AuthConfig, TokensConfig } from "@/types";
 import { computedAsync } from "@vueuse/core";
 
-const axiosInstance = getAxiosInstance();
 const tokensConfig = getTokenConfig();
 const endpointsConfig = getEndpointsConfig();
 
@@ -194,6 +193,9 @@ async function getDecryptedValue(
  * @returns {Object} Auth composable methods and properties.
  */
 export function useAuth(secretKey = getSecretKey()) {
+
+  const axiosInstance = getAxiosInstance();
+  
   const jwt = computedAsync(
     async () =>
       await getDecryptedValue(
