@@ -8,3 +8,4 @@ export * from './SessionConfig'
 export * from './DecodedJwtPayload'
 export * from './AuthResponse'
 export * from './AuthParams'
+export * from './ArexVueCoreOptions';
