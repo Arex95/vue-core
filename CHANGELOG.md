@@ -1,3 +1,12 @@
+## [1.1.21](https://github.com/Arex95/npm-arex-core/compare/v1.1.20...v1.1.21) (2025-06-15)
+
+
+### Features
+
+* add missing exports in types and utils index files ([3970f25](https://github.com/Arex95/npm-arex-core/commit/3970f25ac4005c13ae62d7de6058cedf9755f462))
+
+
+
 ## [1.1.20](https://github.com/Arex95/npm-arex-core/compare/v1.1.19...v1.1.20) (2025-06-15)
 
 
