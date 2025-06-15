@@ -1,3 +1,17 @@
+## [1.1.20](https://github.com/Arex95/npm-arex-core/compare/v1.1.19...v1.1.20) (2025-06-15)
+
+
+### Bug Fixes
+
+* update useAuth function to use default secretKey and improve config imports ([154d5db](https://github.com/Arex95/npm-arex-core/commit/154d5db9eac3696dfe1ec1f207912db390919058))
+
+
+### Features
+
+* Refactor authentication utilities and add comprehensive tests ([62f19f8](https://github.com/Arex95/npm-arex-core/commit/62f19f8fbb147188ab129a50420e14876d773c57))
+
+
+
 ## [1.1.19](https://github.com/Arex95/npm-arex-core/compare/v1.1.18...v1.1.19) (2025-06-12)
 
 
