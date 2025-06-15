@@ -1,6 +1,6 @@
 import { App } from "vue";
-import { ArexVueCoreOptions } from "@types";
-import { configEndpoints, configTokenKeys, configAxios } from "@config";
+import { ArexVueCoreOptions } from "./types/ArexVueCoreOptions";
+import { configEndpoints, configTokenKeys, configAxios } from "./config";
 
 /**
  * The Vue plugin for @arex95/vue-core.
@@ -22,16 +22,20 @@ export const ArexVueCore = {
       return;
     }
 
-    configEndpoints(
-      options.endpoints.login,
-      options.endpoints.refresh,
-      options.endpoints.logout
+    configEndpoints({
+      loginEndpoint: options.endpoints.login,
+      refreshEndpoint: options.endpoints.refresh,
+      logoutEndpoint: options.endpoints.logout
+    }
     );
-    configTokenKeys(
-      options.tokenKeys.accessToken,
-      options.tokenKeys.refreshToken
+    configTokenKeys({
+      accessTokenKey : options.tokenKeys.accessToken,
+      refreshTokenKey : options.tokenKeys.refreshToken
+    }
     );
-    configAxios(options.apiUrl);
+    configAxios({
+      baseURL: options.apiUrl,
+    });
   },
 };
 

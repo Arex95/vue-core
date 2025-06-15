@@ -16,6 +16,7 @@ import {
   getSessionPersistencePreference,
   SessionPreference,
 } from "@config/global/sessionConfig";
+import { getSecretKey } from "@/config";
 
 /**
  * @typedef {object} AuthHook
@@ -36,7 +37,7 @@ import {
  * @param {string} secretKey - The secret key used for token encryption/decryption.
  * @returns {AuthHook} An object containing authentication functions.
  */
-export function useAuth(secretKey: string) {
+export function useAuth(secretKey: string = getSecretKey()) {
   const axiosInstance = getAxiosInstance();
   const endpoints = getEndpointsConfig();
   const currentPersistencePreference: SessionPreference =
