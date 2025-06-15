@@ -51,6 +51,9 @@ importers:
       '@types/node':
         specifier: ^22.13.10
         version: 22.15.31
+      '@vitest/spy':
+        specifier: ^3.2.3
+        version: 3.2.3
       '@vitest/ui':
         specifier: ^3.2.3
         version: 3.2.3(vitest@3.2.3)

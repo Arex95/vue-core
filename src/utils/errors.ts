@@ -25,10 +25,8 @@ export function handleError(
   const type: ErrorType = inferErrorType(error)
   const message = ERROR_MESSAGES[type] || 'Error desconocido.'
 
-  // Mostrar el error en la consola con estilos
   console.log(`%c[${type.toUpperCase()}] ${message}`, ERROR_STYLES[type])
 
-  // Pasar el error según el método elegido
   if (redirect) {
     if (passMethod === 'query') {
       router.push({ path: route, query: { errorMessage: encodeURIComponent(message) } })

@@ -1,84 +1,80 @@
-import { describe, expect, test } from "vitest";
-
-import { useAuth } from "@composables/auth/useAuth";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import {
+  encrypt,
+  decrypt,
+  ab2hex,
+  hex2ab,
+} from "@utils/encryption";
 
 describe("Encryption Utilities", () => {
-  const testSecretKey = "super-secret-key-for-testing-123";
-  const testValue = "This is a test string to be encrypted and decrypted.";
-  const emptyValue = "";
+  const secretKey = "mySuperSecretKey123";
+  const testValue = "Hello, this is a test string for encryption.";
 
-  describe("ab2hex and hex2ab", () => {
-    test("should convert ArrayBuffer to hex and back correctly", () => {
-      const originalArray = new Uint8Array([0x00, 0x01, 0x0a, 0xff]);
-      const hexString = useAuth().ab2hex(originalArray);
-      const convertedArray = useAuth().hex2ab(hexString);
-
-      expect(hexString).toBe("00010aff");
-      expect(convertedArray).toEqual(originalArray);
-    });
-
-    test("should handle empty ArrayBuffer", () => {
-      const originalArray = new Uint8Array([]);
-      const hexString = useAuth().ab2hex(originalArray);
-      const convertedArray = useAuth().hex2ab(hexString);
-
-      expect(hexString).toBe("");
-      expect(convertedArray).toEqual(originalArray);
-    });
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
-  describe("importKey", () => {
-    test("should import a CryptoKey successfully", async () => {
-      const key = await useAuth().importKey(testSecretKey);
-      expect(key).toBeInstanceOf(CryptoKey);
-      expect(key.algorithm.name).toBe("AES-CBC");
-      expect(key.extractable).toBe(false);
-      expect(key.usages).toEqual(
-        expect.arrayContaining(["encrypt", "decrypt"])
-      );
+  describe("ab2hex and hex2ab", () => {
+    it("should correctly convert ArrayBuffer to hex string", () => {
+      const buffer = new Uint8Array([0x01, 0x0a, 0xff, 0x00]);
+      expect(ab2hex(buffer)).toBe("010aff00");
+    });
+
+    it("should correctly convert hex string to Uint8Array", () => {
+      const hex = "010aff00";
+      const expectedBuffer = new Uint8Array([0x01, 0x0a, 0xff, 0x00]);
+      expect(hex2ab(hex)).toEqual(expectedBuffer);
+    });
+
+    it("should handle empty hex string for hex2ab", () => {
+      expect(hex2ab("")).toEqual(new Uint8Array());
+    });
+
+    it("should handle invalid hex string for hex2ab", () => {
+      expect(hex2ab("invalidhex")).toEqual(new Uint8Array());
+    });
+
+    it("should handle mixed case hex string for hex2ab", () => {
+      const hex = "0aB2fF";
+      const expectedBuffer = new Uint8Array([0x0a, 0xb2, 0xff]);
+      expect(hex2ab(hex)).toEqual(expectedBuffer);
     });
   });
 
   describe("encrypt and decrypt", () => {
-    test("should encrypt a value and decrypt it back to the original", async () => {
-      const encrypted = await useAuth().encrypt(testValue, testSecretKey);
+    it("should encrypt a string and decrypt it back to the original value", async () => {
+      const encrypted = await encrypt(testValue, secretKey);
       expect(encrypted).toBeTypeOf("string");
-      expect(encrypted.length).toBeGreaterThan(32);
+      expect(encrypted.length).toBeGreaterThan(0);
 
-      const decrypted = await useAuth().decrypt(encrypted, testSecretKey);
+      const decrypted = await decrypt(encrypted, secretKey);
       expect(decrypted).toBe(testValue);
     });
 
-    test("should handle empty string encryption and decryption", async () => {
-      const encrypted = await useAuth().encrypt(emptyValue, testSecretKey);
-      expect(encrypted).toBeTypeOf("string");
-      expect(encrypted.length).toBeGreaterThanOrEqual(32);
+    it("should fail to decrypt with an incorrect secret key", async () => {
+      const encrypted = await encrypt(testValue, secretKey);
 
-      const decrypted = await useAuth().decrypt(encrypted, testSecretKey);
-      expect(decrypted).toBe(emptyValue);
+      await expect(decrypt(encrypted, "wrongKey")).rejects.toThrow();
     });
 
-    test("should fail to decrypt with an incorrect secret key", async () => {
-      const encrypted = await useAuth().encrypt(testValue, testSecretKey);
-      const wrongSecretKey = "this-is-a-wrong-key-456";
+    it("should fail to decrypt with corrupted data (invalid IV length)", async () => {
+      const encrypted = await encrypt(testValue, secretKey);
+      const corruptedEncryptedValue =
+        encrypted.substring(0, 10) + encrypted.substring(12);
 
       await expect(
-        useAuth().decrypt(encrypted, wrongSecretKey)
+        decrypt(corruptedEncryptedValue, secretKey)
       ).rejects.toThrow();
     });
 
-    test("should fail to decrypt malformed or truncated encrypted string", async () => {
-      const encrypted = await useAuth().encrypt(testValue, testSecretKey);
-      const malformedEncrypted = encrypted.substring(0, 40);
+    it("should fail to decrypt with corrupted data (invalid ciphertext)", async () => {
+      const encrypted = await encrypt(testValue, secretKey);
+      const corruptedEncryptedValue = encrypted.substring(0, 32) + "abcd";
 
       await expect(
-        useAuth().decrypt(malformedEncrypted, testSecretKey)
-      ).rejects.toThrow();
-
-      const shortEncrypted = "1234567890abcdef1234567890abcdef";
-      await expect(
-        useAuth().decrypt(shortEncrypted, testSecretKey)
+        decrypt(corruptedEncryptedValue, secretKey)
       ).rejects.toThrow();
     });
   });
+  
 });

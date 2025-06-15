@@ -1,319 +1,125 @@
-import { jwtDecode } from "jwt-decode";
 import { getAxiosInstance } from "@config/axios";
-import { handleError } from "@utils/errors";
-import { getTokenConfig, getSecretKey } from "@config/global/tokensConfig";
 import { getEndpointsConfig } from "@config/global/endpointsConfig";
-import { AuthConfig, TokensConfig } from "@/types";
+import { handleError } from "@utils/errors";
+import {
+  getAuthToken,
+  getAuthRefreshToken,
+  storeAuthToken,
+  storeAuthRefreshToken,
+  cleanCredentials,
+} from "@utils/credentials";
+import { jwtDecode } from "jwt-decode";
+import { AuthParams, AuthResponse } from "@/types";
+
+import {
+  configSession,
+  getSessionPersistencePreference,
+  SessionPreference,
+} from "@config/global/sessionConfig";
 
 /**
- * Converts an ArrayBuffer to a hexadecimal string.
- * @param {Uint8Array} buffer - The Uint8Array to convert.
- * @returns {string} The hexadecimal string representation.
+ * @typedef {object} AuthHook
+ * @property {function(): Promise<string | null>} getJwt - Retrieves the current JWT.
+ * @property {function(): Promise<number | null>} getTokenExpiry - Retrieves the expiration time of the current token in milliseconds.
+ * @property {function(): Promise<void>} cleanCredentials - Clears authentication credentials from storage.
+ * @property {(params?: AuthParams) => Promise<void>} logout - Logs out the user, clears credentials, and reloads the page.
+ * @property {(params: AuthParams, persistence: SessionPreference) => Promise<AuthResponse>} login - Logs in the user and stores tokens.
+ * @property {function(): Promise<AuthResponse>} refresh - Refreshes authentication tokens.
+ * @property {function(): Promise<boolean>} verifyAuth - Verifies the validity and expiration of the current authentication token.
+ * @property {(preference: SessionPreference) => void} setSessionPersistencePreference - Sets the user's preferred storage for authentication data.
+ * @property {function(): SessionPreference} getSessionPersistencePreference - Retrieves the user's current preferred storage for authentication data.
  */
-function ab2hex(buffer: Uint8Array): string {
-  return Array.from(buffer)
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
 
 /**
- * Converts a hexadecimal string to a Uint8Array.
- * @param {string} hex - The hexadecimal string to convert.
- * @returns {Uint8Array} The Uint8Array representation.
+ * Custom hook for authentication logic, including login, logout, token management, and session preference.
+ *
+ * @param {string} secretKey - The secret key used for token encryption/decryption.
+ * @returns {AuthHook} An object containing authentication functions.
  */
-function hex2ab(hex: string): Uint8Array {
-  const matches = hex.match(/.{1,2}/g);
-  if (!matches) {
-    return new Uint8Array([]);
-  }
-  return new Uint8Array(
-    matches.map((byte) => parseInt(byte, 16))
-  );
-}
-
-/**
- * Imports a secret key for cryptographic operations.
- * @param {string} secretKey - The string secret key.
- * @returns {Promise<CryptoKey>} A Promise that resolves to the CryptoKey.
- */
-async function importKey(secretKey: string): Promise<CryptoKey> {
-  const encoder = new TextEncoder();
-  const keyMaterial = await crypto.subtle.digest(
-    "SHA-256",
-    encoder.encode(secretKey)
-  );
-  return await crypto.subtle.importKey(
-    "raw",
-    keyMaterial,
-    { name: "AES-CBC", length: 256 },
-    false,
-    ["encrypt", "decrypt"]
-  );
-}
-
-/**
- * Encrypts a value using AES-256 CBC encryption with Web Cryptography API.
- * The IV is generated randomly for each encryption and prepended to the ciphertext.
- * @param {string} value - The value to encrypt.
- * @param {string} secretKey - The encryption key string.
- * @returns {Promise<string>} A promise that resolves to the encrypted string (hex IV + hex ciphertext).
- */
-const encrypt = async (value: string, secretKey: string): Promise<string> => {
-  const key = await importKey(secretKey);
-  const textEncoder = new TextEncoder();
-  const data = textEncoder.encode(value);
-  const iv = crypto.getRandomValues(new Uint8Array(16));
-
-  const encryptedContentBuffer = await crypto.subtle.encrypt(
-    { name: "AES-CBC", iv: iv },
-    key,
-    data
-  );
-
-  const encryptedContentUint8 = new Uint8Array(encryptedContentBuffer);
-
-  return ab2hex(iv) + ab2hex(encryptedContentUint8);
-};
-
-/**
- * Decrypts an AES-256 CBC encrypted value using Web Cryptography API.
- * The IV is extracted from the beginning of the encrypted string.
- * @param {string} value - The encrypted string (hex IV + hex ciphertext).
- * @param {string} secretKey - The decryption key string.
- * @returns {Promise<string>} A promise that resolves to the decrypted string.
- */
-const decrypt = async (value: string, secretKey: string): Promise<string> => {
-  const key = await importKey(secretKey);
-  const iv = hex2ab(value.substring(0, 32));
-  const encryptedData = hex2ab(value.substring(32));
-
-  const decryptedContent = await crypto.subtle.decrypt(
-    { name: "AES-CBC", iv: iv },
-    key,
-    encryptedData
-  );
-
-  return new TextDecoder().decode(decryptedContent);
-};
-
-/**
- * Stores an encrypted value in sessionStorage or localStorage.
- * @param {string} key - Storage key.
- * @param {string} value - Value to store.
- * @param {string} secretKey - Encryption key.
- * @param {boolean} isRememberMe - Whether to store in localStorage (true) or sessionStorage (false).
- * @param {number} [attempt=0] - Retry attempt count.
- * @returns {Promise<void>} A Promise that resolves when the item is stored.
- * @throws {Error} If storage is not available after multiple attempts.
- */
-const storeEncryptedItem = async (
-  key: string,
-  value: string,
-  secretKey: string,
-  isRememberMe: boolean,
-  attempt: number = 0
-): Promise<void> => {
-  const storage = isRememberMe ? localStorage : sessionStorage;
-  if (typeof window !== "undefined" && storage) {
-    try {
-      const encryptedValue = await encrypt(value, secretKey);
-      storage.setItem(key, encryptedValue);
-      return;
-    } catch (error) {
-      handleError(error, false);
-      if (attempt < 5) {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        return await storeEncryptedItem(
-          key,
-          value,
-          secretKey,
-          isRememberMe,
-          attempt + 1
-        );
-      }
-      throw new Error(
-        `Storage not available for key ${key} after multiple attempts`
-      );
-    }
-  } else {
-    if (attempt < 5) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      return await storeEncryptedItem(
-        key,
-        value,
-        secretKey,
-        isRememberMe,
-        attempt + 1
-      );
-    }
-    throw new Error(
-      `Storage not available for key ${key} after multiple attempts`
-    );
-  }
-};
-
-/**
- * Retrieves and decrypts a stored value from sessionStorage or localStorage.
- * @param {string} key - Storage key.
- * @param {string} secretKey - Decryption key.
- * @param {boolean} isRememberMe - Whether to retrieve from localStorage (true) or sessionStorage (false).
- * @returns {Promise<string|null>} The decrypted value or null if not found or decryption fails.
- */
-async function getDecryptedValue(
-  key: string,
-  secretKey: string,
-  isRememberMe: boolean
-): Promise<string | null> {
-  const storage = isRememberMe ? localStorage : sessionStorage;
-  try {
-    const value = storage.getItem(key);
-    if (!value) return null;
-    return await decrypt(value, secretKey);
-  } catch (error) {
-    handleError(error, false);
-    return null;
-  }
-}
-
-/**
- * Interface for the structure of JWT payload.
- */
-interface DecodedJwtPayload {
-  exp?: number;
-  iat?: number;
-  nbf?: number;
-  iss?: string;
-  sub?: string;
-  aud?: string | string[];
-  [key: string]: unknown;
-}
-
-/**
- * Interface for the expected structure of a successful login response from the API.
- */
-interface LoginResponse {
-  access_token: string;
-  refresh_token: string;
-  [key: string]: unknown;
-}
-
-/**
- * Interface for the expected structure of a successful token refresh response from the API.
- */
-interface RefreshResponse {
-  access_token: string;
-  refresh_token: string;
-  [key: string]: unknown;
-}
-
-/**
- * A Vue composable that provides authentication utilities, enforcing asynchronous access to tokens.
- * All token-related properties and status checks are awaitable functions.
- * @param {string} [secretKey=getSecretKey()] - The encryption/decryption key. Defaults to a globally configured key.
- * @returns {object} An object containing asynchronous authentication methods and properties.
- */
-export function useAuth(secretKey = getSecretKey()) {
+export function useAuth(secretKey: string) {
   const axiosInstance = getAxiosInstance();
-  const tokensConfig = getTokenConfig();
-  const endpointsConfig = getEndpointsConfig();
-
-  const authConfig: AuthConfig = {
-    endpoints: endpointsConfig,
-    storageKeys: tokensConfig,
-  };
+  const endpoints = getEndpointsConfig();
+  const currentPersistencePreference: SessionPreference =
+    getSessionPersistencePreference();
 
   /**
-   * Asynchronously retrieves and decrypts the Access Token (JWT) from storage.
-   * This function should always be awaited.
-   * @returns {Promise<string|null>} A promise that resolves to the decrypted JWT string or null if not found.
+   * Retrieves the current JSON Web Token (JWT) from storage based on the active session preference.
+   *
+   * @returns {Promise<string | null>} The JWT string if found, otherwise null.
    */
   const getJwt = async (): Promise<string | null> => {
-    return await getDecryptedValue(
-      authConfig.storageKeys.ACCESS_TOKEN,
-      secretKey,
-      false
-    );
-  };
-
-  /**
-   * Asynchronously retrieves and decrypts the Refresh Token from storage.
-   * This function should always be awaited.
-   * @returns {Promise<string|null>} A promise that resolves to the decrypted Refresh Token string or null if not found.
-   */
-  const getRefreshToken = async (): Promise<string | null> => {
-    return await getDecryptedValue(
-      authConfig.storageKeys.REFRESH_TOKEN,
-      secretKey,
-      true
-    );
-  };
-
-  /**
-   * Asynchronously computes the expiration timestamp of the current Access Token.
-   * Requires awaiting the JWT.
-   * @returns {Promise<number|null>} A promise that resolves to the expiration timestamp in milliseconds (Unix epoch) or null if no valid token is found or parsing fails.
-   */
-  const getTokenExpiry = async (): Promise<number | null> => {
-    const token = await getJwt();
-    if (!token) return null;
     try {
-      const decoded: DecodedJwtPayload = jwtDecode(token);
-      return decoded.exp ? decoded.exp * 1000 : null;
+      return await getAuthToken(secretKey, currentPersistencePreference);
     } catch (error) {
-      handleError(error, false);
+      handleError("Error getting JWT: " + error, false);
       return null;
     }
   };
 
   /**
-   * Asynchronously checks if the user is currently authenticated and if the Access Token is valid and not expired.
-   * This function should always be awaited.
-   * @returns {Promise<boolean>} A promise that resolves to true if authenticated and token is valid, false otherwise.
+   * Retrieves the expiration timestamp of the current authentication token in milliseconds.
+   *
+   * @returns {Promise<number | null>} The expiration timestamp in milliseconds if the token is valid, otherwise null.
    */
-  const isAuthenticated = async (): Promise<boolean> => {
+  const getTokenExpiry = async (): Promise<number | null> => {
     const token = await getJwt();
-    if (!token || token.length === 0) {
-      return false;
+    if (!token) return null;
+    try {
+      const decoded: { exp?: number } = jwtDecode(token);
+      return decoded.exp ? decoded.exp * 1000 : null;
+    } catch (error: any) {
+      handleError(
+        `TOKEN_INVALID: Token verification failed (malformed or unreadable): ${error.message}`,
+        false
+      );
+      return null;
     }
-    const expiry = await getTokenExpiry();
-    if (expiry === null) {
-      return false;
-    }
-    return expiry > Date.now();
   };
 
   /**
-   * Handles user login by making an API request and storing the received tokens.
-   * @param {object} [params={}] - The login credentials or payload.
-   * @param {boolean} isRememberMe - Indicates whether the refresh token should be stored in localStorage.
-   * @returns {Promise<LoginResponse>} A promise that resolves to the API response data on successful login.
+   * Logs out the user by making a POST request to the logout endpoint,
+   * cleaning all stored credentials, and reloading the page.
+   * The session persistence preference is NOT reset here; it persists across logouts.
+   *
+   * @param {AuthParams} [params={}] - Optional parameters to send with the logout request.
+   * @returns {Promise<void>}
+   */
+  const logout = async (params: AuthParams = {}): Promise<void> => {
+    try {
+      await axiosInstance.post(endpoints.LOGOUT, params);
+    } catch (error) {
+      handleError(error, false);
+    } finally {
+      await cleanCredentials(currentPersistencePreference);
+      window.location.reload();
+    }
+  };
+
+  /**
+   * Authenticates the user by making a POST request to the login endpoint,
+   * stores the received access and refresh tokens, and sets the session persistence preference.
+   *
+   * @param {AuthParams} params - The authentication parameters (e.g., username, password).
+   * @param {SessionPreference} persistence - The storage preference: 'local' for localStorage, 'session' for sessionStorage.
+   * @returns {Promise<AuthResponse>} The authentication response containing tokens and user information.
    * @throws {Error} If the login request fails.
    */
   const login = async (
-    params: object = {},
-    isRememberMe: boolean
-  ): Promise<LoginResponse> => {
+    params: AuthParams,
+    persistence: SessionPreference
+  ): Promise<AuthResponse> => {
     try {
-      const response = await axiosInstance.post<LoginResponse>(
-        authConfig.endpoints.LOGIN,
+      const { data } = await axiosInstance.post<AuthResponse>(
+        endpoints.LOGIN,
         params
       );
-      const newAccessToken = response.data.access_token;
-      const newRefreshToken = response.data.refresh_token;
+      configSession({
+        persistencePreference: persistence,
+      });
 
-      await storeEncryptedItem(
-        authConfig.storageKeys.ACCESS_TOKEN,
-        newAccessToken,
-        secretKey,
-        false
-      );
-      await storeEncryptedItem(
-        authConfig.storageKeys.REFRESH_TOKEN,
-        newRefreshToken,
-        secretKey,
-        isRememberMe
-      );
-      return response.data;
+      await storeAuthToken(data.access_token, secretKey, persistence);
+      await storeAuthRefreshToken(data.refresh_token, secretKey, persistence);
+      return data;
     } catch (error) {
       handleError(error, false);
       throw error;
@@ -321,32 +127,39 @@ export function useAuth(secretKey = getSecretKey()) {
   };
 
   /**
-   * Refreshes the authentication token by making an API request and updating stored tokens.
-   * @returns {Promise<RefreshResponse>} A promise that resolves to the API response data on successful refresh.
-   * @throws {Error} If the refresh request fails, leading to logout.
+   * Refreshes the authentication tokens using the stored refresh token.
+   * If no refresh token is found, it throws an error and initiates a logout.
+   *
+   * @returns {Promise<AuthResponse>} The new authentication response with refreshed tokens.
+   * @throws {Error} If the refresh token is missing or the refresh request fails.
    */
-  const refresh = async (): Promise<RefreshResponse> => {
+  const refresh = async (): Promise<AuthResponse> => {
     try {
-      const response = await axiosInstance.post<RefreshResponse>(
-        authConfig.endpoints.REFRESH,
-        {}
+      const refreshToken = await getAuthRefreshToken(
+        secretKey,
+        currentPersistencePreference
       );
-      const newAccessToken = response.data.access_token;
-      const newRefreshToken = response.data.refresh_token;
 
-      await storeEncryptedItem(
-        authConfig.storageKeys.ACCESS_TOKEN,
-        newAccessToken,
-        secretKey,
-        false
+      if (!refreshToken) {
+        throw new Error("TOKEN_MISSING: No refresh token found");
+      }
+
+      const { data } = await axiosInstance.post<AuthResponse>(
+        endpoints.REFRESH,
+        { refresh_token: refreshToken }
       );
-      await storeEncryptedItem(
-        authConfig.storageKeys.REFRESH_TOKEN,
-        newRefreshToken,
+
+      await storeAuthToken(
+        data.access_token,
         secretKey,
-        true
+        currentPersistencePreference
       );
-      return response.data;
+      await storeAuthRefreshToken(
+        data.refresh_token,
+        secretKey,
+        currentPersistencePreference
+      );
+      return data;
     } catch (error) {
       handleError(error, false);
       await logout();
@@ -355,86 +168,54 @@ export function useAuth(secretKey = getSecretKey()) {
   };
 
   /**
-   * Handles user logout by making an API request and clearing stored authentication data.
-   * Reloads the page after clearing storage.
-   * @param {object} [params={}] - Optional logout payload.
-   * @returns {Promise<void>} A promise that resolves when the logout process is complete.
+   * Verifies the validity and expiration of the current authentication token.
+   * If the token is missing, invalid, or expired, appropriate errors are thrown and credentials are cleaned.
+   *
+   * @returns {Promise<boolean>} True if the token is valid and unexpired.
+   * @throws {Error} "TOKEN_MISSING" if no token is found, "TOKEN_EXPIRED" if the token has expired,
+   * "TOKEN_INVALID" if the token format is invalid.
    */
-  const logout = async (params: object = {}): Promise<void> => {
-    try {
-      await axiosInstance.post<void>(authConfig.endpoints.LOGOUT, params);
-    } catch (error) {
-      handleError(error, false);
-    } finally {
-      await cleanStorage();
-      location.reload();
-    }
-  };
-
-  /**
-   * Clears all stored authentication data (access and refresh tokens) from both sessionStorage and localStorage.
-   * @returns {Promise<void>} A promise that resolves when all relevant storage items are removed.
-   */
-  const cleanStorage = async (): Promise<void> => {
-    (Object.keys(authConfig.storageKeys) as (keyof TokensConfig)[]).forEach(
-      (key) => {
-        sessionStorage.removeItem(authConfig.storageKeys[key]);
-        localStorage.removeItem(authConfig.storageKeys[key]);
-      }
-    );
-  };
-
-  /**
-   * Verifies the validity of the current Access Token. If the token is missing, invalid, or expired,
-   * it handles the error appropriately (e.g., attempts refresh, clears storage, redirects).
-   * This function should always be awaited.
-   * @returns {Promise<void>} A promise that resolves if the token is valid, or rejects with an error.
-   * @throws {Error} If the token is missing, expired, or invalid.
-   */
-  const verifyToken = async (): Promise<void> => {
+  const verifyAuth = async (): Promise<boolean> => {
     const token = await getJwt();
-
     if (!token) {
-      handleError(
-        "TOKEN_MISSING: No valid token found",
-        true,
-        "/auth-error",
-        "query"
-      );
-      await cleanStorage();
+      handleError("TOKEN_MISSING: No valid token found", false);
+      await cleanCredentials(currentPersistencePreference);
       throw new Error("TOKEN_MISSING: No valid token found");
     }
+
     try {
-      const decoded: DecodedJwtPayload = jwtDecode(token);
-      if (decoded.exp ? decoded.exp * 1000 < Date.now() : false) {
-        handleError("TOKEN_EXPIRED", false);
-        await refresh();
+      const decoded: { exp?: number } = jwtDecode(token);
+      const currentTime = Date.now() / 1000;
+
+      if (typeof decoded.exp !== "number") {
+        throw new Error("Invalid expiration format");
       }
-    } catch (error: unknown) {
-      let errorMessage = "TOKEN_INVALID: Token verification failed";
-      if (error instanceof Error) {
-        errorMessage = `${errorMessage} - ${error.message}`;
+
+      if (decoded.exp <= currentTime) {
+        handleError("TOKEN_EXPIRED: Token is expired", false);
+        await cleanCredentials(currentPersistencePreference);
+        throw new Error("TOKEN_EXPIRED: Token is expired");
       }
-      handleError(errorMessage, true, "/auth-error", "query");
-      await cleanStorage();
-      throw new Error(errorMessage);
+
+      return true;
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("Invalid")) {
+        handleError("TOKEN_INVALID: Invalid token format", false);
+        await cleanCredentials(currentPersistencePreference);
+        throw new Error("TOKEN_INVALID: Invalid token format");
+      }
+
+      throw error;
     }
   };
 
   return {
     getJwt,
-    getRefreshToken,
-    isAuthenticated,
     getTokenExpiry,
+    cleanCredentials,
+    logout,
     login,
     refresh,
-    logout,
-    cleanStorage,
-    verifyToken,
-    ab2hex,
-    hex2ab,
-    importKey,
-    encrypt,
-    decrypt,
+    verifyAuth
   };
 }

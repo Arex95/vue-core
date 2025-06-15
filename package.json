@@ -49,6 +49,7 @@
     "@rollup/plugin-typescript": "^12.1.2",
     "@types/crypto-js": "^4.2.2",
     "@types/node": "^22.13.10",
+    "@vitest/spy": "^3.2.3",
     "@vitest/ui": "^3.2.3",
     "@vue/test-utils": "^2.4.6",
     "conventional-changelog-cli": "^5.0.0",

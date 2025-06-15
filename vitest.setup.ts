@@ -1,10 +1,7 @@
-import { vi, beforeEach } from "vitest";
+import { vi } from "vitest";
 
 vi.mock("@config/axios", () => ({
-  getAxiosInstance: vi.fn(() => ({
-    post: vi.fn(),
-    get: vi.fn(),
-  })),
+  getAxiosInstance: vi.fn(),
 }));
 
 vi.mock("@utils/errors", () => ({
@@ -13,8 +10,8 @@ vi.mock("@utils/errors", () => ({
 
 vi.mock("@config/global/tokensConfig", () => ({
   getTokenConfig: vi.fn(() => ({
-    ACCESS_TOKEN: "vitest_access_token",
-    REFRESH_TOKEN: "vitest_refresh_token",
+    ACCESS_TOKEN: "access_token",
+    REFRESH_TOKEN: "refresh_token",
   })),
   getSecretKey: vi.fn(() => "default-test-secret-key"),
 }));
@@ -28,31 +25,16 @@ vi.mock("@config/global/endpointsConfig", () => ({
 }));
 
 vi.mock("jwt-decode", () => ({
-  jwtDecode: vi.fn((token: string) => {
-    if (token === "valid-jwt") {
-      return { exp: Math.floor(Date.now() / 1000) + 3600 };
-    }
-    if (token === "expired-jwt") {
-      return { exp: Math.floor(Date.now() / 1000) - 3600 };
-    }
-    if (token === "future-jwt") {
-      return { exp: Math.floor(Date.now() / 1000) + 1000 };
-    }
-    if (token === "non-exp-jwt") {
-      return {};
-    }
-    throw new Error("Invalid token for mock");
-  }),
+  jwtDecode: vi.fn(),
 }));
 
-Object.defineProperty(window, "location", {
-  value: {
-    reload: vi.fn(),
-  },
-  writable: true,
-});
-
-beforeEach(() => {
-  localStorage.clear();
-  sessionStorage.clear();
-});
+vi.mock("@utils/storage", () => ({
+  storeEncryptedItem: vi.fn(() => Promise.resolve()),
+  getDecryptedItem: vi.fn((key) => {
+    return Promise.resolve(null);
+  }),
+  cleanStorage: vi.fn(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  }),
+}));

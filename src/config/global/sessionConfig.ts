@@ -1,24 +1,44 @@
-import { SessionConfig } from "@/types"
-import { v4 as uuidv4 } from "uuid"
+import { SessionConfig } from "@/types";
+import { v4 as uuidv4 } from "uuid";
 
-let sessionId: string = uuidv4()
+export type SessionPreference = "local" | "session";
+
+let sessionId: string = uuidv4();
 
 let sessionConfig: SessionConfig = Object.freeze({
   SESSION_ID: sessionId,
-})
+});
+
+let persistencePreference: SessionPreference = "session";
 
 /**
- * Configures the session identifier for the active browser session.
- * Once configured, it cannot be modified.
- *
- * @param {string} sessionIdParam - The unique session identifier.
- *
- * @returns {void} Does not return anything, but freezes the session configuration.
+ * Configuration object for the session.
  */
-export function configSession(sessionIdParam: string): void {
-  sessionConfig = Object.freeze({
-    SESSION_ID: sessionIdParam,
-  })
+interface SessionConfigObject {
+  /** The unique session identifier. */
+  sessionId?: string;
+  /** The storage preference: 'local' for localStorage, 'session' for sessionStorage. */
+  persistencePreference?: SessionPreference;
+}
+
+/**
+ * Configures the session identifier and/or the data persistence preference for the active browser session.
+ * Once configured, the session ID cannot be modified. The persistence preference can be updated.
+ *
+ * @param {SessionConfigObject} config - An object containing the unique session identifier and/or persistence preference.
+ *
+ * @returns {void} Does not return anything, but freezes the session configuration (for ID) and updates preference.
+ */
+export function configSession(config: SessionConfigObject): void {
+  if (config.sessionId) {
+    sessionConfig = Object.freeze({
+      ...sessionConfig,
+      SESSION_ID: config.sessionId,
+    });
+  }
+  if (config.persistencePreference) {
+    persistencePreference = config.persistencePreference;
+  }
 }
 
 /**
@@ -27,7 +47,16 @@ export function configSession(sessionIdParam: string): void {
  * @returns {string} The unique session identifier.
  */
 export function getSessionConfig(): string {
-  return sessionConfig.SESSION_ID
+  return sessionConfig.SESSION_ID;
+}
+
+/**
+ * Retrieves the current data persistence preference.
+ *
+ * @returns {SessionPreference} The configured persistence preference ('local' or 'session').
+ */
+export function getSessionPersistencePreference(): SessionPreference {
+  return persistencePreference;
 }
 
 /**
@@ -36,8 +65,8 @@ export function getSessionConfig(): string {
  * @returns {void} Does not return anything, but updates the session identifier.
  */
 export function regenerateSessionId(): void {
-  sessionId = uuidv4()
-  configSession(sessionId);
+  sessionId = uuidv4();
+  configSession({ sessionId: sessionId });
 }
 
 /**
@@ -46,5 +75,5 @@ export function regenerateSessionId(): void {
  * @returns {string} The unique session identifier.
  */
 export function getSessionId(): string {
-  return sessionId
+  return sessionId;
 }
