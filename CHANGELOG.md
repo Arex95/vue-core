@@ -1,3 +1,12 @@
+## [1.1.23](https://github.com/Arex95/npm-arex-core/compare/v1.1.22...v1.1.23) (2025-06-16)
+
+
+### Bug Fixes
+
+* **credentials:** move tokensConfig initialization inside functions for better encapsulation ([e863aa0](https://github.com/Arex95/npm-arex-core/commit/e863aa00fb69fe9186009ec29e600f828cd6a308))
+
+
+
 ## [1.1.22](https://github.com/Arex95/npm-arex-core/compare/v1.1.21...v1.1.22) (2025-06-16)
 
 
