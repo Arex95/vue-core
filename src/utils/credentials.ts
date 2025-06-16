@@ -21,7 +21,7 @@ export const cleanCredentials = async (
 ): Promise<void> => {
   const tokensConfig = getTokenConfig();
   (Object.keys(tokensConfig) as (keyof TokensConfig)[]).forEach((key) => {
-    const storage = preference === "session" ? sessionStorage : localStorage;
+    const storage = preference === "local" ? localStorage : sessionStorage;
     storage.removeItem(tokensConfig[key]);
   });
 };
@@ -42,7 +42,7 @@ export const getAuthToken = async (
   return await getDecryptedItem(
     tokensConfig.ACCESS_TOKEN,
     secretKey,
-    preference === "session"
+    preference === "local"
   );
 };
 
@@ -62,7 +62,7 @@ export const getAuthRefreshToken = async (
   return await getDecryptedItem(
     tokensConfig.REFRESH_TOKEN,
     secretKey,
-    preference === "session"
+    preference === "local"
   );
 };
 
@@ -85,7 +85,7 @@ export const storeAuthToken = async (
     tokensConfig.ACCESS_TOKEN,
     token,
     secretKey,
-    preference === "session"
+    preference === "local"
   );
 };
 
@@ -108,7 +108,7 @@ export const storeAuthRefreshToken = async (
     tokensConfig.REFRESH_TOKEN,
     token,
     secretKey,
-    preference === "session"
+    preference === "local"
   );
 };
 
