@@ -1,3 +1,12 @@
+## [1.1.24](https://github.com/Arex95/npm-arex-core/compare/v1.1.23...v1.1.24) (2025-06-16)
+
+
+### Bug Fixes
+
+* **credentials:** correct storage preference logic for session and local storage ([9bddc83](https://github.com/Arex95/npm-arex-core/commit/9bddc834b1ec688184e90f3d97c6b5edbf07b965))
+
+
+
 ## [1.1.23](https://github.com/Arex95/npm-arex-core/compare/v1.1.22...v1.1.23) (2025-06-16)
 
 
