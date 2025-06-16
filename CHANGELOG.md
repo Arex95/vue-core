@@ -1,3 +1,17 @@
+## [1.1.22](https://github.com/Arex95/npm-arex-core/compare/v1.1.21...v1.1.22) (2025-06-16)
+
+
+### Bug Fixes
+
+* **auth:** remove unused JWT functions and implement verifyAuth in credentials ([e450ebd](https://github.com/Arex95/npm-arex-core/commit/e450ebdaffcfd122d989b300dc0441741e82e46d))
+
+
+### Features
+
+* **auth:** replace JWT checks with verifyAuth for improved session management ([9f5c368](https://github.com/Arex95/npm-arex-core/commit/9f5c3683ae00e794bb023fae4ac0faeb4b71d5eb))
+
+
+
 ## [1.1.21](https://github.com/Arex95/npm-arex-core/compare/v1.1.20...v1.1.21) (2025-06-15)
 
 
