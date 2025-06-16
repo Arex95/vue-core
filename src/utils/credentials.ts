@@ -2,6 +2,8 @@ import { getTokenConfig } from "@config/global/tokensConfig";
 import { getDecryptedItem, storeEncryptedItem } from "@utils/storage";
 import { TokensConfig } from "@/types";
 import { SessionPreference } from "@config/global/sessionConfig";
+import { jwtDecode } from "jwt-decode";
+import { handleError } from "@utils/errors";
 
 const tokensConfig = getTokenConfig();
 
@@ -101,4 +103,55 @@ export const storeAuthRefreshToken = async (
     secretKey,
     preference === "session"
   );
+};
+
+/**
+ * Verifies the validity and expiration of the current authentication token.
+ * If the token is missing, invalid, or expired, appropriate errors are thrown and credentials are cleaned.
+ *
+ * @param {string} secretKey - The secret key used for token decryption.
+ * @param {SessionPreference} preference - The current session persistence preference.
+ * @returns {Promise<boolean>} True if the token is valid and unexpired.
+ * @throws {Error} "TOKEN_MISSING" if no token is found, "TOKEN_EXPIRED" if the token has expired,
+ * "TOKEN_INVALID" if the token format is invalid.
+ */
+export const verifyAuth = async (
+  secretKey: string,
+  preference: SessionPreference
+): Promise<boolean> => {
+  try {
+    const token = await getAuthToken(secretKey, preference);
+    if (!token) {
+      handleError("TOKEN_MISSING: No valid token found", false);
+      await cleanCredentials(preference);
+      return false;
+    }
+
+    const decoded: { exp?: number } = jwtDecode(token);
+    const currentTime = Date.now() / 1000;
+
+    if (typeof decoded.exp !== "number") {
+      handleError("TOKEN_INVALID: Invalid expiration format", false);
+      await cleanCredentials(preference);
+      return false;
+    }
+
+    if (decoded.exp <= currentTime) {
+      handleError("TOKEN_EXPIRED: Token is expired", false);
+      await cleanCredentials(preference);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("Invalid")) {
+      handleError("TOKEN_INVALID: Invalid token format", false);
+      await cleanCredentials(preference);
+      return false;
+    }
+
+    handleError("AUTH_ERROR: An unexpected error occurred", false);
+    await cleanCredentials(preference);
+    return false;
+  }
 };

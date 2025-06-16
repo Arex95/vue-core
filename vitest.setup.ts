@@ -23,18 +23,3 @@ vi.mock("@config/global/endpointsConfig", () => ({
     LOGOUT: "/api/logout",
   })),
 }));
-
-vi.mock("jwt-decode", () => ({
-  jwtDecode: vi.fn(),
-}));
-
-vi.mock("@utils/storage", () => ({
-  storeEncryptedItem: vi.fn(() => Promise.resolve()),
-  getDecryptedItem: vi.fn((key) => {
-    return Promise.resolve(null);
-  }),
-  cleanStorage: vi.fn(() => {
-    localStorage.clear();
-    sessionStorage.clear();
-  }),
-}));

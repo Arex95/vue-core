@@ -2,13 +2,11 @@ import { getAxiosInstance } from "@config/axios";
 import { getEndpointsConfig } from "@config/global/endpointsConfig";
 import { handleError } from "@utils/errors";
 import {
-  getAuthToken,
   getAuthRefreshToken,
   storeAuthToken,
   storeAuthRefreshToken,
   cleanCredentials,
 } from "@utils/credentials";
-import { jwtDecode } from "jwt-decode";
 import { AuthParams, AuthResponse } from "@/types";
 
 import {
@@ -20,7 +18,6 @@ import { getSecretKey } from "@/config";
 
 /**
  * @typedef {object} AuthHook
- * @property {function(): Promise<string | null>} getJwt - Retrieves the current JWT.
  * @property {function(): Promise<number | null>} getTokenExpiry - Retrieves the expiration time of the current token in milliseconds.
  * @property {function(): Promise<void>} cleanCredentials - Clears authentication credentials from storage.
  * @property {(params?: AuthParams) => Promise<void>} logout - Logs out the user, clears credentials, and reloads the page.
@@ -42,40 +39,6 @@ export function useAuth(secretKey: string = getSecretKey()) {
   const endpoints = getEndpointsConfig();
   const currentPersistencePreference: SessionPreference =
     getSessionPersistencePreference();
-
-  /**
-   * Retrieves the current JSON Web Token (JWT) from storage based on the active session preference.
-   *
-   * @returns {Promise<string | null>} The JWT string if found, otherwise null.
-   */
-  const getJwt = async (): Promise<string | null> => {
-    try {
-      return await getAuthToken(secretKey, currentPersistencePreference);
-    } catch (error) {
-      handleError("Error getting JWT: " + error, false);
-      return null;
-    }
-  };
-
-  /**
-   * Retrieves the expiration timestamp of the current authentication token in milliseconds.
-   *
-   * @returns {Promise<number | null>} The expiration timestamp in milliseconds if the token is valid, otherwise null.
-   */
-  const getTokenExpiry = async (): Promise<number | null> => {
-    const token = await getJwt();
-    if (!token) return null;
-    try {
-      const decoded: { exp?: number } = jwtDecode(token);
-      return decoded.exp ? decoded.exp * 1000 : null;
-    } catch (error: any) {
-      handleError(
-        `TOKEN_INVALID: Token verification failed (malformed or unreadable): ${error.message}`,
-        false
-      );
-      return null;
-    }
-  };
 
   /**
    * Logs out the user by making a POST request to the logout endpoint,
@@ -168,55 +131,9 @@ export function useAuth(secretKey: string = getSecretKey()) {
     }
   };
 
-  /**
-   * Verifies the validity and expiration of the current authentication token.
-   * If the token is missing, invalid, or expired, appropriate errors are thrown and credentials are cleaned.
-   *
-   * @returns {Promise<boolean>} True if the token is valid and unexpired.
-   * @throws {Error} "TOKEN_MISSING" if no token is found, "TOKEN_EXPIRED" if the token has expired,
-   * "TOKEN_INVALID" if the token format is invalid.
-   */
-  const verifyAuth = async (): Promise<boolean> => {
-    const token = await getJwt();
-    if (!token) {
-      handleError("TOKEN_MISSING: No valid token found", false);
-      await cleanCredentials(currentPersistencePreference);
-      throw new Error("TOKEN_MISSING: No valid token found");
-    }
-
-    try {
-      const decoded: { exp?: number } = jwtDecode(token);
-      const currentTime = Date.now() / 1000;
-
-      if (typeof decoded.exp !== "number") {
-        throw new Error("Invalid expiration format");
-      }
-
-      if (decoded.exp <= currentTime) {
-        handleError("TOKEN_EXPIRED: Token is expired", false);
-        await cleanCredentials(currentPersistencePreference);
-        throw new Error("TOKEN_EXPIRED: Token is expired");
-      }
-
-      return true;
-    } catch (error) {
-      if (error instanceof Error && error.message.includes("Invalid")) {
-        handleError("TOKEN_INVALID: Invalid token format", false);
-        await cleanCredentials(currentPersistencePreference);
-        throw new Error("TOKEN_INVALID: Invalid token format");
-      }
-
-      throw error;
-    }
-  };
-
   return {
-    getJwt,
-    getTokenExpiry,
-    cleanCredentials,
     logout,
     login,
-    refresh,
-    verifyAuth
+    refresh
   };
 }
