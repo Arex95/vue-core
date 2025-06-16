@@ -1,9 +1,10 @@
 import { getTokenConfig } from "@config/global/tokensConfig";
 import { getDecryptedItem, storeEncryptedItem } from "@utils/storage";
 import { TokensConfig } from "@/types";
-import { SessionPreference } from "@config/global/sessionConfig";
+import { SessionPreference, getSessionPersistencePreference } from "@config/global/sessionConfig";
 import { jwtDecode } from "jwt-decode";
 import { handleError } from "@utils/errors";
+import { getSecretKey } from "@/config";
 
 const tokensConfig = getTokenConfig();
 
@@ -116,8 +117,8 @@ export const storeAuthRefreshToken = async (
  * "TOKEN_INVALID" if the token format is invalid.
  */
 export const verifyAuth = async (
-  secretKey: string,
-  preference: SessionPreference
+  secretKey: string = getSecretKey(),
+  preference: SessionPreference = getSessionPersistencePreference()
 ): Promise<boolean> => {
   try {
     const token = await getAuthToken(secretKey, preference);

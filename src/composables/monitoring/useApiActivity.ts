@@ -1,6 +1,7 @@
 import { useIntervalFn } from "@vueuse/core";
 import { getAxiosInstance } from "@config/axios";
 import { useAuth } from "@composables/auth/useAuth";
+import { verifyAuth } from "@/utils";
 import { handleError } from "@utils/errors";
 
 /**
@@ -74,8 +75,8 @@ export function useApiActivity(
    * The interval only runs if a JWT is present, ensuring activity checks are relevant.
    */
   const { pause, resume } = useIntervalFn(async () => {
-    const currentJwt = await auth.getJwt();
-    if (currentJwt) {
+    const isAuthenticated = await verifyAuth();
+    if (isAuthenticated) {
       await checkTimeout();
       resume();
     } else {
@@ -84,8 +85,8 @@ export function useApiActivity(
   }, checkIntervalSec * 1000);
 
   (async () => {
-    const currentJwt = await auth.getJwt();
-    if (currentJwt) {
+    const isAuthenticated = await verifyAuth();
+    if (isAuthenticated) {
       await checkTimeout();
       resume();
     } else {
