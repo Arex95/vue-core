@@ -1,3 +1,13 @@
+## [1.1.25](https://github.com/Arex95/npm-arex-core/compare/v1.1.24...v1.1.25) (2025-06-16)
+
+
+### Bug Fixes
+
+* **encryption:** enhance error handling and validation in hex2ab, importKey, and decrypt functions ([d9284d9](https://github.com/Arex95/npm-arex-core/commit/d9284d99fead48226964dccd9059f3a82ea61132))
+* **tests:** improve hex2ab error handling and enhance decrypt failure cases ([b40ee9f](https://github.com/Arex95/npm-arex-core/commit/b40ee9f7711ecd7dde383e5bd970a9a34cf56838))
+
+
+
 ## [1.1.24](https://github.com/Arex95/npm-arex-core/compare/v1.1.23...v1.1.24) (2025-06-16)
 
 
