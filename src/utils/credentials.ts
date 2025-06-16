@@ -1,12 +1,13 @@
 import { getTokenConfig } from "@config/global/tokensConfig";
 import { getDecryptedItem, storeEncryptedItem } from "@utils/storage";
 import { TokensConfig } from "@/types";
-import { SessionPreference, getSessionPersistencePreference } from "@config/global/sessionConfig";
+import {
+  SessionPreference,
+  getSessionPersistencePreference,
+} from "@config/global/sessionConfig";
 import { jwtDecode } from "jwt-decode";
 import { handleError } from "@utils/errors";
 import { getSecretKey } from "@/config";
-
-const tokensConfig = getTokenConfig();
 
 /**
  * Clears all stored authentication data (access and refresh tokens)
@@ -18,6 +19,7 @@ const tokensConfig = getTokenConfig();
 export const cleanCredentials = async (
   preference: SessionPreference
 ): Promise<void> => {
+  const tokensConfig = getTokenConfig();
   (Object.keys(tokensConfig) as (keyof TokensConfig)[]).forEach((key) => {
     const storage = preference === "session" ? sessionStorage : localStorage;
     storage.removeItem(tokensConfig[key]);
@@ -36,6 +38,7 @@ export const getAuthToken = async (
   secretKey: string,
   preference: SessionPreference
 ): Promise<string | null> => {
+  const tokensConfig = getTokenConfig();
   return await getDecryptedItem(
     tokensConfig.ACCESS_TOKEN,
     secretKey,
@@ -55,6 +58,7 @@ export const getAuthRefreshToken = async (
   secretKey: string,
   preference: SessionPreference
 ): Promise<string | null> => {
+  const tokensConfig = getTokenConfig();
   return await getDecryptedItem(
     tokensConfig.REFRESH_TOKEN,
     secretKey,
@@ -76,6 +80,7 @@ export const storeAuthToken = async (
   secretKey: string,
   preference: SessionPreference
 ): Promise<void> => {
+  const tokensConfig = getTokenConfig();
   await storeEncryptedItem(
     tokensConfig.ACCESS_TOKEN,
     token,
@@ -98,6 +103,7 @@ export const storeAuthRefreshToken = async (
   secretKey: string,
   preference: SessionPreference
 ): Promise<void> => {
+  const tokensConfig = getTokenConfig();
   await storeEncryptedItem(
     tokensConfig.REFRESH_TOKEN,
     token,
