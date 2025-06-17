@@ -1,3 +1,7 @@
+## [1.1.29](https://github.com/Arex95/npm-arex-core/compare/v1.1.28...v1.1.29) (2025-06-17)
+
+
+
 ## [1.1.28](https://github.com/Arex95/npm-arex-core/compare/v1.1.27...v1.1.28) (2025-06-17)
 
 
