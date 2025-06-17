@@ -122,12 +122,13 @@ export const storeAuthRefreshToken = async (
  * @throws {Error} "TOKEN_MISSING" if no token is found, "TOKEN_EXPIRED" if the token has expired,
  * "TOKEN_INVALID" if the token format is invalid.
  */
-export const verifyAuth = async (
-  secretKey: string = getAppKey(),
-  preference: SessionPreference = getSessionPersistencePreference()
-): Promise<boolean> => {
+export const verifyAuth = async (): Promise<boolean> => {
+  const preference: SessionPreference = getSessionPersistencePreference();
   try {
-    const token = await getAuthToken(secretKey, preference);
+    const token = await getAuthToken(
+      getAppKey(),
+      preference
+    );
     if (!token) {
       handleError("TOKEN_MISSING: No valid token found", false);
       await cleanCredentials(preference);
