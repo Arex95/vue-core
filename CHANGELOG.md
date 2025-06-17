@@ -1,3 +1,18 @@
+## [1.1.28](https://github.com/Arex95/npm-arex-core/compare/v1.1.27...v1.1.28) (2025-06-17)
+
+
+### Bug Fixes
+
+* **imports:** update import paths for AppKeyConfig and getAppKey for consistency ([b09d04f](https://github.com/Arex95/npm-arex-core/commit/b09d04fc5eb1e0f0b05ce01ec727aef1297f6aa2))
+
+
+### Features
+
+* **auth:** refactor verifyAuth to use app key directly and simplify parameters ([89fd162](https://github.com/Arex95/npm-arex-core/commit/89fd16258e8307dd195c419798cc239886d2c0f4))
+* **auth:** replace secret key with app key for improved security and refactor related functions ([6d0ba6d](https://github.com/Arex95/npm-arex-core/commit/6d0ba6d77560df5b5ec5818188c163eb6bc56873))
+
+
+
 ## [1.1.27](https://github.com/Arex95/npm-arex-core/compare/v1.1.26...v1.1.27) (2025-06-17)
 
 
