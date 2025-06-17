@@ -7,7 +7,7 @@ import {
 } from "@config/global/sessionConfig";
 import { jwtDecode } from "jwt-decode";
 import { handleError } from "@utils/errors";
-import { getSecretKey } from "@/config";
+import { getAppKey } from "@/config";
 
 /**
  * Clears all stored authentication data (access and refresh tokens)
@@ -123,7 +123,7 @@ export const storeAuthRefreshToken = async (
  * "TOKEN_INVALID" if the token format is invalid.
  */
 export const verifyAuth = async (
-  secretKey: string = getSecretKey(),
+  secretKey: string = getAppKey(),
   preference: SessionPreference = getSessionPersistencePreference()
 ): Promise<boolean> => {
   try {

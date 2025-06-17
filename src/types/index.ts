@@ -7,3 +7,4 @@ export * from './Auth'
 export * from './SessionConfig'
 export * from './DecodedJwtPayload'
 export * from './ArexVueCoreOptions';
+export * from './AppKeyConfig';

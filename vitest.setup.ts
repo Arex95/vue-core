@@ -13,7 +13,7 @@ vi.mock("@config/global/tokensConfig", () => ({
     ACCESS_TOKEN: "access_token",
     REFRESH_TOKEN: "refresh_token",
   })),
-  getSecretKey: vi.fn(() => "default-test-secret-key"),
+  getAppKey: vi.fn(() => "default-test-secret-key"),
 }));
 
 vi.mock("@config/global/endpointsConfig", () => ({

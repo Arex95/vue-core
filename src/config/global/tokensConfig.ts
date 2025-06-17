@@ -1,7 +1,5 @@
 import { TokensConfig } from "@/types";
 
-let secretKey: string = "12345678901234567890123456789012";
-
 let tokensConfig: TokensConfig = Object.freeze({
   ACCESS_TOKEN: "access_token",
   REFRESH_TOKEN: "refresh_token",
@@ -39,24 +37,4 @@ export function configTokenKeys(config: TokenKeyConfig): void {
  */
 export function getTokenConfig(): TokensConfig {
   return tokensConfig;
-}
-
-/**
- * Sets the secret key for use in authentication.
- *
- * @param {string} key - The new secret key.
- *
- * @returns {void} Does not return anything, but updates the secret key.
- */
-export function setSecretKey(key: string): void {
-  secretKey = key;
-}
-
-/**
- * Retrieves the current secret key.
- *
- * @returns {string} The configured secret key.
- */
-export function getSecretKey(): string {
-  return secretKey;
 }
