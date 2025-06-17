@@ -77,6 +77,19 @@ export function useAuth(secretKey: string = getSecretKey()) {
         endpoints.LOGIN,
         params
       );
+
+      if (!data) {
+        throw new Error("LOGIN_ERROR: No data received from login endpoint.");
+      }
+
+      if (!data.access_token) {
+        throw new Error("LOGIN_ERROR: Access token not found in response.");
+      }
+
+      if (!data.refresh_token) {
+        throw new Error("LOGIN_ERROR: Refresh token not found in response.");
+      }
+
       configSession({
         persistencePreference: persistence,
       });
