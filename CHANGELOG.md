@@ -1,3 +1,12 @@
+## [1.1.26](https://github.com/Arex95/npm-arex-core/compare/v1.1.25...v1.1.26) (2025-06-17)
+
+
+### Bug Fixes
+
+* **auth:** add error handling for missing tokens in login response ([ff7cb0d](https://github.com/Arex95/npm-arex-core/commit/ff7cb0d6f8c65dbd548ada3823dfcda15dcac29f))
+
+
+
 ## [1.1.25](https://github.com/Arex95/npm-arex-core/compare/v1.1.24...v1.1.25) (2025-06-16)
 
 
