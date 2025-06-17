@@ -1,3 +1,12 @@
+## [1.1.27](https://github.com/Arex95/npm-arex-core/compare/v1.1.26...v1.1.27) (2025-06-17)
+
+
+### Features
+
+* **auth:** enhance authentication handling and remove unused types ([8428499](https://github.com/Arex95/npm-arex-core/commit/8428499dd90e1d951000c76eb59fbd4c7b0d3cb4))
+
+
+
 ## [1.1.26](https://github.com/Arex95/npm-arex-core/compare/v1.1.25...v1.1.26) (2025-06-17)
 
 
