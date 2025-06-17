@@ -1,7 +1,7 @@
 import { SessionConfig } from "@/types";
 import { v4 as uuidv4 } from "uuid";
 import { storeEncryptedItem, getDecryptedItem } from "@utils/storage";
-import { getAppKey } from "@config/global";
+import { getAppKey } from "@config/global/keyConfig";
 
 export type SessionPreference = "local" | "session";
 

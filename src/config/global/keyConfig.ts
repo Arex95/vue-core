@@ -1,4 +1,4 @@
-import { AppKeyConfig } from "@types";
+import { AppKeyConfig } from "../../types/AppKeyConfig";
 
 let appKey: string | null = null;
 
