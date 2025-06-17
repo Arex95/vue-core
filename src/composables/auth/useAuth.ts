@@ -7,8 +7,8 @@ import {
   storeAuthRefreshToken,
   cleanCredentials,
 } from "@utils/credentials";
-import { AuthParams, AuthResponse } from "@/types";
-
+import { AuthParams, AuthResponse, AuthTokenPaths } from "@/types";
+import { safeGet } from "@utils/objects";
 import {
   configSession,
   getSessionPersistencePreference,
@@ -21,8 +21,8 @@ import { getSecretKey } from "@/config";
  * @property {function(): Promise<number | null>} getTokenExpiry - Retrieves the expiration time of the current token in milliseconds.
  * @property {function(): Promise<void>} cleanCredentials - Clears authentication credentials from storage.
  * @property {(params?: AuthParams) => Promise<void>} logout - Logs out the user, clears credentials, and reloads the page.
- * @property {(params: AuthParams, persistence: SessionPreference) => Promise<AuthResponse>} login - Logs in the user and stores tokens.
- * @property {function(): Promise<AuthResponse>} refresh - Refreshes authentication tokens.
+ * @property {(params: AuthParams, persistence: SessionPreference, tokenPaths?: AuthTokenPaths) => Promise<AuthResponse>} login - Logs in the user and stores tokens.
+ * @property {(tokenPaths?: AuthTokenPaths) => Promise<AuthResponse>} refresh - Refreshes authentication tokens.
  * @property {function(): Promise<boolean>} verifyAuth - Verifies the validity and expiration of the current authentication token.
  * @property {(preference: SessionPreference) => void} setSessionPersistencePreference - Sets the user's preferred storage for authentication data.
  * @property {function(): SessionPreference} getSessionPersistencePreference - Retrieves the user's current preferred storage for authentication data.
@@ -65,12 +65,14 @@ export function useAuth(secretKey: string = getSecretKey()) {
    *
    * @param {AuthParams} params - The authentication parameters (e.g., username, password).
    * @param {SessionPreference} persistence - The storage preference: 'local' for localStorage, 'session' for sessionStorage.
-   * @returns {Promise<AuthResponse>} The authentication response containing tokens and user information.
-   * @throws {Error} If the login request fails.
+   * @param {AuthTokenPaths} [tokenPaths] - Configuración opcional para las rutas (en notación de punto) donde se encuentran los tokens en la respuesta de la API.
+   * @returns {Promise<AuthResponse>} La respuesta de autenticación que contiene los tokens e información del usuario.
+   * @throws {Error} Si la solicitud de login falla, o si los tokens de acceso/refresco no se encuentran o no son válidos en la respuesta.
    */
   const login = async (
     params: AuthParams,
-    persistence: SessionPreference
+    persistence: SessionPreference,
+    tokenPaths?: AuthTokenPaths
   ): Promise<AuthResponse> => {
     try {
       const { data } = await axiosInstance.post<AuthResponse>(
@@ -78,24 +80,37 @@ export function useAuth(secretKey: string = getSecretKey()) {
         params
       );
 
+      const accessTokenPath = tokenPaths?.accessTokenPath || "access_token";
+      const refreshTokenPath = tokenPaths?.refreshTokenPath || "refresh_token";
+
+      const accessTokenPathArray = accessTokenPath.split(".");
+      const refreshTokenPathArray = refreshTokenPath.split(".");
+
       if (!data) {
         throw new Error("LOGIN_ERROR: No data received from login endpoint.");
       }
 
-      if (!data.access_token) {
-        throw new Error("LOGIN_ERROR: Access token not found in response.");
+      const accessToken = safeGet(data, accessTokenPathArray);
+      const refreshToken = safeGet(data, refreshTokenPathArray);
+
+      if (!accessToken || typeof accessToken !== "string") {
+        throw new Error(
+          `LOGIN_ERROR: Access token not found or invalid at path '${accessTokenPath}' in response.`
+        );
       }
 
-      if (!data.refresh_token) {
-        throw new Error("LOGIN_ERROR: Refresh token not found in response.");
+      if (!refreshToken || typeof refreshToken !== "string") {
+        throw new Error(
+          `LOGIN_ERROR: Refresh token not found or invalid at path '${refreshTokenPath}' in response.`
+        );
       }
 
       configSession({
         persistencePreference: persistence,
       });
 
-      await storeAuthToken(data.access_token, secretKey, persistence);
-      await storeAuthRefreshToken(data.refresh_token, secretKey, persistence);
+      await storeAuthToken(accessToken, secretKey, persistence);
+      await storeAuthRefreshToken(refreshToken, secretKey, persistence);
       return data;
     } catch (error) {
       handleError(error, false);
@@ -105,34 +120,71 @@ export function useAuth(secretKey: string = getSecretKey()) {
 
   /**
    * Refreshes the authentication tokens using the stored refresh token.
+   * This function can also accept optional token paths if the refresh endpoint
+   * returns tokens with a different structure than the default login.
    * If no refresh token is found, it throws an error and initiates a logout.
    *
+   * @param {AuthTokenPaths} [tokenPaths] - Configuración opcional para las rutas (en notación de punto) de los tokens de acceso y refresco en la respuesta del endpoint de refresco.
    * @returns {Promise<AuthResponse>} The new authentication response with refreshed tokens.
    * @throws {Error} If the refresh token is missing or the refresh request fails.
    */
-  const refresh = async (): Promise<AuthResponse> => {
+  const refresh = async (
+    tokenPaths?: AuthTokenPaths
+  ): Promise<AuthResponse> => {
     try {
-      const refreshToken = await getAuthRefreshToken(
+      const refreshTokenFromStorage = await getAuthRefreshToken(
         secretKey,
         currentPersistencePreference
       );
 
-      if (!refreshToken) {
-        throw new Error("TOKEN_MISSING: No refresh token found");
+      if (!refreshTokenFromStorage) {
+        throw new Error("TOKEN_MISSING: No refresh token found in storage.");
       }
 
       const { data } = await axiosInstance.post<AuthResponse>(
         endpoints.REFRESH,
-        { refresh_token: refreshToken }
+        { refresh_token: refreshTokenFromStorage }
       );
 
+      const accessTokenPath = tokenPaths?.accessTokenPath || "access_token";
+      const refreshTokenPath = tokenPaths?.refreshTokenPath || "refresh_token";
+
+      const accessTokenPathArray = accessTokenPath.split(".");
+      const refreshTokenPathArray = refreshTokenPath.split(".");
+
+      if (!data) {
+        throw new Error(
+          "REFRESH_ERROR: No data received from refresh endpoint."
+        );
+      }
+
+      const accessTokenAfterRefresh = safeGet(data, accessTokenPathArray);
+      const refreshTokenAfterRefresh = safeGet(data, refreshTokenPathArray);
+
+      if (
+        !accessTokenAfterRefresh ||
+        typeof accessTokenAfterRefresh !== "string"
+      ) {
+        throw new Error(
+          `REFRESH_ERROR: Access token not found or invalid at path '${accessTokenPath}' in refresh response.`
+        );
+      }
+      if (
+        !refreshTokenAfterRefresh ||
+        typeof refreshTokenAfterRefresh !== "string"
+      ) {
+        throw new Error(
+          `REFRESH_ERROR: Refresh token not found or invalid at path '${refreshTokenPath}' in refresh response.`
+        );
+      }
+
       await storeAuthToken(
-        data.access_token,
+        accessTokenAfterRefresh,
         secretKey,
         currentPersistencePreference
       );
       await storeAuthRefreshToken(
-        data.refresh_token,
+        refreshTokenAfterRefresh,
         secretKey,
         currentPersistencePreference
       );
@@ -147,6 +199,6 @@ export function useAuth(secretKey: string = getSecretKey()) {
   return {
     logout,
     login,
-    refresh
+    refresh,
   };
 }
