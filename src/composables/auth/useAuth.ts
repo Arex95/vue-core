@@ -7,12 +7,16 @@ import {
   storeAuthRefreshToken,
   cleanCredentials,
 } from "@utils/credentials";
-import { AuthParams, AuthResponse, AuthTokenPaths } from "@/types";
+import {
+  AuthParams,
+  AuthResponse,
+  AuthTokenPaths,
+  SessionPreference,
+} from "@/types";
 import { safeGet } from "@utils/objects";
 import {
   configSession,
   getSessionPersistence,
-  SessionPreference,
 } from "@config/global/sessionConfig";
 import { getAppKey } from "@/config";
 
@@ -37,8 +41,6 @@ import { getAppKey } from "@/config";
 export function useAuth(secretKey: string = getAppKey()) {
   const axiosInstance = getAxiosInstance();
   const endpoints = getEndpointsConfig();
-  const currentPersistencePreference: SessionPreference =
-    getSessionPersistence();
 
   /**
    * Logs out the user by making a POST request to the logout endpoint,
@@ -54,7 +56,7 @@ export function useAuth(secretKey: string = getAppKey()) {
     } catch (error) {
       handleError(error, false);
     } finally {
-      await cleanCredentials(currentPersistencePreference);
+      await cleanCredentials(await getSessionPersistence());
       window.location.reload();
     }
   };
@@ -134,7 +136,7 @@ export function useAuth(secretKey: string = getAppKey()) {
     try {
       const refreshTokenFromStorage = await getAuthRefreshToken(
         secretKey,
-        currentPersistencePreference
+        await getSessionPersistence()
       );
 
       if (!refreshTokenFromStorage) {
@@ -181,12 +183,12 @@ export function useAuth(secretKey: string = getAppKey()) {
       await storeAuthToken(
         accessTokenAfterRefresh,
         secretKey,
-        currentPersistencePreference
+        await getSessionPersistence()
       );
       await storeAuthRefreshToken(
         refreshTokenAfterRefresh,
         secretKey,
-        currentPersistencePreference
+        await getSessionPersistence()
       );
       return data;
     } catch (error) {
