@@ -1,3 +1,17 @@
+## [1.1.30](https://github.com/Arex95/npm-arex-core/compare/v1.1.29...v1.1.30) (2025-06-18)
+
+
+### Bug Fixes
+
+* **session:** rename session persistence functions for consistency, implement logic for save session configuration. ([2305915](https://github.com/Arex95/npm-arex-core/commit/2305915bcd7f5cfc3b2316ecc16d43a7659291f3))
+
+
+### Features
+
+* **auth:** streamline session persistence handling in useAuth and verifyAuth functions ([a44fecf](https://github.com/Arex95/npm-arex-core/commit/a44fecf615b6cf4e690bcbae7d2b937a60477be8))
+
+
+
 ## [1.1.29](https://github.com/Arex95/npm-arex-core/compare/v1.1.28...v1.1.29) (2025-06-17)
 
 
