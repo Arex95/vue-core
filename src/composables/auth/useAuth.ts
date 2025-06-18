@@ -11,7 +11,7 @@ import { AuthParams, AuthResponse, AuthTokenPaths } from "@/types";
 import { safeGet } from "@utils/objects";
 import {
   configSession,
-  getSessionPersistencePreference,
+  getSessionPersistence,
   SessionPreference,
 } from "@config/global/sessionConfig";
 import { getAppKey } from "@/config";
@@ -25,7 +25,7 @@ import { getAppKey } from "@/config";
  * @property {(tokenPaths?: AuthTokenPaths) => Promise<AuthResponse>} refresh - Refreshes authentication tokens.
  * @property {function(): Promise<boolean>} verifyAuth - Verifies the validity and expiration of the current authentication token.
  * @property {(preference: SessionPreference) => void} setSessionPersistencePreference - Sets the user's preferred storage for authentication data.
- * @property {function(): SessionPreference} getSessionPersistencePreference - Retrieves the user's current preferred storage for authentication data.
+ * @property {function(): SessionPreference} getSessionPersistence - Retrieves the user's current preferred storage for authentication data.
  */
 
 /**
@@ -38,7 +38,7 @@ export function useAuth(secretKey: string = getAppKey()) {
   const axiosInstance = getAxiosInstance();
   const endpoints = getEndpointsConfig();
   const currentPersistencePreference: SessionPreference =
-    getSessionPersistencePreference();
+    getSessionPersistence();
 
   /**
    * Logs out the user by making a POST request to the logout endpoint,

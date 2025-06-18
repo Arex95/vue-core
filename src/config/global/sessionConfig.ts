@@ -1,136 +1,128 @@
-import { SessionConfig } from "@/types";
 import { v4 as uuidv4 } from "uuid";
 import { storeEncryptedItem, getDecryptedItem } from "@utils/storage";
 import { getAppKey } from "@config/global/keyConfig";
+import {
+  InternalSessionState,
+  SessionPreference,
+  SessionConfigObject,
+  SessionConfig
+} from "@/types/SessionConfig";
 
-export type SessionPreference = "local" | "session";
+const SESSION_KEY = "session_config_";
 
-let sessionId: string = uuidv4();
+const internalSessionState: InternalSessionState = {
+  sessionId: uuidv4(),
+  persistencePreference: "session",
+};
 
-let sessionConfig: SessionConfig = Object.freeze({
-  SESSION_ID: sessionId,
+let _sessionConfig: SessionConfig = Object.freeze({
+  SESSION_ID: internalSessionState.sessionId,
+  PERSISTENCE: internalSessionState.persistencePreference,
 });
 
-let persistencePreference: SessionPreference = "session";
-
 /**
- * Configuration object for the session.
+ * Updates the immutable `_sessionConfig` object with the current state of `internalSessionState`
+ * and freezes it.
  */
-interface SessionConfigObject {
-  /** The unique session identifier. */
-  sessionId?: string;
-  /** The storage preference: 'local' for localStorage, 'session' for sessionStorage. */
-  persistencePreference?: SessionPreference;
-}
-
-/**
- * Loads the session configuration from storage (local or session).
- * This should be called once when the application initializes.
- */
-export async function loadSessionConfigFromStorage(): Promise<void> {
-  const isPersistent = persistencePreference === "local";
-  const storedConfig = await getDecryptedItem(
-    "sessionConfig",
-    getAppKey(),
-    isPersistent
-  );
-  if (storedConfig) {
-    try {
-      const parsedConfig = JSON.parse(storedConfig);
-      sessionConfig = Object.freeze({
-        ...sessionConfig,
-        ...parsedConfig,
-      });
-      if (parsedConfig.SESSION_ID) {
-        sessionId = parsedConfig.SESSION_ID;
-      }
-    } catch (error) {
-      console.error("Error parsing stored session config:", error);
-      regenerateSessionId();
-    }
-  } else {
-    regenerateSessionId();
-  }
-  await saveSessionConfigToStorage();
+function updateSessionConfig(): void {
+  _sessionConfig = Object.freeze({
+    SESSION_ID: internalSessionState.sessionId,
+    PERSISTENCE: internalSessionState.persistencePreference,
+  });
 }
 
 /**
  * Saves the current session configuration to local or session storage.
+ * @returns {Promise<void>} A promise that resolves when the session configuration has been saved.
  */
-async function saveSessionConfigToStorage(): Promise<void> {
-  const isPersistent = persistencePreference === "local";
+async function saveSessionConfig(): Promise<void> {
+  const isPersistent = internalSessionState.persistencePreference === "local";
   try {
     await storeEncryptedItem(
-      "sessionConfig",
-      JSON.stringify(sessionConfig),
+      SESSION_KEY,
+      JSON.stringify(_sessionConfig),
       getAppKey(),
       isPersistent
     );
   } catch (error) {
-    console.error("Error saving session config to storage:", error);
+    console.error("Error saving session configuration to storage:", error);
   }
 }
 
 /**
- * Configures the session identifier and/or the data persistence preference for the active browser session.
- * Once configured, the session ID cannot be modified. The persistence preference can be updated.
+ * Attempts to load the configuration from storage.
+ * If it fails or is not found, `internalSessionState` will retain its current values (initial or last configured).
+ * Then, it updates `_sessionConfig`.
  *
- * @param {SessionConfigObject} config - An object containing the unique session identifier and/or persistence preference.
- *
- * @returns {void} Does not return anything, but freezes the session configuration (for ID) and updates preference.
+ * @returns {Promise<void>} A promise that resolves when the state has been loaded and updated.
  */
-export function configSession(config: SessionConfigObject): void {
-  let updatedConfig = { ...sessionConfig };
-
-  if (config.sessionId && sessionConfig.SESSION_ID === sessionId) {
-    updatedConfig = {
-      ...updatedConfig,
-      SESSION_ID: config.sessionId,
-    };
-    sessionId = config.sessionId;
+async function loadSessionConfig(): Promise<void> {
+  try {
+    const storedConfig = await getDecryptedItem(SESSION_KEY, getAppKey(), true);
+    if (storedConfig) {
+      const parsedConfig = JSON.parse(storedConfig);
+      internalSessionState.sessionId = parsedConfig.SESSION_ID;
+      internalSessionState.persistencePreference = parsedConfig.PERSISTENCE;
+      updateSessionConfig();
+    }
+  } catch (error) {
+    console.warn(`Error loading or parsing from storage`, error);
   }
+}
 
+/**
+ * Configures the session identifier and/or data persistence preference
+ * for the active browser session.
+ *
+ * This function is asynchronous because it will always attempt to load the current configuration
+ * before applying changes and then saving them.
+ *
+ * @param {SessionConfigObject} config - An object containing the unique session identifier and/or
+ * the persistence preference.
+ * @returns {Promise<void>} A promise that resolves when the session has been configured and saved.
+ */
+export async function configSession(
+  config: SessionConfigObject
+): Promise<void> {
+  if (config.sessionId) {
+    internalSessionState.sessionId = config.sessionId;
+  }
   if (config.persistencePreference) {
-    persistencePreference = config.persistencePreference;
+    internalSessionState.persistencePreference = config.persistencePreference;
   }
-
-  sessionConfig = Object.freeze(updatedConfig);
-  saveSessionConfigToStorage();
-}
-
-/**
- * Retrieves the current session identifier configuration.
- *
- * @returns {string} The unique session identifier.
- */
-export function getSessionConfig(): string {
-  return sessionConfig.SESSION_ID;
-}
-
-/**
- * Retrieves the current data persistence preference.
- *
- * @returns {SessionPreference} The configured persistence preference ('local' or 'session').
- */
-export function getSessionPersistencePreference(): SessionPreference {
-  return persistencePreference;
-}
-
-/**
- * Generates a new UUID for the current session.
- *
- * @returns {void} Does not return anything, but updates the session identifier.
- */
-export function regenerateSessionId(): void {
-  sessionId = uuidv4();
-  configSession({ sessionId: sessionId });
+  updateSessionConfig();
+  await saveSessionConfig();
 }
 
 /**
  * Retrieves the current session identifier.
+ * Always attempts to load the configuration from storage. If it fails, it uses the internal state.
  *
- * @returns {string} The unique session identifier.
+ * @returns {Promise<string>} A promise that resolves with the unique session identifier.
  */
-export function getSessionId(): string {
-  return sessionId;
+export async function getSessionId(): Promise<string> {
+  await loadSessionConfig();
+  return _sessionConfig.SESSION_ID;
+}
+
+/**
+ * Retrieves the current data persistence preference.
+ * Always attempts to load the configuration from storage. If it fails, it uses the internal state.
+ *
+ * @returns {Promise<SessionPreference>} A promise that resolves with the configured persistence preference ('local' or 'session').
+ */
+export async function getSessionPersistence(): Promise<SessionPreference> {
+  await loadSessionConfig();
+  return _sessionConfig.PERSISTENCE;
+}
+
+/**
+ * Retrieves the complete session configuration.
+ * Always attempts to load the configuration from storage. If it fails, it uses the internal state.
+ *
+ * @returns {Promise<SessionConfig>} A promise that resolves with the session configuration object.
+ */
+export async function getSessionConfig(): Promise<SessionConfig> {
+  await loadSessionConfig();
+  return _sessionConfig;
 }

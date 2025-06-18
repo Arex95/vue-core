@@ -3,7 +3,7 @@ import { getDecryptedItem, storeEncryptedItem } from "@utils/storage";
 import { TokensConfig } from "@/types";
 import {
   SessionPreference,
-  getSessionPersistencePreference,
+  getSessionPersistence,
 } from "@config/global/sessionConfig";
 import { jwtDecode } from "jwt-decode";
 import { handleError } from "@utils/errors";
@@ -123,7 +123,7 @@ export const storeAuthRefreshToken = async (
  * "TOKEN_INVALID" if the token format is invalid.
  */
 export const verifyAuth = async (): Promise<boolean> => {
-  const preference: SessionPreference = getSessionPersistencePreference();
+  const preference: SessionPreference = getSessionPersistence();
   try {
     const token = await getAuthToken(
       getAppKey(),
