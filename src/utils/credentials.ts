@@ -4,25 +4,33 @@ import { TokensConfig } from "@/types";
 import {
   getSessionPersistence,
 } from "@config/global/sessionConfig";
-import { SessionPreference } from "@/types/SessionConfig"
+import { LocationPreference } from "@/types/SessionConfig"
 import { jwtDecode } from "jwt-decode";
 import { handleError } from "@utils/errors";
 import { getAppKey } from "@/config";
 
 /**
  * Clears all stored authentication data (access and refresh tokens)
- * from either sessionStorage or localStorage based on the provided preference.
+ * from either sessionStorage, localStorage, or both based on the provided location preference.
  *
- * @param {SessionPreference} preference - The storage preference ('local' for localStorage, 'session' for sessionStorage).
+ * @param {LocationPreference} location - The storage preference ('local' for localStorage, 'session' for sessionStorage, 'any' for both).
  * @returns {Promise<void>} A promise that resolves when all relevant storage items are removed.
  */
 export const cleanCredentials = async (
-  preference: SessionPreference
+  location: LocationPreference
 ): Promise<void> => {
   const tokensConfig = getTokenConfig();
+
   (Object.keys(tokensConfig) as (keyof TokensConfig)[]).forEach((key) => {
-    const storage = preference === "local" ? localStorage : sessionStorage;
-    storage.removeItem(tokensConfig[key]);
+    const itemKey = tokensConfig[key];
+
+    if (location === "local" || location === "any") {
+      localStorage.removeItem(itemKey);
+    }
+
+    if (location === "session" || location === "any") {
+      sessionStorage.removeItem(itemKey);
+    }
   });
 };
 
@@ -36,13 +44,13 @@ export const cleanCredentials = async (
  */
 export const getAuthToken = async (
   secretKey: string,
-  preference: SessionPreference
+  location: LocationPreference
 ): Promise<string | null> => {
   const tokensConfig = getTokenConfig();
   return await getDecryptedItem(
     tokensConfig.ACCESS_TOKEN,
     secretKey,
-    preference === "local"
+    location
   );
 };
 
@@ -56,13 +64,13 @@ export const getAuthToken = async (
  */
 export const getAuthRefreshToken = async (
   secretKey: string,
-  preference: SessionPreference
+  location: LocationPreference
 ): Promise<string | null> => {
   const tokensConfig = getTokenConfig();
   return await getDecryptedItem(
     tokensConfig.REFRESH_TOKEN,
     secretKey,
-    preference === "local"
+    location
   );
 };
 
@@ -78,14 +86,14 @@ export const getAuthRefreshToken = async (
 export const storeAuthToken = async (
   token: string,
   secretKey: string,
-  preference: SessionPreference
+  location: LocationPreference
 ): Promise<void> => {
   const tokensConfig = getTokenConfig();
   await storeEncryptedItem(
     tokensConfig.ACCESS_TOKEN,
     token,
     secretKey,
-    preference === "local"
+    location
   );
 };
 
@@ -101,14 +109,14 @@ export const storeAuthToken = async (
 export const storeAuthRefreshToken = async (
   token: string,
   secretKey: string,
-  preference: SessionPreference
+  location: LocationPreference
 ): Promise<void> => {
   const tokensConfig = getTokenConfig();
   await storeEncryptedItem(
     tokensConfig.REFRESH_TOKEN,
     token,
     secretKey,
-    preference === "local"
+    location
   );
 };
 
@@ -121,7 +129,7 @@ export const storeAuthRefreshToken = async (
  * "TOKEN_INVALID" if the token format is invalid.
  */
 export const verifyAuth = async (): Promise<boolean> => {
-  const sessionPersistence = await getSessionPersistence();
+  const sessionPersistence ='any';
 
   const handleAuthError = async (message: string, shouldClean: boolean = true) => {
     handleError(message, false);

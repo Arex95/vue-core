@@ -1,16 +1,16 @@
-export type SessionPreference = "local" | "session";
+export type LocationPreference = "local" | "session" | "any";
 
 export type SessionConfig = {
   SESSION_ID: string;
-  PERSISTENCE: SessionPreference;
+  PERSISTENCE: LocationPreference;
 };
 
 export interface InternalSessionState {
   sessionId: string;
-  persistencePreference: SessionPreference;
+  persistencePreference: LocationPreference;
 }
 
 export interface SessionConfigObject {
   sessionId?: string;
-  persistencePreference?: SessionPreference;
+  persistencePreference?: LocationPreference;
 }

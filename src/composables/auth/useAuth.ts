@@ -11,7 +11,7 @@ import {
   AuthParams,
   AuthResponse,
   AuthTokenPaths,
-  SessionPreference,
+  LocationPreference,
 } from "@/types";
 import { safeGet } from "@utils/objects";
 import {
@@ -73,7 +73,7 @@ export function useAuth(secretKey: string = getAppKey()) {
    */
   const login = async (
     params: AuthParams,
-    persistence: SessionPreference,
+    persistence: LocationPreference,
     tokenPaths?: AuthTokenPaths
   ): Promise<AuthResponse> => {
     try {

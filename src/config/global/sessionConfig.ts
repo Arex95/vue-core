@@ -3,7 +3,7 @@ import { storeEncryptedItem, getDecryptedItem } from "@utils/storage";
 import { getAppKey } from "@config/global/keyConfig";
 import {
   InternalSessionState,
-  SessionPreference,
+  LocationPreference,
   SessionConfigObject,
   SessionConfig
 } from "@/types/SessionConfig";
@@ -36,13 +36,13 @@ function updateSessionConfig(): void {
  * @returns {Promise<void>} A promise that resolves when the session configuration has been saved.
  */
 async function saveSessionConfig(): Promise<void> {
-  const isPersistent = internalSessionState.persistencePreference === "local";
+  const location = internalSessionState.persistencePreference;
   try {
     await storeEncryptedItem(
       SESSION_KEY,
       JSON.stringify(_sessionConfig),
       getAppKey(),
-      isPersistent
+      location
     );
   } catch (error) {
     console.error("Error saving session configuration to storage:", error);
@@ -57,8 +57,9 @@ async function saveSessionConfig(): Promise<void> {
  * @returns {Promise<void>} A promise that resolves when the state has been loaded and updated.
  */
 async function loadSessionConfig(): Promise<void> {
+  const location = internalSessionState.persistencePreference;
   try {
-    const storedConfig = await getDecryptedItem(SESSION_KEY, getAppKey(), true);
+    const storedConfig = await getDecryptedItem(SESSION_KEY, getAppKey(), location);
     if (storedConfig) {
       const parsedConfig = JSON.parse(storedConfig);
       internalSessionState.sessionId = parsedConfig.SESSION_ID;
@@ -111,7 +112,7 @@ export async function getSessionId(): Promise<string> {
  *
  * @returns {Promise<SessionPreference>} A promise that resolves with the configured persistence preference ('local' or 'session').
  */
-export async function getSessionPersistence(): Promise<SessionPreference> {
+export async function getSessionPersistence(): Promise<LocationPreference> {
   await loadSessionConfig();
   return _sessionConfig.PERSISTENCE;
 }
