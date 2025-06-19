@@ -1,3 +1,12 @@
+## [1.1.31](https://github.com/Arex95/npm-arex-core/compare/v1.1.30...v1.1.31) (2025-06-19)
+
+
+### Features
+
+* **auth:** rename SessionPreference to LocationPreference and update related functions for improved clarity and functionality ([81910e5](https://github.com/Arex95/npm-arex-core/commit/81910e561c95bb1a8054a7a8121d72ca4e624b4c))
+
+
+
 ## [1.1.30](https://github.com/Arex95/npm-arex-core/compare/v1.1.29...v1.1.30) (2025-06-18)
 
 
