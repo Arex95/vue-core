@@ -1,257 +1,206 @@
-import * as CryptoJS from 'crypto-js'
-import { computed } from 'vue'
-import { jwtDecode } from 'jwt-decode'
-import { getAxiosInstance } from '@config/axios'
-import { handleError } from '@utils/errors'
-import { getTokenConfig, getSecretKey } from '@/config/global/tokensConfig'
-import { getEndpointsConfig } from '@config/global/endpointsConfig'
-import { AuthConfig, TokensConfig } from "@/types";
-
-const axiosInstance = getAxiosInstance()
-const tokensConfig = getTokenConfig()
-const endpointsConfig = getEndpointsConfig()
-
-const config: AuthConfig = {
-  endpoints: endpointsConfig,
-  storageKeys: tokensConfig,
-}
-
-/**
- * Configures authentication settings globally.
- * Allows modifying default endpoints and storage keys.
- *
- * @param {Object} options - Custom configuration options.
- * @param {Object} [options.endpoints] - Custom endpoints for login, refresh, and logout.
- * @param {Object} [options.storageKeys] - Custom storage keys for tokens.
- */
-export function configureAuth(options: AuthConfig) {
-  if (options.endpoints) {
-    config.endpoints = { ...config.endpoints, ...options.endpoints }
-  }
-  if (options.storageKeys) {
-    config.storageKeys = { ...config.storageKeys, ...options.storageKeys }
-  }
-}
+import { getAxiosInstance } from "@config/axios";
+import { getEndpointsConfig } from "@config/global/endpointsConfig";
+import { handleError } from "@utils/errors";
+import {
+  getAuthRefreshToken,
+  storeAuthToken,
+  storeAuthRefreshToken,
+  cleanCredentials,
+} from "@utils/credentials";
+import {
+  AuthParams,
+  AuthResponse,
+  AuthTokenPaths,
+  LocationPreference,
+} from "@/types";
+import { safeGet } from "@utils/objects";
+import {
+  configSession,
+  getSessionPersistence,
+} from "@config/global/sessionConfig";
+import { getAppKey } from "@/config";
 
 /**
- * Encrypts a value using AES encryption.
- *
- * @param {string} value - The value to encrypt.
- * @param {string} key - The encryption key.
- * @returns {string} The encrypted string.
+ * @typedef {object} AuthHook
+ * @property {function(): Promise<number | null>} getTokenExpiry - Retrieves the expiration time of the current token in milliseconds.
+ * @property {function(): Promise<void>} cleanCredentials - Clears authentication credentials from storage.
+ * @property {(params?: AuthParams) => Promise<void>} logout - Logs out the user, clears credentials, and reloads the page.
+ * @property {(params: AuthParams, persistence: SessionPreference, tokenPaths?: AuthTokenPaths) => Promise<AuthResponse>} login - Logs in the user and stores tokens.
+ * @property {(tokenPaths?: AuthTokenPaths) => Promise<AuthResponse>} refresh - Refreshes authentication tokens.
+ * @property {function(): Promise<boolean>} verifyAuth - Verifies the validity and expiration of the current authentication token.
+ * @property {(preference: SessionPreference) => void} setSessionPersistencePreference - Sets the user's preferred storage for authentication data.
+ * @property {function(): SessionPreference} getSessionPersistence - Retrieves the user's current preferred storage for authentication data.
  */
-const encrypt = (value: string, key: string) => {
-  return CryptoJS.AES.encrypt(value, key).toString()
-}
 
 /**
- * Decrypts an AES encrypted value.
+ * Custom hook for authentication logic, including login, logout, token management, and session preference.
  *
- * @param {string} value - The encrypted value.
- * @param {string} key - The encryption key.
- * @returns {string} The decrypted string.
+ * @param {string} secretKey - The secret key used for token encryption/decryption.
+ * @returns {AuthHook} An object containing authentication functions.
  */
-const decrypt = (value: string, key: string) => {
-  const bytes = CryptoJS.AES.decrypt(value, key);
-  return bytes.toString(CryptoJS.enc.Utf8);
-};
+export function useAuth(secretKey: string = getAppKey()) {
+  const axiosInstance = getAxiosInstance();
+  const endpoints = getEndpointsConfig();
 
-/**
- * Stores an encrypted value in sessionStorage or localStorage.
- *
- * @param {string} key - Storage key.
- * @param {any} value - Value to store.
- * @param {string} secretKey - Encryption key.
- * @param {boolean} isRememberMe - Whether to store in localStorage.
- * @param {number} [attempt=0] - Retry attempt count.
- * @returns {Promise<void>} 
- */
-const storeEncryptedItem = async (
-  value: string,
-  key: string,
-  secretKey: string,
-  isRememberMe: boolean,
-  attempt: number = 0
-) => {
-  const storage = isRememberMe ? localStorage : sessionStorage;
-  if (typeof window !== "undefined" && storage) {
+  /**
+   * Logs out the user by making a POST request to the logout endpoint,
+   * cleaning all stored credentials, and reloading the page.
+   * The session persistence preference is NOT reset here; it persists across logouts.
+   *
+   * @param {AuthParams} [params={}] - Optional parameters to send with the logout request.
+   * @returns {Promise<void>}
+   */
+  const logout = async (params: AuthParams = {}): Promise<void> => {
     try {
-      storage.setItem(key, encrypt(value, secretKey));
-      return;
+      await axiosInstance.post(endpoints.LOGOUT, params);
     } catch (error) {
       handleError(error, false);
-      if (attempt < 5) {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        return await storeEncryptedItem(
-          key,
-          value,
-          secretKey,
-          isRememberMe,
-          attempt + 1
+    } finally {
+      await cleanCredentials(await getSessionPersistence());
+      window.location.reload();
+    }
+  };
+
+  /**
+   * Authenticates the user by making a POST request to the login endpoint,
+   * stores the received access and refresh tokens, and sets the session persistence preference.
+   *
+   * @param {AuthParams} params - The authentication parameters (e.g., username, password).
+   * @param {SessionPreference} persistence - The storage preference: 'local' for localStorage, 'session' for sessionStorage.
+   * @param {AuthTokenPaths} [tokenPaths] - Configuración opcional para las rutas (en notación de punto) donde se encuentran los tokens en la respuesta de la API.
+   * @returns {Promise<AuthResponse>} La respuesta de autenticación que contiene los tokens e información del usuario.
+   * @throws {Error} Si la solicitud de login falla, o si los tokens de acceso/refresco no se encuentran o no son válidos en la respuesta.
+   */
+  const login = async (
+    params: AuthParams,
+    persistence: LocationPreference,
+    tokenPaths?: AuthTokenPaths
+  ): Promise<AuthResponse> => {
+    try {
+      const { data } = await axiosInstance.post<AuthResponse>(
+        endpoints.LOGIN,
+        params
+      );
+
+      const accessTokenPath = tokenPaths?.accessTokenPath || "access_token";
+      const refreshTokenPath = tokenPaths?.refreshTokenPath || "refresh_token";
+
+      const accessTokenPathArray = accessTokenPath.split(".");
+      const refreshTokenPathArray = refreshTokenPath.split(".");
+
+      if (!data) {
+        throw new Error("LOGIN_ERROR: No data received from login endpoint.");
+      }
+
+      const accessToken = safeGet(data, accessTokenPathArray);
+      const refreshToken = safeGet(data, refreshTokenPathArray);
+
+      if (!accessToken || typeof accessToken !== "string") {
+        throw new Error(
+          `LOGIN_ERROR: Access token not found or invalid at path '${accessTokenPath}' in response.`
         );
       }
-      throw new Error(
-        `Storage not available for key ${key} after multiple attempts`
-      );
-    }
-  } else {
-    if (attempt < 5) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      return await storeEncryptedItem(
-        key,
-        value,
-        secretKey,
-        isRememberMe,
-        attempt + 1
-      );
-    }
-    throw new Error(
-      `Storage not available for key ${key} after multiple attempts`
-    );
-  }
-};
 
-/**
- * Retrieves and decrypts a stored value.
- *
- * @param {string} key - Storage key.
- * @param {string} secretKey - Decryption key.
- * @param {boolean} isRememberMe - Whether to retrieve from localStorage.
- * @returns {string|null} The decrypted value or null.
- */
-function getDecryptedValue(key: string, secretKey: string, isRememberMe: boolean) {
-  const storage = isRememberMe ? localStorage : sessionStorage
-  try {
-    const value = storage.getItem(key)
-    return value ? decrypt(value, secretKey) : null
-  } catch (error) {
-    handleError(error, false)
-    return null
-  }
-}
-
-/**
- * Provides authentication utilities.
- *
- * @param {string} [secretKey=getSecretKey()] - Encryption key.
- * @returns {Object} Auth composable methods and properties.
- */
-export function useAuth(secretKey = getSecretKey()) {
-  const jwt = computed(() => getDecryptedValue(config.storageKeys.ACCESS_TOKEN, secretKey, false))
-  const refresh_token = computed(() => getDecryptedValue(config.storageKeys.REFRESH_TOKEN, secretKey, false))
-
-  /**
-   * Computes token expiration timestamp.
-   */
-  const tokenExpiry = computed(() => {
-    if (!jwt.value) return null
-    try {
-      const decoded = jwtDecode(jwt.value)
-      return decoded.exp ? decoded.exp * 1000 : null
-    } catch (error) {
-      handleError(error, false)
-      return null
-    }
-  })
-
-  /**
-   * Checks if the user is authenticated.
-   */
-  const isAuthenticated = computed(() => {
-    if (!jwt.value || jwt.value.length === 0) {
-      return false
-    }
-    if (tokenExpiry.value === null) {
-      return false
-    }
-    return tokenExpiry.value > Date.now()
-  })
-
-  /**
-   * Handles user login.
-   */
-  const login = async (params = {}, isRememberMe: boolean) => {
-    try {
-      const response = await axiosInstance.post(config.endpoints.LOGIN, params)
-      await storeEncryptedItem(config.storageKeys.ACCESS_TOKEN, response.data.token, secretKey, isRememberMe)
-      await storeEncryptedItem(config.storageKeys.REFRESH_TOKEN, response.data.refresh_token, secretKey, isRememberMe)
-      return response
-    } catch (error) {
-      handleError(error, false)
-      throw error
-    }
-  }
-
-  /**
-   * Refreshes authentication token.
-   */
-  const refresh = async () => {
-    try {
-      const response = await axiosInstance.post(config.endpoints.REFRESH, {})
-      await storeEncryptedItem(config.storageKeys.ACCESS_TOKEN, response.data.token, secretKey, false)
-      await storeEncryptedItem(config.storageKeys.REFRESH_TOKEN, response.data.refresh_token, secretKey, false)
-      return response
-    } catch (error) {
-      handleError(error, false)
-      await logout()
-    }
-  }
-
-  /**
-   * Logs out the user.
-   */
-  const logout = async (params = {}) => {
-    try {
-      await axiosInstance.post(config.endpoints.LOGOUT, params)
-    } catch (error) {
-      handleError(error, false)
-    } finally {
-      await cleanStorage()
-      location.reload()
-    }
-  }
-
-  /**
-   * Clears stored authentication data.
-   */
-  const cleanStorage = async () => {
-    (Object.keys(config.storageKeys) as (keyof TokensConfig)[]).forEach(key => {
-      sessionStorage.removeItem(config.storageKeys[key])
-      localStorage.removeItem(config.storageKeys[key])
-    })
-  }
-
-  /**
-   * Verifies token validity.
-   */
-  const verifyToken = async () => {
-    if (!jwt.value) {
-      handleError('TOKEN_MISSING: No valid token found', true, '/auth-error', 'query')
-      await cleanStorage()
-      throw new Error('TOKEN_MISSING: No valid token found')
-    }
-    try {
-      const decoded = jwtDecode(jwt.value)
-      if (decoded.exp ? decoded.exp * 1000 < Date.now() : false) {
-        handleError('TOKEN_EXPIRED', false)
-        await refresh()
+      if (!refreshToken || typeof refreshToken !== "string") {
+        throw new Error(
+          `LOGIN_ERROR: Refresh token not found or invalid at path '${refreshTokenPath}' in response.`
+        );
       }
+
+      configSession({
+        persistencePreference: persistence,
+      });
+
+      await storeAuthToken(accessToken, secretKey, persistence);
+      await storeAuthRefreshToken(refreshToken, secretKey, persistence);
+      return data;
     } catch (error) {
-      handleError('TOKEN_INVALID: Token verification failed', true, '/auth-error', 'query')
-      await cleanStorage()
-      throw new Error('TOKEN_INVALID: Token verification failed')
+      handleError(error, false);
+      throw error;
     }
-  }
+  };
+
+  /**
+   * Refreshes the authentication tokens using the stored refresh token.
+   * This function can also accept optional token paths if the refresh endpoint
+   * returns tokens with a different structure than the default login.
+   * If no refresh token is found, it throws an error and initiates a logout.
+   *
+   * @param {AuthTokenPaths} [tokenPaths] - Configuración opcional para las rutas (en notación de punto) de los tokens de acceso y refresco en la respuesta del endpoint de refresco.
+   * @returns {Promise<AuthResponse>} The new authentication response with refreshed tokens.
+   * @throws {Error} If the refresh token is missing or the refresh request fails.
+   */
+  const refresh = async (
+    tokenPaths?: AuthTokenPaths
+  ): Promise<AuthResponse> => {
+    try {
+      const refreshTokenFromStorage = await getAuthRefreshToken(
+        secretKey,
+        await getSessionPersistence()
+      );
+
+      if (!refreshTokenFromStorage) {
+        throw new Error("TOKEN_MISSING: No refresh token found in storage.");
+      }
+
+      const { data } = await axiosInstance.post<AuthResponse>(
+        endpoints.REFRESH,
+        { refresh_token: refreshTokenFromStorage }
+      );
+
+      const accessTokenPath = tokenPaths?.accessTokenPath || "access_token";
+      const refreshTokenPath = tokenPaths?.refreshTokenPath || "refresh_token";
+
+      const accessTokenPathArray = accessTokenPath.split(".");
+      const refreshTokenPathArray = refreshTokenPath.split(".");
+
+      if (!data) {
+        throw new Error(
+          "REFRESH_ERROR: No data received from refresh endpoint."
+        );
+      }
+
+      const accessTokenAfterRefresh = safeGet(data, accessTokenPathArray);
+      const refreshTokenAfterRefresh = safeGet(data, refreshTokenPathArray);
+
+      if (
+        !accessTokenAfterRefresh ||
+        typeof accessTokenAfterRefresh !== "string"
+      ) {
+        throw new Error(
+          `REFRESH_ERROR: Access token not found or invalid at path '${accessTokenPath}' in refresh response.`
+        );
+      }
+      if (
+        !refreshTokenAfterRefresh ||
+        typeof refreshTokenAfterRefresh !== "string"
+      ) {
+        throw new Error(
+          `REFRESH_ERROR: Refresh token not found or invalid at path '${refreshTokenPath}' in refresh response.`
+        );
+      }
+
+      await storeAuthToken(
+        accessTokenAfterRefresh,
+        secretKey,
+        await getSessionPersistence()
+      );
+      await storeAuthRefreshToken(
+        refreshTokenAfterRefresh,
+        secretKey,
+        await getSessionPersistence()
+      );
+      return data;
+    } catch (error) {
+      handleError(error, false);
+      await logout();
+      throw error;
+    }
+  };
 
   return {
-    isAuthenticated,
-    jwt,
-    refresh_token,
-    tokenExpiry,
+    logout,
     login,
     refresh,
-    logout,
-    cleanStorage,
-    verifyToken
-  }
+  };
 }

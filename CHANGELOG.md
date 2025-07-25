@@ -1,3 +1,215 @@
+## [1.1.34](https://github.com/Arex95/npm-arex-core/compare/v1.1.33...v1.1.34) (2025-07-25)
+
+
+
+## [1.1.33](https://github.com/Arex95/npm-arex-core/compare/v1.1.32...v1.1.33) (2025-07-25)
+
+
+
+## [1.1.32](https://github.com/Arex95/npm-arex-core/compare/v1.1.31...v1.1.32) (2025-07-25)
+
+
+
+## [1.1.31](https://github.com/Arex95/npm-arex-core/compare/v1.1.30...v1.1.31) (2025-06-19)
+
+
+### Features
+
+* **auth:** rename SessionPreference to LocationPreference and update related functions for improved clarity and functionality ([81910e5](https://github.com/Arex95/npm-arex-core/commit/81910e561c95bb1a8054a7a8121d72ca4e624b4c))
+
+
+
+## [1.1.30](https://github.com/Arex95/npm-arex-core/compare/v1.1.29...v1.1.30) (2025-06-18)
+
+
+### Bug Fixes
+
+* **session:** rename session persistence functions for consistency, implement logic for save session configuration. ([2305915](https://github.com/Arex95/npm-arex-core/commit/2305915bcd7f5cfc3b2316ecc16d43a7659291f3))
+
+
+### Features
+
+* **auth:** streamline session persistence handling in useAuth and verifyAuth functions ([a44fecf](https://github.com/Arex95/npm-arex-core/commit/a44fecf615b6cf4e690bcbae7d2b937a60477be8))
+
+
+
+## [1.1.29](https://github.com/Arex95/npm-arex-core/compare/v1.1.28...v1.1.29) (2025-06-17)
+
+
+
+## [1.1.28](https://github.com/Arex95/npm-arex-core/compare/v1.1.27...v1.1.28) (2025-06-17)
+
+
+### Bug Fixes
+
+* **imports:** update import paths for AppKeyConfig and getAppKey for consistency ([b09d04f](https://github.com/Arex95/npm-arex-core/commit/b09d04fc5eb1e0f0b05ce01ec727aef1297f6aa2))
+
+
+### Features
+
+* **auth:** refactor verifyAuth to use app key directly and simplify parameters ([89fd162](https://github.com/Arex95/npm-arex-core/commit/89fd16258e8307dd195c419798cc239886d2c0f4))
+* **auth:** replace secret key with app key for improved security and refactor related functions ([6d0ba6d](https://github.com/Arex95/npm-arex-core/commit/6d0ba6d77560df5b5ec5818188c163eb6bc56873))
+
+
+
+## [1.1.27](https://github.com/Arex95/npm-arex-core/compare/v1.1.26...v1.1.27) (2025-06-17)
+
+
+### Features
+
+* **auth:** enhance authentication handling and remove unused types ([8428499](https://github.com/Arex95/npm-arex-core/commit/8428499dd90e1d951000c76eb59fbd4c7b0d3cb4))
+
+
+
+## [1.1.26](https://github.com/Arex95/npm-arex-core/compare/v1.1.25...v1.1.26) (2025-06-17)
+
+
+### Bug Fixes
+
+* **auth:** add error handling for missing tokens in login response ([ff7cb0d](https://github.com/Arex95/npm-arex-core/commit/ff7cb0d6f8c65dbd548ada3823dfcda15dcac29f))
+
+
+
+## [1.1.25](https://github.com/Arex95/npm-arex-core/compare/v1.1.24...v1.1.25) (2025-06-16)
+
+
+### Bug Fixes
+
+* **encryption:** enhance error handling and validation in hex2ab, importKey, and decrypt functions ([d9284d9](https://github.com/Arex95/npm-arex-core/commit/d9284d99fead48226964dccd9059f3a82ea61132))
+* **tests:** improve hex2ab error handling and enhance decrypt failure cases ([b40ee9f](https://github.com/Arex95/npm-arex-core/commit/b40ee9f7711ecd7dde383e5bd970a9a34cf56838))
+
+
+
+## [1.1.24](https://github.com/Arex95/npm-arex-core/compare/v1.1.23...v1.1.24) (2025-06-16)
+
+
+### Bug Fixes
+
+* **credentials:** correct storage preference logic for session and local storage ([9bddc83](https://github.com/Arex95/npm-arex-core/commit/9bddc834b1ec688184e90f3d97c6b5edbf07b965))
+
+
+
+## [1.1.23](https://github.com/Arex95/npm-arex-core/compare/v1.1.22...v1.1.23) (2025-06-16)
+
+
+### Bug Fixes
+
+* **credentials:** move tokensConfig initialization inside functions for better encapsulation ([e863aa0](https://github.com/Arex95/npm-arex-core/commit/e863aa00fb69fe9186009ec29e600f828cd6a308))
+
+
+
+## [1.1.22](https://github.com/Arex95/npm-arex-core/compare/v1.1.21...v1.1.22) (2025-06-16)
+
+
+### Bug Fixes
+
+* **auth:** remove unused JWT functions and implement verifyAuth in credentials ([e450ebd](https://github.com/Arex95/npm-arex-core/commit/e450ebdaffcfd122d989b300dc0441741e82e46d))
+
+
+### Features
+
+* **auth:** replace JWT checks with verifyAuth for improved session management ([9f5c368](https://github.com/Arex95/npm-arex-core/commit/9f5c3683ae00e794bb023fae4ac0faeb4b71d5eb))
+
+
+
+## [1.1.21](https://github.com/Arex95/npm-arex-core/compare/v1.1.20...v1.1.21) (2025-06-15)
+
+
+### Features
+
+* add missing exports in types and utils index files ([3970f25](https://github.com/Arex95/npm-arex-core/commit/3970f25ac4005c13ae62d7de6058cedf9755f462))
+
+
+
+## [1.1.20](https://github.com/Arex95/npm-arex-core/compare/v1.1.19...v1.1.20) (2025-06-15)
+
+
+### Bug Fixes
+
+* update useAuth function to use default secretKey and improve config imports ([154d5db](https://github.com/Arex95/npm-arex-core/commit/154d5db9eac3696dfe1ec1f207912db390919058))
+
+
+### Features
+
+* Refactor authentication utilities and add comprehensive tests ([62f19f8](https://github.com/Arex95/npm-arex-core/commit/62f19f8fbb147188ab129a50420e14876d773c57))
+
+
+
+## [1.1.19](https://github.com/Arex95/npm-arex-core/compare/v1.1.18...v1.1.19) (2025-06-12)
+
+
+
+## [1.1.18](https://github.com/Arex95/npm-arex-core/compare/v1.1.17...v1.1.18) (2025-06-12)
+
+
+
+## [1.1.17](https://github.com/Arex95/npm-arex-core/compare/v1.1.16...v1.1.17) (2025-06-12)
+
+
+### Features
+
+* **auth:** add encryption utilities and tests ([b935dc7](https://github.com/Arex95/npm-arex-core/commit/b935dc736a5973a12c6e044db8ae39d15a034fe3))
+
+
+
+## [1.1.16](https://github.com/Arex95/npm-arex-core/compare/v1.1.15...v1.1.16) (2025-06-12)
+
+
+### Bug Fixes
+
+* **apiActivity:** improve session timeout handling and add JWT check for activity monitoring ([0969b4d](https://github.com/Arex95/npm-arex-core/commit/0969b4dfc65085a7ce43ee6ce1ff07f237034c7d))
+
+
+
+## [1.1.15](https://github.com/Arex95/npm-arex-core/compare/v1.1.14...v1.1.15) (2025-06-12)
+
+
+### Bug Fixes
+
+* **auth:** ensure JWT promise resolves before returning response ([b7f73ca](https://github.com/Arex95/npm-arex-core/commit/b7f73ca6878a4244392ac2814e7daf699418960d))
+
+
+
+## [1.1.14](https://github.com/Arex95/npm-arex-core/compare/v1.1.13...v1.1.14) (2025-06-12)
+
+
+
+## [1.1.13](https://github.com/Arex95/npm-arex-core/compare/v1.1.12...v1.1.13) (2025-06-12)
+
+
+### Bug Fixes
+
+* **auth:** restore axios instance initialization in useAuth function ([e4e14e8](https://github.com/Arex95/npm-arex-core/commit/e4e14e84c60c70572a8e2bc5f322c78c0d8b5484))
+
+
+
+## [1.1.12](https://github.com/Arex95/npm-arex-core/compare/v1.1.11...v1.1.12) (2025-06-12)
+
+
+### Features
+
+* **auth:** enhance encryption methods and update dependencies ([b0d32fc](https://github.com/Arex95/npm-arex-core/commit/b0d32fc8064afd9254a27bfcefa7035151d3d407))
+
+
+
+## [1.1.11](https://github.com/Arex95/npm-arex-core/compare/v1.1.10...v1.1.11) (2025-06-11)
+
+
+### Bug Fixes
+
+* **auth:** correct type import for storageKeys in AuthConfig ([244cd78](https://github.com/Arex95/npm-arex-core/commit/244cd787863a9df57518a1737cd770827d0d5d98))
+
+
+
+## [1.1.10](https://github.com/Arex95/npm-arex-core/compare/v1.1.9...v1.1.10) (2025-06-11)
+
+
+### Bug Fixes
+
+* **auth:** enhance error handling in useAuth for token verification ([9750cf8](https://github.com/Arex95/npm-arex-core/commit/9750cf829d87dd618ecb39e5ae568c835b9ec643))
+
+
+
 ## [1.1.9](https://github.com/Arex95/npm-arex-core/compare/v1.1.8...v1.1.9) (2025-06-11)
 
 

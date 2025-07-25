@@ -3,5 +3,8 @@ export * from './ExtendedQueryOptions'
 export * from './ErrorType'
 export * from './EndpointsConfig'
 export * from './TokenConfig'
-export * from './AuthConfig'
+export * from './Auth'
 export * from './SessionConfig'
+export * from './DecodedJwtPayload'
+export * from './ArexVueCoreOptions';
+export * from './AppKeyConfig';
