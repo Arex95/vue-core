@@ -33,7 +33,7 @@ export class AxiosService {
             timeout: 300000,
             headers: {
                 'Accept': 'application/json',
-                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+                'Cache-Control': 'no-cache',
                 'Pragma': 'no-cache',
                 'Expires': '0',
                 ...headers,
