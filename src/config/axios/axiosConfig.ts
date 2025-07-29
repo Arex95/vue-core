@@ -6,6 +6,16 @@ import axios, {
     InternalAxiosRequestConfig,
 } from 'axios'
 
+import {
+  getAuthToken,
+  getAuthRefreshToken,
+  storeAuthToken,
+  storeAuthRefreshToken,
+  cleanCredentials
+} from "@utils/credentials";
+
+import { getSessionPersistence } from "@config/global/sessionConfig";
+import { getAppKey } from "@/config";
 import { handleError } from '@utils/errors'
 import { getTokenConfig } from '@/config/global/tokensConfig'
 import { getEndpointsConfig } from '@config/global/endpointsConfig'
@@ -48,11 +58,10 @@ export class AxiosService {
      * Initializes request and response interceptors for the Axios instance.
      */
     private initializeInterceptors() {
-        const { ACCESS_TOKEN, REFRESH_TOKEN } = getTokenConfig()
 
         this.instance.interceptors.request.use(
-            (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
-                const token = typeof window !== 'undefined' ? localStorage.getItem(ACCESS_TOKEN) : null
+            async (config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> => {
+                const token = await getAuthToken(getAppKey(), 'any');
                 if (token && config.headers) {
                     (config.headers as Record<string, string>).Authorization = `Bearer ${token}`
                 }
@@ -75,22 +84,18 @@ export class AxiosService {
             async (error: AxiosError) => {
                 this.activeRequests--
 
-                // Check for unauthorized access (401)
                 if (axios.isAxiosError(error) && error.response?.status === 401 && !this.refreshTokenInProgress) {
-                    const refreshToken = localStorage.getItem(REFRESH_TOKEN)
+                    const refreshToken = await getAuthRefreshToken(getAppKey(), "any");
 
                     if (refreshToken) {
                         this.refreshTokenInProgress = true
                         try {
-                            // Attempt to refresh the token
                             const refreshResponse = await axios.post(this.refreshTokenUrl, { refreshToken })
 
                             const { token: newAccessToken } = refreshResponse.data
                             if (newAccessToken) {
-                                // Save the new access token
-                                localStorage.setItem(ACCESS_TOKEN, newAccessToken)
+                                storeAuthToken(newAccessToken, getAppKey(), await getSessionPersistence())
 
-                                // Retry the original request with the new token
                                 if (error.config && error.config.headers) {
                                     error.config.headers['Authorization'] = `Bearer ${newAccessToken}`
                                 }
@@ -102,8 +107,8 @@ export class AxiosService {
                         } catch (refreshError) {
                             handleError(refreshError, false)
                             this.refreshTokenInProgress = false
-                            localStorage.removeItem(ACCESS_TOKEN)
-                            localStorage.removeItem(REFRESH_TOKEN)
+
+                            cleanCredentials('any')
                         }
                     }
                 }
