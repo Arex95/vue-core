@@ -1,3 +1,12 @@
+## [1.1.36](https://github.com/Arex95/npm-arex-core/compare/v1.1.35...v1.1.36) (2025-07-29)
+
+
+### Features
+
+* **axios:** enhance token management with utility functions ([c64e405](https://github.com/Arex95/npm-arex-core/commit/c64e405c0495d2aee1de1f87996ee68c8d3194de))
+
+
+
 ## [1.1.35](https://github.com/Arex95/npm-arex-core/compare/v1.1.34...v1.1.35) (2025-07-25)
 
 
