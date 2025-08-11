@@ -136,7 +136,7 @@ export function useAuth(secretKey: string = getAppKey()) {
     try {
       const refreshTokenFromStorage = await getAuthRefreshToken(
         secretKey,
-        await getSessionPersistence()
+        'any'
       );
 
       if (!refreshTokenFromStorage) {
