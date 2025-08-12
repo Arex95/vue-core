@@ -7,7 +7,7 @@ import {
 import { LocationPreference } from "@/types/SessionConfig"
 import { jwtDecode } from "jwt-decode";
 import { handleError } from "@utils/errors";
-import { getAppKey } from "@/config";
+import { getAppKey } from "@/config/global";
 
 /**
  * Clears all stored authentication data (access and refresh tokens)

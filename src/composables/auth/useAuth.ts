@@ -1,4 +1,4 @@
-import { getAxiosInstance } from "@config/axios";
+import { getAxiosInstance } from "@config/axios/axiosInstance";
 import { getEndpointsConfig } from "@config/global/endpointsConfig";
 import { handleError } from "@utils/errors";
 import {

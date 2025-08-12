@@ -10,10 +10,9 @@ import { AxiosServiceOptions } from "@/types/AxiosServiceOptions";
 
 import { getAuthToken } from "@utils/credentials";
 
-import { getAppKey } from "@/config";
+import { getAppKey } from "@/config/global";
 import { handleError } from "@utils/errors";
 import { getEndpointsConfig } from "@config/global/endpointsConfig";
-import { useAuth } from "@/composables/auth/useAuth";
 
 declare module "axios" {
   interface InternalAxiosRequestConfig {
@@ -26,7 +25,7 @@ export class AxiosService {
   private cancelTokenSource: CancelTokenSource;
   private activeRequests: number = 0;
   private readonly refreshTokenUrl: string;
-  private readonly auth = useAuth();
+  private readonly refreshAuth: () => Promise<void>;
 
   private isRefreshing = false;
   private failedQueue: {
@@ -34,8 +33,9 @@ export class AxiosService {
     reject: (reason: AxiosError | Error) => void;
   }[] = [];
 
-  constructor(options: AxiosServiceOptions) {
+  constructor(options: AxiosServiceOptions, refreshAuth: () => Promise<void>) {
     this.cancelTokenSource = axios.CancelToken.source();
+    this.refreshAuth = refreshAuth;
 
     const endpointsConfig = getEndpointsConfig();
     this.refreshTokenUrl = endpointsConfig.REFRESH;
@@ -137,7 +137,7 @@ export class AxiosService {
         originalRequest._retry = true;
 
         try {
-          await this.auth.refresh();
+          await this.refreshAuth();
           const newToken = await getAuthToken(getAppKey(), "any");
 
           if (newToken) {
