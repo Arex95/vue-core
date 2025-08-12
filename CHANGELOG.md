@@ -1,3 +1,14 @@
+## [1.1.37](https://github.com/Arex95/npm-arex-core/compare/v1.1.36...v1.1.37) (2025-08-12)
+
+
+### Features
+
+* **axios:** enhance AxiosService with improved token handling and error processing ([305715f](https://github.com/Arex95/npm-arex-core/commit/305715f7f2aeddf80f45171dfca04ba3b0a27cb7))
+* **axios:** refactor AxiosService to use AxiosServiceOptions and improve token handling ([260c1c7](https://github.com/Arex95/npm-arex-core/commit/260c1c7e31996838caaf7b4d1c8cc2884408bf63))
+* **axios:** update imports and enhance AxiosService initialization with refreshAuth function ([280c3cc](https://github.com/Arex95/npm-arex-core/commit/280c3cc31bd00b26e34f750bff53a58a8b4137bd))
+
+
+
 ## [1.1.36](https://github.com/Arex95/npm-arex-core/compare/v1.1.35...v1.1.36) (2025-07-29)
 
 
