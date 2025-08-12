@@ -1,31 +1,38 @@
 import axios, {
-    AxiosResponse,
-    AxiosError,
-    AxiosInstance,
-    CancelTokenSource,
-    InternalAxiosRequestConfig,
-} from 'axios'
+  AxiosResponse,
+  AxiosError,
+  AxiosInstance,
+  CancelTokenSource,
+  InternalAxiosRequestConfig,
+} from "axios";
 
-import {
-    AxiosServiceOptions
-} from '@/types/AxiosServiceOptions';
+import { AxiosServiceOptions } from "@/types/AxiosServiceOptions";
 
-import {
-    getAuthToken
-} from "@utils/credentials";
+import { getAuthToken } from "@utils/credentials";
 
 import { getAppKey } from "@/config";
-import { handleError } from '@utils/errors'
-import { getEndpointsConfig } from '@config/global/endpointsConfig'
-import { useAuth } from '@/composables/auth/useAuth'
+import { handleError } from "@utils/errors";
+import { getEndpointsConfig } from "@config/global/endpointsConfig";
+import { useAuth } from "@/composables/auth/useAuth";
+
+declare module "axios" {
+  interface InternalAxiosRequestConfig {
+    _retry?: boolean;
+  }
+}
 
 export class AxiosService {
   private readonly instance: AxiosInstance;
   private cancelTokenSource: CancelTokenSource;
   private activeRequests: number = 0;
-  private refreshTokenPromise: Promise<void> | null = null;
   private readonly refreshTokenUrl: string;
   private readonly auth = useAuth();
+
+  private isRefreshing = false;
+  private failedQueue: {
+    resolve: (value: string) => void;
+    reject: (reason: AxiosError | Error) => void;
+  }[] = [];
 
   constructor(options: AxiosServiceOptions) {
     this.cancelTokenSource = axios.CancelToken.source();
@@ -34,7 +41,7 @@ export class AxiosService {
     this.refreshTokenUrl = endpointsConfig.REFRESH;
 
     this.instance = axios.create({
-      baseURL: options.baseURL ?? '',
+      baseURL: options.baseURL ?? "",
       timeout: options.timeout ?? 30000,
       headers: {
         Accept: "application/json",
@@ -47,15 +54,37 @@ export class AxiosService {
     this.initializeInterceptors();
   }
 
-    private initializeInterceptors() {
-      
+  private processQueue(
+    error: AxiosError | null,
+    token: string | null = null
+  ): void {
+    this.failedQueue.forEach((prom) => {
+      if (error) {
+        prom.reject(error);
+      } else if (token) {
+        prom.resolve(token);
+      }
+    });
+    this.failedQueue = [];
+  }
+
+  private setAuthHeader(
+    config: InternalAxiosRequestConfig,
+    token: string
+  ): void {
+    if (config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  }
+
+  private initializeInterceptors() {
     this.instance.interceptors.request.use(
       async (
         config: InternalAxiosRequestConfig
       ): Promise<InternalAxiosRequestConfig> => {
         const token = await getAuthToken(getAppKey(), "any");
-        if (token && config.headers) {
-          config.headers.Authorization = `Bearer ${token}`;
+        if (token) {
+          this.setAuthHeader(config, token);
         }
         config.cancelToken = this.cancelTokenSource.token;
         this.activeRequests++;
@@ -76,36 +105,60 @@ export class AxiosService {
         this.activeRequests--;
         const originalRequest = error.config;
 
-        if (
-          axios.isAxiosError(error) &&
-          error.response?.status === 401 &&
-          originalRequest &&
-          originalRequest.url !== this.refreshTokenUrl
-        ) {
-          if (!this.refreshTokenPromise) {
-            this.refreshTokenPromise = this.auth
-              .refresh()
-              .then(() => {})
-              .finally(() => {
-                this.refreshTokenPromise = null;
-              });
-          }
+        const isAuthError =
+          axios.isAxiosError(error) && error.response?.status === 401;
+        const isRefreshCall = originalRequest?.url === this.refreshTokenUrl;
+        const isRetry = originalRequest?._retry === true;
 
-          try {
-            await this.refreshTokenPromise;
-            const newToken = await getAuthToken(getAppKey(), "any");
-            if (originalRequest.headers) {
-              originalRequest.headers.Authorization = `Bearer ${newToken}`;
-            }
-            return this.instance(originalRequest);
-          } catch (refreshError) {
-            handleError(refreshError, false);
-            return Promise.reject(error);
-          }
+        if (!isAuthError || isRefreshCall || isRetry) {
+          handleError(error, false);
+          return Promise.reject(error);
         }
 
-        handleError(error, false);
-        return Promise.reject(error);
+        if (!originalRequest) {
+          handleError(error, false);
+          return Promise.reject(error);
+        }
+
+        if (this.isRefreshing) {
+          return new Promise<string>((resolve, reject) => {
+            this.failedQueue.push({ resolve, reject });
+          })
+            .then((newToken) => {
+              this.setAuthHeader(originalRequest, newToken);
+              return this.instance(originalRequest);
+            })
+            .catch((err) => {
+              return Promise.reject(err);
+            });
+        }
+
+        this.isRefreshing = true;
+        originalRequest._retry = true;
+
+        try {
+          await this.auth.refresh();
+          const newToken = await getAuthToken(getAppKey(), "any");
+
+          if (newToken) {
+            this.processQueue(null, newToken);
+            this.setAuthHeader(originalRequest, newToken);
+          } else {
+            const refreshError = new Error(
+              "New token not found after refresh."
+            );
+            this.processQueue(refreshError as AxiosError, null);
+            throw refreshError;
+          }
+
+          this.isRefreshing = false;
+          return this.instance(originalRequest);
+        } catch (refreshError) {
+          this.processQueue(refreshError as AxiosError, null);
+          this.isRefreshing = false;
+          handleError(refreshError, false);
+          return Promise.reject(error);
+        }
       }
     );
   }
