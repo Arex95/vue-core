@@ -10,9 +10,10 @@ import { AxiosServiceOptions } from "@/types/AxiosServiceOptions";
 
 import { getAuthToken } from "@utils/credentials";
 
-import { getAppKey } from "@/config/global";
+import { getAppKey } from "@/config";
 import { handleError } from "@utils/errors";
 import { getEndpointsConfig } from "@config/global/endpointsConfig";
+import { useAuth } from "@/composables/auth/useAuth";
 
 declare module "axios" {
   interface InternalAxiosRequestConfig {
@@ -25,7 +26,7 @@ export class AxiosService {
   private cancelTokenSource: CancelTokenSource;
   private activeRequests: number = 0;
   private readonly refreshTokenUrl: string;
-  private readonly refreshAuth: () => Promise<void>;
+  private readonly auth = useAuth();
 
   private isRefreshing = false;
   private failedQueue: {
@@ -33,9 +34,8 @@ export class AxiosService {
     reject: (reason: AxiosError | Error) => void;
   }[] = [];
 
-  constructor(options: AxiosServiceOptions, refreshAuth: () => Promise<void>) {
+  constructor(options: AxiosServiceOptions) {
     this.cancelTokenSource = axios.CancelToken.source();
-    this.refreshAuth = refreshAuth;
 
     const endpointsConfig = getEndpointsConfig();
     this.refreshTokenUrl = endpointsConfig.REFRESH;
@@ -77,12 +77,16 @@ export class AxiosService {
     }
   }
 
+  private async getLatestAuthToken(): Promise<string | null> {
+    return await getAuthToken(getAppKey(), "any");
+  }
+
   private initializeInterceptors() {
     this.instance.interceptors.request.use(
       async (
         config: InternalAxiosRequestConfig
       ): Promise<InternalAxiosRequestConfig> => {
-        const token = await getAuthToken(getAppKey(), "any");
+        const token = await this.getLatestAuthToken();
         if (token) {
           this.setAuthHeader(config, token);
         }
@@ -137,8 +141,8 @@ export class AxiosService {
         originalRequest._retry = true;
 
         try {
-          await this.refreshAuth();
-          const newToken = await getAuthToken(getAppKey(), "any");
+          await this.auth.refresh();
+          const newToken = await this.getLatestAuthToken();
 
           if (newToken) {
             this.processQueue(null, newToken);
