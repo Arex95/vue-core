@@ -18,7 +18,7 @@ import {
   configSession,
   getSessionPersistence,
 } from "@config/global/sessionConfig";
-import { getAppKey } from "@/config";
+import { getAppKey } from "@/config/global/keyConfig";
 
 /**
  * @typedef {object} AuthHook
