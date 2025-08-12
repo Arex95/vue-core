@@ -1,3 +1,12 @@
+## [1.1.38](https://github.com/Arex95/npm-arex-core/compare/v1.1.37...v1.1.38) (2025-08-12)
+
+
+### Features
+
+* **auth:** update import path for getAppKey and refactor install method for async configuration ([78ca096](https://github.com/Arex95/npm-arex-core/commit/78ca0966d868ac3fe1937ef19682773d88df92f4))
+
+
+
 ## [1.1.37](https://github.com/Arex95/npm-arex-core/compare/v1.1.36...v1.1.37) (2025-08-12)
 
 
