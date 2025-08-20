@@ -1,3 +1,12 @@
+## [1.1.40](https://github.com/Arex95/npm-arex-core/compare/v1.1.39...v1.1.40) (2025-08-20)
+
+
+### Features
+
+* **auth:** refactor authentication flow with new token management and storage services ([f6cf0f5](https://github.com/Arex95/npm-arex-core/commit/f6cf0f5059c0573f0ef949ce0768b92965f2e99e))
+
+
+
 ## [1.1.39](https://github.com/Arex95/npm-arex-core/compare/v1.1.38...v1.1.39) (2025-08-12)
 
 
