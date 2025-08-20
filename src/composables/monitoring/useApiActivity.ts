@@ -1,5 +1,5 @@
 import { useIntervalFn } from "@vueuse/core";
-import { getAxiosInstance } from "@config/axios";
+import { getConfiguredAxiosInstance } from "@config/axios";
 import { useAuth } from "@composables/auth/useAuth";
 import { verifyAuth } from "@/utils";
 import { handleError } from "@utils/errors";
@@ -44,7 +44,7 @@ export function useApiActivity(
    */
   const addInterceptor = (): void => {
     if (!interceptorAdded) {
-      getAxiosInstance().interceptors.request.use((config) => {
+      getConfiguredAxiosInstance().interceptors.request.use((config) => {
         updateTimestamp();
         interceptorAdded = true;
         return config;
