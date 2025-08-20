@@ -1,3 +1,5 @@
+import { AxiosServiceOptions } from "./AxiosServiceOptions";
+
 export interface ArexVueCoreOptions {
   appKey: string;
   endpoints: {
@@ -9,5 +11,13 @@ export interface ArexVueCoreOptions {
     accessToken: string;
     refreshToken: string;
   };
-  apiUrl: string;
+  tokenPaths: {
+    accessToken: string;
+    refreshToken: string;
+  };
+  refreshTokenPaths: {
+    accessToken: string;
+    refreshToken: string;
+  };
+  axios: AxiosServiceOptions;
 }

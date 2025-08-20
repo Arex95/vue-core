@@ -5,11 +5,6 @@ export type AuthConfig = {
   storageKeys: TokensConfig;
 }
 
-export interface AuthParams {
-  username?: string;
-  password?: string;
-}
-
 export interface AuthTokenPaths {
   accessTokenPath?: string;
   refreshTokenPath?: string;

@@ -9,3 +9,4 @@ export * from './DecodedJwtPayload'
 export * from './ArexVueCoreOptions';
 export * from './AppKeyConfig';
 export * from './AxiosServiceOptions';
+export * from './TokenValidationResult'

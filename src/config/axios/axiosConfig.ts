@@ -7,13 +7,13 @@ import axios, {
 } from "axios";
 
 import { AxiosServiceOptions } from "@/types/AxiosServiceOptions";
+import { getAuthToken } from "@/services/credentials";
 
-import { getAuthToken } from "@utils/credentials";
-
-import { getAppKey } from "@/config";
+import { getAppKey } from "@/config/global";
 import { handleError } from "@utils/errors";
 import { getEndpointsConfig } from "@config/global/endpointsConfig";
-import { useAuth } from "@/composables/auth/useAuth";
+
+import { refreshTokens } from "@/services";
 
 declare module "axios" {
   interface InternalAxiosRequestConfig {
@@ -26,7 +26,6 @@ export class AxiosService {
   private cancelTokenSource: CancelTokenSource;
   private activeRequests: number = 0;
   private readonly refreshTokenUrl: string;
-  private readonly auth = useAuth();
 
   private isRefreshing = false;
   private failedQueue: {
@@ -77,16 +76,12 @@ export class AxiosService {
     }
   }
 
-  private async getLatestAuthToken(): Promise<string | null> {
-    return await getAuthToken(getAppKey(), "any");
-  }
-
   private initializeInterceptors() {
     this.instance.interceptors.request.use(
       async (
         config: InternalAxiosRequestConfig
       ): Promise<InternalAxiosRequestConfig> => {
-        const token = await this.getLatestAuthToken();
+        const token = await getAuthToken(getAppKey(), "any");
         if (token) {
           this.setAuthHeader(config, token);
         }
@@ -141,8 +136,8 @@ export class AxiosService {
         originalRequest._retry = true;
 
         try {
-          await this.auth.refresh();
-          const newToken = await this.getLatestAuthToken();
+          await refreshTokens(this.instance);
+          const newToken = await getAuthToken(getAppKey(), "any");
 
           if (newToken) {
             this.processQueue(null, newToken);

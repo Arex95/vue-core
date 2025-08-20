@@ -23,6 +23,7 @@ export default defineConfig({
       "@config": path.resolve(__dirname, "./src/config"),
       "@enums": path.resolve(__dirname, "./src/enums"),
       "@rest": path.resolve(__dirname, "./src/rest"),
+      "@services": path.resolve(__dirname, "./src/services"),
       "@types": path.resolve(__dirname, "./src/types"),
       "@utils": path.resolve(__dirname, "./src/utils"),
     },
