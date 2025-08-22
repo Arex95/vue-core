@@ -1,3 +1,3 @@
 export * from './axiosFetch'
-export * from './createFetch'
+export * from './useFetch'
 export * from './useVueQuery'
