@@ -1,3 +1,12 @@
+## [1.1.41](https://github.com/Arex95/npm-arex-core/compare/v1.1.40...v1.1.41) (2025-08-22)
+
+
+### Features
+
+* **axios:** remove createFetch and implement useFetch for Axios requests ([b47036b](https://github.com/Arex95/npm-arex-core/commit/b47036b89c659f9f4ac99b676b0901ce6f05e519))
+
+
+
 ## [1.1.40](https://github.com/Arex95/npm-arex-core/compare/v1.1.39...v1.1.40) (2025-08-20)
 
 
