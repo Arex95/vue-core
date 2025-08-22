@@ -1,6 +1,6 @@
 {
   "name": "@arex95/vue-core",
-  "version": "1.1.40",
+  "version": "1.1.41",
   "description": "Opinionated Vue Core",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
