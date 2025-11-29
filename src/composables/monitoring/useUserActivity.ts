@@ -2,11 +2,26 @@ import { ref, onUnmounted } from 'vue'
 import { useEventListener, useTimeoutFn } from '@vueuse/core'
 
 /**
- * Hook para detectar la inactividad del usuario.
- * @param timeout - Tiempo en milisegundos antes de considerar al usuario inactivo. Por defecto es 5 minutos.
- * @param useDefaultEvents - Si se deben usar los eventos por defecto (mousemove, keydown, scroll, touchstart).
- * @param customEvents - Lista personalizada de eventos para detectar actividad.
- * @returns Un objeto con el estado de inactividad, funciones para controlar el temporizador y registrar callbacks.
+ * A composable to detect user inactivity. It tracks user interactions and triggers a timeout
+ * if no activity is detected for a specified duration.
+ *
+ * @param {number} [timeout=300000] - The time in milliseconds before the user is considered inactive. Defaults to 5 minutes.
+ * @param {boolean} [useDefaultEvents=true] - Whether to use the default events (mousemove, keydown, scroll, touchstart) to detect activity.
+ * @param {Array<keyof WindowEventMap>} [customEvents=[]] - A list of custom events to detect activity, in addition to the default ones if `useDefaultEvents` is true.
+ * @returns {{
+ *   isInactive: import('vue').Ref<boolean>,
+ *   startInactivityTimer: () => void,
+ *   stopInactivityTimer: () => void,
+ *   resetInactivityTimer: () => void,
+ *   onTimeout: (callback: () => void) => void,
+ *   removeTimeoutCallback: (callback: () => void) => void
+ * }} An object containing:
+ *   - `isInactive`: A ref that becomes `true` when the user is inactive.
+ *   - `startInactivityTimer`: A function to start the inactivity timer.
+ *   - `stopInactivityTimer`: A function to stop the inactivity timer.
+ *   - `resetInactivityTimer`: A function to reset the inactivity timer.
+ *   - `onTimeout`: A function to register a callback that will be executed on timeout.
+ *   - `removeTimeoutCallback`: A function to remove a previously registered callback.
  */
 export function useUserInactivity(
   timeout = 300000,

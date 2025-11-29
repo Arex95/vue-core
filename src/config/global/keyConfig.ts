@@ -3,13 +3,11 @@ import { AppKeyConfig } from "../../types/AppKeyConfig";
 let appKey: string | null = null;
 
 /**
- * Sets the main application encryption key.
- * This key is expected to be used for encryption purposes within the application.
+ * Sets the main application key, which is intended for use in encryption and signing operations.
+ * This function should be called once at application startup to configure the key.
  *
- * @param {AppKeyConfig} config - An object containing the application encryption key.
- * @param {string} config.key - The new application encryption key.
- *
- * @returns {void} Does not return anything, but updates the application key.
+ * @param {AppKeyConfig} config - An object containing the application key.
+ * @param {string} config.appKey - The application key.
  * @throws {Error} If the provided key is null, undefined, or an empty string.
  */
 export function configAppKey(config: AppKeyConfig): void {
@@ -20,11 +18,10 @@ export function configAppKey(config: AppKeyConfig): void {
 }
 
 /**
- * Retrieves the current application encryption key.
- * Throws an error if the application key has not been configured.
+ * Retrieves the configured application key.
  *
- * @returns {string} The configured application encryption key.
- * @throws {Error} If the application encryption key has not been set.
+ * @returns {string} The configured application key.
+ * @throws {Error} If the application key has not been set by calling `configAppKey` first.
  */
 export function getAppKey(): string {
   if (appKey === null) {

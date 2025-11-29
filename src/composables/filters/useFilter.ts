@@ -1,15 +1,20 @@
 import { computed } from "vue";
 
 /**
- * A composable function that filters objects based on a specific field and criteria.
+ * A composable function that filters an array of objects based on a specified field, data type, and criteria.
+ * It supports filtering by date range, string matching (case-insensitive and diacritic-insensitive), number range, and boolean values.
  *
- * @param {Object[]} items - The list of objects to filter.
- * @param {Object} filterConfig - Configuration for the filter, specifying the field, the data type to filter, and the criteria.
- * @param {string} filterConfig.field - The field in the objects to filter.
- * @param {string} filterConfig.type - The data type of the field ('date', 'string', 'number', 'boolean').
- * @param {any} filterConfig.criteria - The criteria for filtering. Can be a date range, a string to search, a number range, or a boolean value.
- *
- * @returns {Object[]} - The filtered list of objects.
+ * @template T A generic type that extends a record of string keys to any value, representing the objects in the array.
+ * @param {T[]} items - The array of objects to be filtered.
+ * @param {object} filterConfig - The configuration object for filtering.
+ * @param {string} filterConfig.field - The name of the field in the objects to filter by.
+ * @param {'date' | 'string' | 'number' | 'boolean'} filterConfig.type - The data type of the field to be filtered.
+ * @param {any} filterConfig.criteria - The criteria for filtering, which varies based on the `type`:
+ *   - For 'date': An object `{ startDate: string, endDate: string }`.
+ *   - For 'string': A string to search for.
+ *   - For 'number': An object `{ min: number, max: number }`.
+ *   - For 'boolean': A boolean value.
+ * @returns {T[]} The filtered array of objects. If the criteria are invalid or not provided, the original array is returned.
  */
 export function useFilter<T extends Record<string, any>>(
     items: T[],

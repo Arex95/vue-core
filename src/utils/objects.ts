@@ -1,7 +1,8 @@
 /**
- * Converts a Proxy object to a plain object.
- * @param {ProxyConstructor} proxy The Proxy object to convert.
- * @returns {Object} The plain object.
+ * Converts a Proxy object into a plain JavaScript object.
+ *
+ * @param {ProxyConstructor} proxy - The Proxy object to convert.
+ * @returns {any} A new object containing the properties of the Proxy.
  */
 export function proxyToPlainObject(proxy: ProxyConstructor): any {
     if (!proxy) return {};
@@ -13,10 +14,11 @@ export function proxyToPlainObject(proxy: ProxyConstructor): any {
 }
 
 /**
- * Compares two objects to check if they have the same keys.
- * @param {Object} object1 The first object to compare.
- * @param {Object} object2 The second object to compare.
- * @returns {boolean} True if the objects have the same keys, otherwise false.
+ * Performs a shallow comparison to check if two objects have the same keys.
+ *
+ * @param {Record<string, any>} object1 - The first object.
+ * @param {Record<string, any>} object2 - The second object.
+ * @returns {boolean} `true` if both objects have the exact same set of keys, otherwise `false`.
  */
 export function compareObject(object1: Record<string, any>, object2: Record<string, any>): boolean {
     return Object.keys(object1).every(function (element) {
@@ -25,10 +27,11 @@ export function compareObject(object1: Record<string, any>, object2: Record<stri
 }
 
 /**
- * Deeply compares two objects to check if they are equal.
- * @param {Object} object1 The first object to compare.
- * @param {Object} object2 The second object to compare.
- * @returns {boolean} True if the objects are deeply equal, otherwise false.
+ * Performs a deep comparison between two objects to determine if they are structurally and value-wise equal.
+ *
+ * @param {Record<string, any>} object1 - The first object.
+ * @param {Record<string, any>} object2 - The second object.
+ * @returns {boolean} `true` if the objects are deeply equal, otherwise `false`.
  */
 export function deepEqual(object1: Record<string, any>, object2: Record<string, any>): boolean {
     if (object1 === object2) return true;
@@ -54,9 +57,12 @@ export function deepEqual(object1: Record<string, any>, object2: Record<string, 
 }
 
 /**
- * Deeply clones an object.
- * @param {Object} obj The object to clone.
- * @returns {Object} The cloned object.
+ * Creates a deep clone of a given object, including nested objects and arrays.
+ *
+ * @template T - The type of the object being cloned.
+ * @param {T} obj - The object to clone.
+ * @returns {T} A new object that is a deep clone of the original.
+ * @throws {Error} If the object contains a type that cannot be cloned.
  */
 export function deepClone<T>(obj: T): T {
     if (obj === null || typeof obj !== 'object') {
@@ -85,9 +91,10 @@ export function deepClone<T>(obj: T): T {
 }
 
 /**
- * Converts an object to a query string.
- * @param {Object} obj The object to convert.
- * @returns {string} The query string.
+ * Converts a flat object into a URL query string.
+ *
+ * @param {Record<string, any>} obj - The object to convert.
+ * @returns {string} The resulting URL query string.
  */
 export function objectToQueryString(obj: Record<string, any>): string {
     return Object.keys(obj)
@@ -99,10 +106,11 @@ export function objectToQueryString(obj: Record<string, any>): string {
 // objectToQueryString({ name: 'John Doe', age: 30 }); // 'name=John%20Doe&age=30'
 
 /**
- * Gets the differences between two objects.
- * @param {Object} object1 The first object.
- * @param {Object} object2 The second object.
- * @returns {Object} An object containing the differences.
+ * Compares two objects and returns an object containing the keys where their values differ.
+ *
+ * @param {Record<string, any>} object1 - The first object.
+ * @param {Record<string, any>} object2 - The second object.
+ * @returns {Record<string, any>} An object where each key represents a difference, and the value contains the differing values from both objects.
  */
 export function getObjectDifferences(object1: Record<string, any>, object2: Record<string, any>): Record<string, any> {
     const differences: Record<string, any> = {};
@@ -119,10 +127,11 @@ export function getObjectDifferences(object1: Record<string, any>, object2: Reco
 }
 
 /**
- * Filters an object by a list of keys.
- * @param {Object} obj The object to filter.
- * @param {Array<string>} keys The keys to keep.
- * @returns {Object} The filtered object.
+ * Creates a new object containing only the specified keys from the original object.
+ *
+ * @param {Record<string, any>} obj - The source object.
+ * @param {string[]} keys - An array of keys to include in the new object.
+ * @returns {Record<string, any>} A new object with the filtered properties.
  */
 export function filterObjectByKeys(obj: Record<string, any>, keys: string[]): Record<string, any> {
     const filteredObject: Record<string, any> = {};
@@ -138,10 +147,12 @@ export function filterObjectByKeys(obj: Record<string, any>, keys: string[]): Re
 // filterObjectByKeys({ name: 'John', age: 30, job: 'Developer' }, ['name', 'job']); // { name: 'John', job: 'Developer' }
 
 /**
- * Deeply merges two objects.
- * @param {Object} target The target object to merge into.
- * @param {Object} source The source object to merge from.
- * @returns {Object} The merged object.
+ * Recursively merges the properties of a source object into a target object.
+ *
+ * @template T - The type of the target object.
+ * @param {T} target - The object to merge properties into.
+ * @param {Partial<T>} source - The object from which to merge properties.
+ * @returns {T} The modified target object.
  */
 export function deepMerge<T>(target: T, source: Partial<T>): T {
     if (target === null || typeof target !== 'object' || typeof source !== 'object') {
@@ -165,19 +176,21 @@ export function deepMerge<T>(target: T, source: Partial<T>): T {
 }
 
 /**
- * Checks if an object is empty.
- * @param {Object} obj The object to check.
- * @returns {boolean} True if the object is empty, otherwise false.
+ * Checks if an object has no own enumerable properties.
+ *
+ * @param {Record<string, any>} obj - The object to check.
+ * @returns {boolean} `true` if the object is empty, otherwise `false`.
  */
 export function isEmptyObject(obj: Record<string, any>): boolean {
     return Object.keys(obj).length === 0;
 }
 
 /**
- * Safely accesses nested properties in an object.
- * @param {Object} obj The object to access.
- * @param {Array<string>} keys The array of keys representing the path.
- * @returns {any} The value at the nested path, or undefined if not found.
+ * Safely retrieves a nested property from an object using an array of keys as the path.
+ *
+ * @param {Record<string, any>} obj - The object to query.
+ * @param {string[]} keys - An array of keys representing the path to the nested property.
+ * @returns {*} The value of the nested property, or `undefined` if the path is not valid.
  */
 export function safeGet(obj: Record<string, any>, keys: string[]): any {
     return keys.reduce((acc, key) => (acc && acc[key] !== undefined) ? acc[key] : undefined, obj);
@@ -188,9 +201,10 @@ export function safeGet(obj: Record<string, any>, keys: string[]): any {
 // safeGet({ a: { b: { c: 10 } } }, ['a', 'x', 'c']); // undefined
 
 /**
- * Removes empty properties (null, undefined, or empty string) from an object.
- * @param {Object} obj The object to clean.
- * @returns {Object} A new object without empty properties.
+ * Creates a new object with all properties that have `null`, `undefined`, or empty string values removed.
+ *
+ * @param {Record<string, any>} obj - The source object.
+ * @returns {Record<string, any>} A new object containing only the non-empty properties.
  */
 export function removeEmptyProperties(obj: Record<string, any>): Record<string, any> {
     return Object.keys(obj)
@@ -205,9 +219,10 @@ export function removeEmptyProperties(obj: Record<string, any>): Record<string, 
 // removeEmptyProperties({ a: null, b: 2, c: undefined, d: '', e: 'hello' }); // { b: 2, e: 'hello' }
 
 /**
- * Retrieves all keys of an object as an array.
- * @param {Object} obj The object to retrieve keys from.
- * @returns {Array<string>} The array of keys.
+ * Returns an array of an object's own enumerable property names.
+ *
+ * @param {Record<string, any>} obj - The object to get the keys from.
+ * @returns {string[]} An array of string keys.
  */
 export function getObjectKeys(obj: Record<string, any>): string[] {
     return Object.keys(obj);
@@ -217,9 +232,10 @@ export function getObjectKeys(obj: Record<string, any>): string[] {
 // getObjectKeys({ name: 'John', age: 30 }); // ['name', 'age']
 
 /**
- * Checks if an object has nested properties.
- * @param {Object} obj The object to check.
- * @returns {boolean} True if there are nested properties, false otherwise.
+ * Checks if any of the object's properties are themselves objects (and not null).
+ *
+ * @param {Record<string, any>} obj - The object to inspect.
+ * @returns {boolean} `true` if the object contains at least one nested object, otherwise `false`.
  */
 export function hasNestedProperties(obj: Record<string, any>): boolean {
     return Object.values(obj).some(value => typeof value === 'object' && value !== null);
@@ -230,11 +246,12 @@ export function hasNestedProperties(obj: Record<string, any>): boolean {
 // hasNestedProperties({ a: 1, b: 2 }); // false
 
 /**
- * Converts an object to FormData, handling nested objects.
- * @param {Object} obj The object to convert.
- * @param {FormData} [formData] The FormData object to append to.
- * @param {string} [parentKey] The parent key for nested objects.
- * @returns {FormData} The FormData object.
+ * Recursively converts a nested object into a `FormData` object.
+ *
+ * @param {Record<string, any>} obj - The object to convert.
+ * @param {FormData} [formData=new FormData()] - An existing `FormData` object to append to.
+ * @param {string} [parentKey=''] - The base key for nested properties.
+ * @returns {FormData} The resulting `FormData` object.
  */
 export function objectToFormDataEnhanced(obj: Record<string, any>, formData = new FormData(), parentKey = ''): FormData {
     Object.entries(obj).forEach(([key, value]) => {
@@ -252,12 +269,12 @@ export function objectToFormDataEnhanced(obj: Record<string, any>, formData = ne
 // objectToFormDataEnhanced({ user: { name: 'John', age: 30 } });
 
 /**
- * Converts a JavaScript object into FormData.
+ * Recursively converts a JavaScript object into a `FormData` object, handling nested objects and boolean conversion.
  *
- * @param obj - The object to be converted.
- * @param form - An optional FormData instance to use.
- * @param namespace - An optional namespace to use for nested objects.
- * @returns The FormData instance with the object's key-value pairs.
+ * @param {any} obj - The object to convert.
+ * @param {FormData} [form] - An optional existing `FormData` object to append to.
+ * @param {string} [namespace] - An optional namespace for keys of nested properties.
+ * @returns {FormData} The resulting `FormData` object.
  */
 export const objectToFormData = function (obj: any, form?: FormData, namespace?: string): FormData {
     const fd = form || new FormData();
@@ -288,11 +305,12 @@ export const objectToFormData = function (obj: any, form?: FormData, namespace?:
 }
 
 /**
- * Flattens a nested object, bringing all properties to the top level.
- * @param {Object} obj The object to flatten.
- * @param {string} [parentKey] The parent key for nested properties.
- * @param {Object} [result] The resulting flattened object.
- * @returns {Object} The flattened object.
+ * Flattens a nested object into a single-level object with dot-separated keys.
+ *
+ * @param {Record<string, any>} obj - The object to flatten.
+ * @param {string} [parentKey=''] - The prefix to use for the keys of the flattened properties.
+ * @param {Record<string, any>} [result={}] - An object to merge the flattened properties into.
+ * @returns {Record<string, any>} The flattened object.
  */
 export function flattenObject(obj: Record<string, any>, parentKey = '', result: Record<string, any> = {}): Record<string, any> {
     for (const key in obj) {

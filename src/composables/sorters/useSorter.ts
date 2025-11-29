@@ -1,17 +1,22 @@
 import { computed } from "vue";
 
 /**
- * Custom composable for sorting products based on a selected criterion.
- * @param {Array} items - The array of products to sort.
- * @param {Array} criteriaList - The list of available sorting criteria.
- * @param {Number} selectedCriteria - The currently selected sorting criterion.
- * @returns {ComputedRef<Array>} - The sorted array of products.
+ * A composable that sorts an array of objects based on a selected criterion from a list of predefined sorting options.
+ * It supports sorting by number, date, boolean, and string fields, in both ascending and descending order.
+ *
+ * @template T An array of objects to be sorted.
+ * @param {T[]} items - The array of objects to sort.
+ * @param {Array<{value: number, label: string, field: string, order: string, type: string}>} criteriaList - A list of
+ *   sorting criteria objects. Each object defines a sorting option with a unique `value`, a `label` for display, the `field`
+ *   to sort by, the `order` ('asc' or 'desc'), and the data `type` ('number', 'date', 'boolean', 'string').
+ * @param {number} selectedCriteria - The `value` of the currently selected sorting criterion from the `criteriaList`.
+ * @returns {T[]} A new array containing the sorted items. If the selected criterion is not found, the original array is returned.
  */
-export function useSorter(
-    items: any[],
+export function useSorter<T extends any[]>(
+    items: T,
     criteriaList: { value: number, label: string, field: string, order: string, type: string }[],
     selectedCriteria: number
-) {
+): T {
     return computed(() => {
         const criteria = criteriaList.find(item => item.value === Number(selectedCriteria));
         if (!criteria) return items;

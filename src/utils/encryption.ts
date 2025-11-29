@@ -1,7 +1,8 @@
 /**
- * Converts an ArrayBuffer or Uint8Array to a hexadecimal string.
- * @param buffer The ArrayBuffer or Uint8Array to convert.
- * @returns The hexadecimal string.
+ * Converts an `ArrayBuffer` or `Uint8Array` into a hexadecimal string representation.
+ *
+ * @param {ArrayBuffer | Uint8Array} buffer - The buffer to convert.
+ * @returns {string} The resulting hexadecimal string.
  */
 export function ab2hex(buffer: ArrayBuffer | Uint8Array): string {
   return Array.from(new Uint8Array(buffer))
@@ -10,11 +11,12 @@ export function ab2hex(buffer: ArrayBuffer | Uint8Array): string {
 }
 
 /**
- * Converts a hexadecimal string to a Uint8Array.
- * @param hex The hexadecimal string to convert.
- * @returns The Uint8Array.
+ * Converts a hexadecimal string into a `Uint8Array`.
+ *
+ * @param {string} hex - The hexadecimal string to convert.
+ * @returns {Uint8Array} The resulting `Uint8Array`.
  * @throws {TypeError} If the input is not a string.
- * @throws {Error} If the hexadecimal string format is invalid or has an odd length.
+ * @throws {Error} If the hexadecimal string has an invalid format or an odd length.
  */
 export function hex2ab(hex: string): Uint8Array {
   if (typeof hex !== "string") {
@@ -34,10 +36,12 @@ export function hex2ab(hex: string): Uint8Array {
 }
 
 /**
- * Derives an encryption key from a secret key.
- * @param secretKey The secret key in plain text.
- * @returns A promise that resolves with the derived CryptoKey.
- * @throws {Error} If the secretKey is null or empty.
+ * Derives a `CryptoKey` for AES-CBC encryption from a plain-text secret key.
+ * It uses SHA-256 to hash the secret key, ensuring a fixed-length key suitable for the Web Crypto API.
+ *
+ * @param {string} secretKey - The plain-text secret key.
+ * @returns {Promise<CryptoKey>} A promise that resolves with the derived `CryptoKey`.
+ * @throws {Error} If the `secretKey` is null or empty.
  */
 export async function importKey(secretKey: string): Promise<CryptoKey> {
   if (!secretKey) {
@@ -57,11 +61,13 @@ export async function importKey(secretKey: string): Promise<CryptoKey> {
 }
 
 /**
- * Encrypts a value with the provided secret key.
- * @param value The value to encrypt.
- * @param secretKey The secret key for encryption.
- * @returns A promise that resolves with the IV (hex) + ciphertext (hex) string.
- * @throws {Error} If the secretKey is null or empty (via importKey).
+ * Encrypts a plain-text value using AES-CBC with a given secret key.
+ * A random 16-byte initialization vector (IV) is generated for each encryption.
+ *
+ * @param {string} value - The plain-text string to encrypt.
+ * @param {string} secretKey - The secret key to use for encryption.
+ * @returns {Promise<string>} A promise that resolves with a concatenated hexadecimal string of the IV and the ciphertext.
+ * @throws {Error} If the `secretKey` is null or empty.
  */
 export async function encrypt(
   value: string,
@@ -81,14 +87,12 @@ export async function encrypt(
 }
 
 /**
- * Decrypts an encrypted value.
- * @param encryptedValue The encrypted string (IV_hex + ciphertext_hex).
- * @param secretKey The secret key for decryption.
- * @returns A promise that resolves with the decrypted value.
- * @throws {Error} If encryptedValue is null or empty, too short,
- * or if the IV/ciphertext have incorrect lengths after conversion.
- * @throws {Error} If the secretKey is null or empty (via importKey).
- * @throws {TypeError} If hex2ab receives an invalid input type.
+ * Decrypts a hexadecimal string (IV + ciphertext) using AES-CBC with a given secret key.
+ *
+ * @param {string} encryptedValue - The concatenated hexadecimal string of the IV and ciphertext.
+ * @param {string} secretKey - The secret key to use for decryption.
+ * @returns {Promise<string>} A promise that resolves with the decrypted plain-text string.
+ * @throws {Error} If the encrypted value is null, empty, or too short, or if the `secretKey` is invalid.
  */
 export async function decrypt(
   encryptedValue: string,

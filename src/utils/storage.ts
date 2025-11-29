@@ -2,13 +2,14 @@ import { encrypt, decrypt } from "./encryption";
 import { LocationPreference } from "@/types";
 
 /**
- * Encrypts and stores an item in local or session storage.
- * Assumes the `window` environment is available.
- * @param key The key under which to store the value.
- * @param value The value to encrypt and store.
- * @param secretKey The secret key for encryption.
- * @param location Determines where the item is stored: 'local' for localStorage, 'session' for sessionStorage.
- * @returns A promise that resolves when the item is stored. Throws an error if it fails.
+ * Encrypts and stores a key-value pair in either `localStorage` or `sessionStorage`.
+ *
+ * @param {string} key - The key for the storage item.
+ * @param {string} value - The string value to encrypt and store.
+ * @param {string} secretKey - The secret key to use for encryption.
+ * @param {LocationPreference} location - The storage location: 'local' for `localStorage` or 'session' for `sessionStorage`.
+ * @returns {Promise<void>} A promise that resolves when the item has been stored.
+ * @throws {Error} If the `window` object is not available.
  */
 export async function storeEncryptedItem(
   key: string,
@@ -27,12 +28,12 @@ export async function storeEncryptedItem(
 }
 
 /**
- * Retrieves and decrypts a value from local or session storage.
- * Assumes the `window` environment is available.
- * @param key The key of the item to retrieve.
- * @param secretKey The secret key for decryption.
- * @param location Specifies where to search for the item: 'local' for localStorage, 'session' for sessionStorage, or 'any' to check both (session first).
- * @returns A promise that resolves with the decrypted value or null if not found or decryption fails.
+ * Retrieves and decrypts an item from `localStorage` or `sessionStorage`.
+ *
+ * @param {string} key - The key of the item to retrieve.
+ * @param {string} secretKey - The secret key to use for decryption.
+ * @param {LocationPreference} location - The storage location to search: 'local', 'session', or 'any' (checks session first, then local).
+ * @returns {Promise<string | null>} A promise that resolves with the decrypted value, or `null` if the item is not found or decryption fails.
  */
 export async function getDecryptedItem(
   key: string,

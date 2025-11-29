@@ -5,13 +5,22 @@ import { onServerPrefetch } from 'vue'
 import type { ExtendedQueryOptions } from '../../types'
 
 /**
- * Custom composable for integrating Axios requests with Vue Query.
+ * A composable that integrates Axios with Vue Query for efficient data fetching, caching, and state management.
+ * It provides a reactive way to handle API requests, with support for server-side rendering (SSR),
+ * manual query execution, and callbacks for success and error handling.
  *
- * @template T - The type of data expected from the query.
- * @param {AxiosInstance} axios - Axios instance used for making HTTP requests.
- * @param {AxiosRequestConfig} axiosRequest - Initial Axios request configuration.
- * @param {ExtendedQueryOptions<T>} [queryOptions] - Optional Vue Query options with server execution flag.
- * @returns {object} Composable functions and query state for managing API requests.
+ * @template T The expected data type of the query's response.
+ * @param {AxiosInstance} axios - The Axios instance to be used for making HTTP requests.
+ * @param {AxiosRequestConfig} axiosRequest - The initial Axios request configuration (URL, method, headers, etc.).
+ * @param {ExtendedQueryOptions<T>} [queryOptions] - Optional configuration for Vue Query, including a `server` flag
+ *   to control server-side execution.
+ * @returns {{
+ *   execute: (newKey?: any[], newRequestParams?: object, newQueryOptions?: ExtendedQueryOptions<T>) => void,
+ *   onResult: (cb: (data: T) => void) => void,
+ *   onError: (callback: (e: unknown) => void) => void
+ * } & import('@tanstack/vue-query').UseQueryReturnType<T, unknown>}
+ *   An object containing methods to manually execute the query, register callbacks for results and errors,
+ *   and all the properties returned by the `useQuery` hook from Vue Query (e.g., `data`, `error`, `isLoading`).
  */
 export function useVueQuery<T>(
   axios: AxiosInstance,

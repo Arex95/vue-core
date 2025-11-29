@@ -18,8 +18,10 @@ import { storeTokens } from "@services/storeTokens";
 /**
  * Custom hook for authentication logic, including login, logout, token management, and session preference.
  *
- * @param {string} secretKey - The secret key used for token encryption/decryption.
- * @returns {AuthHook} An object containing authentication functions.
+ * @returns {{
+ *   logout: (params?: any) => Promise<void>,
+ *   login: (params: any, persistence: LocationPreference, tokenPaths?: AuthTokenPaths) => Promise<AuthResponse>
+ * }} An object containing authentication functions.
  */
 export function useAuth() {
   const axiosInstance = getConfiguredAxiosInstance();
@@ -30,7 +32,7 @@ export function useAuth() {
    * cleaning all stored credentials, and reloading the page.
    * The session persistence preference is NOT reset here; it persists across logouts.
    *
-   * @param {AuthParams} [params={}] - Optional parameters to send with the logout request.
+   * @param {any} [params={}] - Optional parameters to send with the logout request.
    * @returns {Promise<void>}
    */
   const logout = async (params: any = {}): Promise<void> => {

@@ -10,16 +10,16 @@ import {
 } from "./config";
 
 /**
- * The Vue plugin for @arex95/vue-core.
- * Configures the core functionalities for authentication and API communication.
+ * A Vue plugin that serves as the entry point for the `@arex95/vue-core` library.
+ * It initializes and configures all the core modules, such as authentication, API communication,
+ * and token management, based on the provided options.
  */
 export const ArexVueCore = {
   /**
-   * The `install` method is the entry point for the Vue plugin.
-   * It is automatically called when `app.use(ArexVueCore, options)` is executed.
+   * The `install` method required by Vue's plugin system. It is called when `app.use()` is invoked.
    *
-   * @param app The Vue application instance.
-   * @param options The configuration options provided by the user.
+   * @param {App} app - The Vue application instance.
+   * @param {ArexVueCoreOptions} options - The configuration object for the library.
    */
   install: (app: App, options: ArexVueCoreOptions) => {
     if (!options) {

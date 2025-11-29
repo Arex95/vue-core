@@ -3,12 +3,15 @@ import { ErrorType, ErrorPassMethod } from '@/types'
 import { ERROR_MESSAGES, ERROR_STYLES } from '@/enums'
 
 /**
- * Maneja y registra errores en la consola, además de permitir redirecciones configurables.
- * @param error - Error capturado (string o Error)
- * @param redirect - `true` si se quiere redirigir a una página de error
- * @param route - Ruta personalizada para la página de error (por defecto: `/error`)
- * @param passMethod - Método para pasar el error a la ruta (`query`, `localStorage`, `sessionStorage`)
- * @returns Mensaje user-friendly del error
+ * Handles and logs errors to the console, with an option to redirect to a dedicated error page.
+ * It infers the error type, logs a styled message, and can pass the error message to the error page
+ * via query parameters or web storage.
+ *
+ * @param {unknown} error - The captured error, which can be a string or an `Error` object.
+ * @param {boolean} [redirect=false] - If `true`, redirects the user to an error page.
+ * @param {string} [route='/error'] - The path to the error page.
+ * @param {ErrorPassMethod} [passMethod='query'] - The method to pass the error message to the error route ('query', 'localStorage', 'sessionStorage').
+ * @returns {string | undefined} The user-friendly error message, or `undefined` if the error is of an unknown type.
  */
 export function handleError(
   error: unknown,
@@ -43,9 +46,11 @@ export function handleError(
 }
 
 /**
- * Infiera el tipo de error basado en su mensaje o nombre.
- * @param error - El error que se desea analizar.
- * @returns El tipo de error determinado.
+ * Infers the `ErrorType` of an error by analyzing its name and message content.
+ * This helps in categorizing the error for standardized handling and logging.
+ *
+ * @param {string | Error} error - The error to analyze.
+ * @returns {ErrorType} The inferred error type.
  */
 function inferErrorType(error: string | Error): ErrorType {
   const msg = typeof error === 'string' ? error : error.message

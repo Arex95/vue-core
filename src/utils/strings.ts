@@ -1,7 +1,8 @@
 /**
- * Capitalizes the first character of a string.
- * @param {string} s The string to capitalize.
- * @returns {string} The capitalized string.
+ * Capitalizes the first letter of a string.
+ *
+ * @param {string} s - The input string.
+ * @returns {string} The string with the first letter capitalized.
  */
 export function upperFirst(s: string): string {
     return s.charAt(0).toUpperCase() + s.slice(1);
@@ -11,9 +12,10 @@ export function upperFirst(s: string): string {
 // console.log(upperFirst('hello')); // 'Hello'
 
 /**
- * Lowercases the first character of a string.
- * @param {string} s The string to lowercase.
- * @returns {string} The lowercased string.
+ * Converts the first letter of a string to lowercase.
+ *
+ * @param {string} s - The input string.
+ * @returns {string} The string with the first letter in lowercase.
  */
 export function lowerFirst(s: string): string {
     return s.charAt(0).toLowerCase() + s.slice(1);
@@ -23,9 +25,11 @@ export function lowerFirst(s: string): string {
 // console.log(lowerFirst('Hello')); // 'hello'
 
 /**
- * Removes accents and special characters from a string and converts it to a URL-friendly format.
- * @param {string} input The string to process.
- * @returns {string} The processed string.
+ * Normalizes a string by converting it to lowercase, trimming whitespace, replacing spaces with hyphens,
+ * and removing diacritical marks (accents).
+ *
+ * @param {string} input - The string to normalize.
+ * @returns {string} The URL-friendly, normalized string.
  */
 export function removeAccent(input: string): string {
     return input
@@ -41,8 +45,9 @@ export function removeAccent(input: string): string {
 // console.log(removeAccent('Café du Nord')); // 'cafe-du-nord'
 
 /**
- * Reverses a string.
- * @param {string} str The string to reverse.
+ * Reverses the characters of a string.
+ *
+ * @param {string} str - The input string.
  * @returns {string} The reversed string.
  */
 export function reverseString(str: string): string {
@@ -53,9 +58,10 @@ export function reverseString(str: string): string {
 // console.log(reverseString('hello')); // 'olleh'
 
 /**
- * Counts the number of words in a string.
- * @param {string} str The string to analyze.
- * @returns {number} The word count.
+ * Counts the number of words in a string, based on whitespace separation.
+ *
+ * @param {string} str - The input string.
+ * @returns {number} The number of words in the string.
  */
 export function countWords(str: string): number {
     return str.trim().split(/\s+/).length;
@@ -65,9 +71,10 @@ export function countWords(str: string): number {
 // console.log(countWords('Hello world!')); // 2
 
 /**
- * Truncates a string to the specified length and adds ellipsis if necessary.
- * @param {string} str The string to truncate.
- * @param {number} maxLength The maximum length of the string.
+ * Truncates a string to a specified maximum length, appending '...' if the string is cut.
+ *
+ * @param {string} str - The input string.
+ * @param {number} maxLength - The maximum desired length of the string.
  * @returns {string} The truncated string.
  */
 export function truncateString(str: string, maxLength: number): string {
@@ -78,9 +85,10 @@ export function truncateString(str: string, maxLength: number): string {
 // console.log(truncateString('This is a long string', 10)); // 'This is a...'
 
 /**
- * Converts a string to camel case.
- * @param {string} str The string to convert.
- * @returns {string} The camel cased string.
+ * Converts a string from various cases (e.g., snake_case, kebab-case, space separated) into camelCase.
+ *
+ * @param {string} str - The input string.
+ * @returns {string} The camelCase version of the string.
  */
 export function toCamelCase(str: string): string {
     return str
@@ -92,9 +100,10 @@ export function toCamelCase(str: string): string {
 // console.log(toCamelCase('hello world example')); // 'helloWorldExample'
 
 /**
- * Converts a string to kebab case.
- * @param {string} str The string to convert.
- * @returns {string} The kebab cased string.
+ * Converts a string from various cases (e.g., camelCase, PascalCase, space separated) into kebab-case.
+ *
+ * @param {string} str - The input string.
+ * @returns {string} The kebab-case version of the string.
  */
 export function toKebabCase(str: string): string {
     return str
@@ -107,11 +116,12 @@ export function toKebabCase(str: string): string {
 // console.log(toKebabCase('Hello World Example')); // 'hello-world-example'
 
 /**
- * Replaces all instances of a substring within a string.
- * @param {string} str The original string.
- * @param {string} find The substring to find.
- * @param {string} replace The substring to replace with.
- * @returns {string} The modified string.
+ * Replaces all occurrences of a substring with a new substring.
+ *
+ * @param {string} str - The original string.
+ * @param {string} find - The substring to find and replace.
+ * @param {string} replace - The substring to replace with.
+ * @returns {string} A new string with all replacements made.
  */
 export function replaceAll(str: string, find: string, replace: string): string {
     return str.split(find).join(replace);
@@ -121,9 +131,10 @@ export function replaceAll(str: string, find: string, replace: string): string {
 // console.log(replaceAll('hello world', 'o', 'a')); // 'hella warld'
 
 /**
- * Generates a random string of a specific length.
- * @param {number} length The length of the string to generate.
- * @returns {string} The random string.
+ * Generates a random alphanumeric string of a specified length.
+ *
+ * @param {number} length - The desired length of the random string.
+ * @returns {string} The generated random string.
  */
 export function generateRandomString(length: number): string {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';

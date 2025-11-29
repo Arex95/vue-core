@@ -1,6 +1,6 @@
 /**
- * Enum for different storage keys used in the application.
- * This enum contains the keys for storing authentication token, locale information, user info, roles, and more.
+ * An enum that defines a standardized set of keys for accessing `localStorage` and `sessionStorage`.
+ * This helps to avoid magic strings and ensures consistency when managing data persistence in the browser.
  * @readonly
  * @enum {string}
  */
@@ -55,9 +55,9 @@ export enum StorageKeyEnum {
 }
 
 /**
- * Enum defining types of storage.
+ * A frozen object that serves as an enum for storage types, distinguishing between `sessionStorage` and `localStorage`.
+ * Using this object provides a type-safe way to specify the desired storage mechanism.
  * @readonly
- * @enum {number}
  */
 export const StorageTypeEnum = {
   /**

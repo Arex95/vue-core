@@ -3,13 +3,14 @@ import { safeGet } from "@utils/objects";
 import { TokenValidationResult } from '@/types';
 
 /**
- * Extracts and validates the access and refresh tokens from a response object.
- * Throws an error if the tokens are not found or are invalid.
+ * Extracts access and refresh tokens from a response object using specified dot-notation paths
+ * and validates their existence and type.
  *
- * @param {any} data - The API response object.
- * @param {AuthTokenPaths} tokenPaths - The paths for the tokens.
- * @param {string} errorSource - A prefix for the error message ("LOGIN" or "REFRESH").
- * @returns {TokenValidationResult} An object with the validated tokens.
+ * @param {any} data - The response object from which to extract the tokens.
+ * @param {AuthTokenPaths} tokenPaths - An object containing the dot-notation paths for the access and refresh tokens.
+ * @param {string} errorSource - A string to identify the source of the operation (e.g., "LOGIN", "REFRESH") for error messages.
+ * @returns {TokenValidationResult} An object containing the extracted `accessToken` and `refreshToken`.
+ * @throws {Error} If the data object is missing, or if the access or refresh tokens cannot be found at the specified paths or are not strings.
  */
 export const extractAndValidateTokens = (
   data: any,

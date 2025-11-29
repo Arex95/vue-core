@@ -16,15 +16,14 @@ interface EndpointConfig {
 }
 
 /**
- * Configures authentication endpoint URLs globally.
- * This function freezes the object to prevent further modifications.
+ * Configures the global authentication endpoint URLs for the application.
+ * This function should be called once at startup to define the API endpoints for login,
+ * token refresh, and logout. The configuration is then frozen to prevent changes.
  *
- * @param {EndpointConfig} config - An object containing the authentication endpoint URLs.
- * @param {string} config.loginEndpoint - URL of the login endpoint.
- * @param {string} config.refreshEndpoint - URL of the refresh token endpoint.
- * @param {string} config.logoutEndpoint - URL of the logout endpoint.
- *
- * @returns {void} Does not return anything but freezes the endpoint configuration object.
+ * @param {EndpointConfig} config - An object containing the URLs for the authentication endpoints.
+ * @param {string} config.loginEndpoint - The URL for the login endpoint.
+ * @param {string} config.refreshEndpoint - The URL for the token refresh endpoint.
+ * @param {string} config.logoutEndpoint - The URL for the logout endpoint.
  */
 export function configEndpoints(config: EndpointConfig): void {
   endpointsConfig = Object.freeze({
@@ -35,12 +34,9 @@ export function configEndpoints(config: EndpointConfig): void {
 }
 
 /**
- * Retrieves the configured authentication endpoint URLs.
+ * Retrieves the globally configured authentication endpoint URLs.
  *
- * @returns {EndpointsConfig} An object containing the configured authentication endpoints.
- * @property {string} LOGIN - URL of the login endpoint.
- * @property {string} REFRESH - URL of the refresh token endpoint.
- * @property {string} LOGOUT - URL of the logout endpoint.
+ * @returns {EndpointsConfig} A frozen object containing the configured `LOGIN`, `REFRESH`, and `LOGOUT` endpoints.
  */
 export function getEndpointsConfig(): EndpointsConfig {
   return endpointsConfig;

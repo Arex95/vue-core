@@ -1,5 +1,7 @@
 /**
- * Enum representing different types of errors.
+ * An enum that defines a vocabulary of error types, covering a wide range of potential issues
+ * from validation and network problems to runtime and syntax errors. This provides a standardized
+ * way to classify errors throughout the application.
  * @readonly
  */
 export enum ErrorEnum {
@@ -20,28 +22,31 @@ export enum ErrorEnum {
 }
 
 /**
- * Enum representing different error messages.
+ * An enum that provides standardized, user-friendly messages for different error types.
+ * These messages are intended to be displayed to the user or used in logs.
  * @readonly
  */
 export enum ErrorMessages {
-  WARNING = 'Algo no está del todo bien. Verifica y vuelve a intentar.',
-  ERROR = 'Ocurrió un error inesperado.',
-  CRITICAL = 'Error crítico. Contacta al soporte técnico.',
-  VALIDATION = 'Hay errores en el formulario. Revisa los campos.',
-  COMPONENT = 'Error en la carga del componente. Intenta recargar.',
-  NETWORK = 'Problema de conexión. Verifica tu internet.',
-  AUTHENTICATION = 'No tienes permisos para realizar esta acción.',
-  RUNTIME = 'Error de ejecución. Intenta nuevamente.',
-  TYPE = 'Tipo de error no identificado.',
-  REFERENCE = 'Referencia no válida.',
-  SYNTAX = 'Error de sintaxis en el código.',
-  RANGE = 'Error en el rango de valores.',
-  EVAL = 'Error en la evaluación.',
-  URI = 'URI no válida.',
+  WARNING = 'Something is not quite right. Please check and try again.',
+  ERROR = 'An unexpected error occurred.',
+  CRITICAL = 'Critical error. Please contact technical support.',
+  VALIDATION = 'There are errors in the form. Please review the fields.',
+  COMPONENT = 'Error loading the component. Try reloading.',
+  NETWORK = 'Connection problem. Please check your internet.',
+  AUTHENTICATION = 'You do not have permission to perform this action.',
+  RUNTIME = 'Execution error. Please try again.',
+  TYPE = 'Unidentified error type.',
+  REFERENCE = 'Invalid reference.',
+  SYNTAX = 'Syntax error in the code.',
+  RANGE = 'Error in the range of values.',
+  EVAL = 'Error in evaluation.',
+  URI = 'Invalid URI.',
 }
 
 /**
- * Enum representing different error styles.
+ * An enum that defines CSS styles for console log messages, corresponding to each error type in `ErrorEnum`.
+ * This allows for visually distinct, styled logging in the browser's console, making it easier to
+ * identify the severity and type of logged errors during development.
  * @readonly
  */
 export enum ErrorStyles {
@@ -62,7 +67,8 @@ export enum ErrorStyles {
 }
 
 /**
- * A record mapping ErrorEnum to their corresponding error messages.
+ * A frozen record that maps each `ErrorEnum` member to its corresponding user-friendly message from `ErrorMessages`.
+ * This provides a convenient, type-safe way to look up error messages.
  */
 export const ERROR_MESSAGES: Record<ErrorEnum, string> = {
   [ErrorEnum.WARNING]: ErrorMessages.WARNING,
@@ -82,7 +88,8 @@ export const ERROR_MESSAGES: Record<ErrorEnum, string> = {
 } as const
 
 /**
- * A record mapping ErrorEnum to their corresponding error styles.
+ * A frozen record that maps each `ErrorEnum` member to its corresponding CSS style string from `ErrorStyles`.
+ * This enables easy retrieval of the correct style for console logging based on the error type.
  */
 export const ERROR_STYLES: Record<ErrorEnum, string> = {
   [ErrorEnum.WARNING]: ErrorStyles.WARNING,
