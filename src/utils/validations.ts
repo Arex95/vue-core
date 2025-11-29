@@ -1,7 +1,8 @@
 /**
- * Validates if the key pressed is a valid letter or special character.
- * @param {KeyboardEvent} e The keyboard event.
- * @returns {boolean} True if the key is valid, otherwise false.
+ * An event handler that prevents a `KeyboardEvent`'s default action if the key pressed is not a letter or a specific special character.
+ *
+ * @param {KeyboardEvent} e - The `KeyboardEvent` object.
+ * @returns {boolean} `true` if the key is valid, `false` otherwise.
  */
 export function validateLetters(e: KeyboardEvent): boolean {
     const key = e.keyCode;
@@ -36,9 +37,10 @@ export function validateLetters(e: KeyboardEvent): boolean {
 
 
 /**
- * Validates if the key pressed is a valid alphanumeric character.
- * @param {KeyboardEvent} e The keyboard event.
- * @returns {boolean} True if the key is valid, otherwise false.
+ * An event handler that prevents a `KeyboardEvent`'s default action if the key pressed is not an alphanumeric character.
+ *
+ * @param {KeyboardEvent} e - The `KeyboardEvent` object.
+ * @returns {boolean} `true` if the key is valid, `false` otherwise.
  */
 export function validateAlphanumeric(e: KeyboardEvent): boolean {
     const key = e.keyCode;
@@ -63,9 +65,10 @@ export function validateAlphanumeric(e: KeyboardEvent): boolean {
 
 
 /**
- * Validates if the key pressed is a number.
- * @param {KeyboardEvent} e The keyboard event.
- * @returns {boolean} True if the key is a number, otherwise false.
+ * An event handler that prevents a `KeyboardEvent`'s default action if the key pressed is not a number.
+ *
+ * @param {KeyboardEvent} e - The `KeyboardEvent` object.
+ * @returns {boolean} `true` if the key is a number, otherwise `false`.
  */
 export function validateNumbers(e: KeyboardEvent): boolean {
     const key = e.keyCode;
@@ -82,9 +85,10 @@ export function validateNumbers(e: KeyboardEvent): boolean {
 
 
 /**
- * Validates if a phone number is valid.
- * @param {string} phoneNumber The phone number to validate.
- * @returns {boolean} True if the phone number is valid, otherwise false.
+ * Validates a phone number against a regex for 10-digit numbers.
+ *
+ * @param {string} phoneNumber - The phone number to validate.
+ * @returns {boolean} `true` if the phone number is valid, otherwise `false`.
  */
 export function isValidPhoneNumber(phoneNumber: string): boolean {
     const phonePattern = /^[0-9]{10}$/; // Example pattern for 10-digit phone numbers
@@ -97,9 +101,10 @@ export function isValidPhoneNumber(phoneNumber: string): boolean {
 
 
 /**
- * Validates if a string is a valid email address.
- * @param {string} email The email address to validate.
- * @returns {boolean} True if the email address is valid, otherwise false.
+ * Validates an email address against a standard regex pattern.
+ *
+ * @param {string} email - The email address to validate.
+ * @returns {boolean} `true` if the email is valid, otherwise `false`.
  */
 export function isValidEmail(email: string): boolean {
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -112,9 +117,10 @@ export function isValidEmail(email: string): boolean {
 
 
 /**
- * Validates if a string is a valid URL.
- * @param {string} url The URL to validate.
- * @returns {boolean} True if the URL is valid, otherwise false.
+ * Validates a string to see if it is a well-formed URL.
+ *
+ * @param {string} url - The URL string to validate.
+ * @returns {boolean} `true` if the URL is valid, otherwise `false`.
  */
 export function isValidURL(url: string): boolean {
     try {
@@ -131,9 +137,10 @@ export function isValidURL(url: string): boolean {
 
 
 /**
- * Validates if a string is a valid date in YYYY-MM-DD format.
- * @param {string} date The date string to validate.
- * @returns {boolean} True if the date is valid, otherwise false.
+ * Validates a string to ensure it is a valid date in 'YYYY-MM-DD' format.
+ *
+ * @param {string} date - The date string to validate.
+ * @returns {boolean} `true` if the date is valid, otherwise `false`.
  */
 export function isValidDate(date: string): boolean {
     const datePattern = /^\d{4}-\d{2}-\d{2}$/;
@@ -150,9 +157,10 @@ export function isValidDate(date: string): boolean {
 
 
 /**
- * Validates if a password meets certain strength criteria.
- * @param {string} password The password to validate.
- * @returns {boolean} True if the password is strong, otherwise false.
+ * Checks if a password meets a set of strength requirements (minimum length, uppercase, lowercase, numbers, special characters).
+ *
+ * @param {string} password - The password to validate.
+ * @returns {boolean} `true` if the password is strong, otherwise `false`.
  */
 export function isStrongPassword(password: string): boolean {
     const minLength = 8;
@@ -170,9 +178,10 @@ export function isStrongPassword(password: string): boolean {
 
 
 /**
- * Validates a credit card number using the Luhn algorithm.
- * @param {string} cardNumber The credit card number to validate.
- * @returns {boolean} True if the credit card number is valid, otherwise false.
+ * Validates a credit card number using the Luhn algorithm (mod-10 check).
+ *
+ * @param {string} cardNumber - The credit card number to validate.
+ * @returns {boolean} `true` if the credit card number is valid, otherwise `false`.
  */
 export function isValidCreditCard(cardNumber: string): boolean {
     const sanitized = cardNumber.replace(/\D/g, '');
@@ -200,9 +209,10 @@ export function isValidCreditCard(cardNumber: string): boolean {
 
 
 /**
- * Validates if a string is a valid hex color code.
- * @param {string} color The color code to validate.
- * @returns {boolean} True if the color code is valid, otherwise false.
+ * Validates a string to check if it's a valid 3- or 6-digit hexadecimal color code.
+ *
+ * @param {string} color - The hex color string to validate.
+ * @returns {boolean} `true` if the color code is valid, otherwise `false`.
  */
 export function isValidHexColor(color: string): boolean {
     const hexPattern = /^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$/;
@@ -216,9 +226,10 @@ export function isValidHexColor(color: string): boolean {
 
 
 /**
- * Validates if a string is a valid time in HH:MM format.
- * @param {string} time The time string to validate.
- * @returns {boolean} True if the time is valid, otherwise false.
+ * Validates a string to ensure it represents a valid time in 24-hour HH:MM format.
+ *
+ * @param {string} time - The time string to validate.
+ * @returns {boolean} `true` if the time is valid, otherwise `false`.
  */
 export function isValidTime(time: string): boolean {
     const timePattern = /^([01]\d|2[0-3]):([0-5]\d)$/;
@@ -231,9 +242,10 @@ export function isValidTime(time: string): boolean {
 
 
 /**
- * Validates if a string is a valid IPv4 address.
- * @param {string} ip The IP address to validate.
- * @returns {boolean} True if the IP address is valid, otherwise false.
+ * Validates a string to check if it is a valid IPv4 address.
+ *
+ * @param {string} ip - The IP address string to validate.
+ * @returns {boolean} `true` if the IP address is valid, otherwise `false`.
  */
 export function isValidIP(ip: string): boolean {
     const ipPattern = /^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)$/;
@@ -246,9 +258,10 @@ export function isValidIP(ip: string): boolean {
 
 
 /**
- * Validates if a string is a valid U.S. Social Security Number (SSN).
- * @param {string} ssn The SSN to validate.
- * @returns {boolean} True if the SSN is valid, otherwise false.
+ * Validates a string to check if it matches the format of a U.S. Social Security Number (SSN).
+ *
+ * @param {string} ssn - The SSN string to validate.
+ * @returns {boolean} `true` if the SSN format is valid, otherwise `false`.
  */
 export function isValidSSN(ssn: string): boolean {
     const ssnPattern = /^\d{3}-\d{2}-\d{4}$/;
@@ -261,9 +274,10 @@ export function isValidSSN(ssn: string): boolean {
 
 
 /**
- * Validates if a string is a valid U.S. ZIP code.
- * @param {string} zip The ZIP code to validate.
- * @returns {boolean} True if the ZIP code is valid, otherwise false.
+ * Validates a string to check if it is a valid 5-digit or 9-digit (ZIP+4) U.S. ZIP code.
+ *
+ * @param {string} zip - The ZIP code string to validate.
+ * @returns {boolean} `true` if the ZIP code is valid, otherwise `false`.
  */
 export function isValidZIP(zip: string): boolean {
     const zipPattern = /^\d{5}(-\d{4})?$/;
@@ -277,9 +291,10 @@ export function isValidZIP(zip: string): boolean {
 
 
 /**
- * Validates if a string is a valid credit card expiry date in MM/YY format.
- * @param {string} expiryDate The expiry date to validate.
- * @returns {boolean} True if the expiry date is valid, otherwise false.
+ * Validates a credit card expiry date string (MM/YY format) to ensure it is a valid, non-expired date.
+ *
+ * @param {string} expiryDate - The expiry date to validate.
+ * @returns {boolean} `true` if the expiry date is valid and not in the past, otherwise `false`.
  */
 export function isValidExpiryDate(expiryDate: string): boolean {
     const expiryPattern = /^(0[1-9]|1[0-2])\/\d{2}$/;
@@ -298,9 +313,10 @@ export function isValidExpiryDate(expiryDate: string): boolean {
 
 
 /**
- * Validates if a string is a valid 8-character hexadecimal color code (including alpha).
- * @param {string} color The color code to validate.
- * @returns {boolean} True if the color code is valid, otherwise false.
+ * Validates a string to check if it's a valid 8-digit hexadecimal color code (with alpha channel).
+ *
+ * @param {string} color - The hex color string to validate.
+ * @returns {boolean} `true` if the color code is valid, otherwise `false`.
  */
 export function isValidHexColorAlpha(color: string): boolean {
     const hexPattern = /^#([0-9A-Fa-f]{8})$/;
@@ -313,9 +329,10 @@ export function isValidHexColorAlpha(color: string): boolean {
 
 
 /**
- * Validates if a username meets specific criteria.
- * @param {string} username The username to validate.
- * @returns {boolean} True if the username is valid, otherwise false.
+ * Validates a username to ensure it contains only alphanumeric characters and underscores, with a length between 3 and 16 characters.
+ *
+ * @param {string} username - The username to validate.
+ * @returns {boolean} `true` if the username is valid, otherwise `false`.
  */
 export function isValidUsername(username: string): boolean {
     const usernamePattern = /^[a-zA-Z0-9_]{3,16}$/; // 3 to 16 characters, letters, numbers, and underscores only
@@ -328,9 +345,10 @@ export function isValidUsername(username: string): boolean {
 
 
 /**
- * Validates if a string represents a valid age between 0 and 120.
- * @param {string} age The age to validate.
- * @returns {boolean} True if the age is valid, otherwise false.
+ * Validates a string to ensure it represents a plausible human age (0-120).
+ *
+ * @param {string} age - The age string to validate.
+ * @returns {boolean} `true` if the age is valid, otherwise `false`.
  */
 export function isValidAge(age: string): boolean {
     const ageNumber = parseInt(age, 10);
@@ -343,9 +361,10 @@ export function isValidAge(age: string): boolean {
 
 
 /**
- * Validates if a string is a valid hexadecimal number.
- * @param {string} hex The hexadecimal number to validate.
- * @returns {boolean} True if the number is valid, otherwise false.
+ * Validates a string to check if it contains only valid hexadecimal characters.
+ *
+ * @param {string} hex - The string to validate.
+ * @returns {boolean} `true` if the string is a valid hexadecimal number, otherwise `false`.
  */
 export function isValidHexNumber(hex: string): boolean {
     const hexPattern = /^[0-9A-Fa-f]+$/;

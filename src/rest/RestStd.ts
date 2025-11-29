@@ -1,24 +1,33 @@
 import { objectToFormData } from "@/utils";
 import { ContentTypeEnum } from "@/enums";
 
+/**
+ * A standardized RESTful service class that provides a generic interface for performing
+ * CRUD (Create, Read, Update, Delete) operations on a specific API resource. It is designed
+ * to be extended by resource-specific classes. It supports both JSON and FormData requests.
+ */
 export class RestStd {
+  /** The base URL path for the resource (e.g., '/users'). */
   static resource: string;
+  /** A flag to determine if request data should be sent as FormData. Defaults to `false`. */
   static isFormData: boolean = false;
+  /** A record of global headers to be sent with every request. */
   static headers: Record<string, string> = {};
+  /** The function used to make the actual HTTP requests (e.g., an Axios instance). */
   static fetchFn: Function;
 
   /**
-   * Set global headers for all requests.
-   * @param headers Object containing headers to be set globally.
+   * Sets global headers that will be included in all subsequent requests made by this class.
+   * @param {Record<string, string>} headers - An object containing the headers to be set.
    */
   static setHeaders(headers: Record<string, string>) {
     this.headers = { ...this.headers, ...headers };
   }
 
   /**
-   * Convert data to FormData if isFormData is true, otherwise return the data as is.
-   * @param data Data to be converted.
-   * @returns Data in FormData format or as is.
+   * Conditionally transforms the request data to FormData if `isFormData` is true.
+   * @param {*} data - The data to be potentially transformed.
+   * @returns {FormData|*} The transformed data as FormData, or the original data.
    */
   static transformData(data: any) {
     if (this.isFormData) {
@@ -29,11 +38,11 @@ export class RestStd {
   }
 
   /**
-   * Fetch a list of items from the server.
-   *
-   * @param params Query parameters for filtering the results.
-   * @param options Additional options for the fetch function.
-   * @returns The result of the fetch function (typically a promise).
+   * Fetches a list of items from the resource's endpoint.
+   * @template T The expected response type.
+   * @param {Record<string, any>} [params] - Query parameters for filtering the results.
+   * @param {object} [options={}] - Additional options to be passed to the fetch function.
+   * @returns {Promise<T>} The result of the fetch function, typically a promise that resolves with the response data.
    */
   static getAll<T>(params?: Record<string, any>, options: object = {}) {
     return this.fetchFn(
@@ -48,12 +57,12 @@ export class RestStd {
   }
 
   /**
-   * Fetch a single item by ID from the server.
-   *
-   * @param id The ID of the item to fetch.
-   * @param params Additional query parameters for the request.
-   * @param options Additional options for the fetch function.
-   * @returns The result of the fetch function (typically a promise).
+   * Fetches a single item by its ID.
+   * @template T The expected response type.
+   * @param {string|number} id - The unique identifier of the item to fetch.
+   * @param {Record<string, any>} [params] - Additional query parameters.
+   * @param {object} [options={}] - Additional options for the fetch function.
+   * @returns {Promise<T>} The result of the fetch function.
    */
   static getOne<T>(
     id: string | number,
@@ -72,11 +81,11 @@ export class RestStd {
   }
 
   /**
-   * Create a new item on the server.
-   *
-   * @param data The data for the new item to create.
-   * @param options Additional options for the fetch function.
-   * @returns The result of the fetch function (typically a promise).
+   * Creates a new item.
+   * @template T The expected response type.
+   * @param {*} data - The data for the new item.
+   * @param {object} [options={}] - Additional options for the fetch function.
+   * @returns {Promise<T>} The result of the fetch function.
    */
   static create<T>(data: any, options: object = {}) {
     const transformedData = this.transformData(data);
@@ -97,11 +106,11 @@ export class RestStd {
   }
 
   /**
-   * Create multiple new items on the server.
-   *
-   * @param data An array of data for the items to create.
-   * @param options Additional options for the fetch function.
-   * @returns The result of the fetch function.
+   * Creates multiple new items in a single request.
+   * @template T The expected response type.
+   * @param {any[]} data - An array of items to create.
+   * @param {object} [options={}] - Additional options for the fetch function.
+   * @returns {Promise<T>} The result of the fetch function.
    */
   static bulkCreate<T>(data: any[], options: object = {}) {
     const transformedData = this.isFormData
@@ -124,12 +133,12 @@ export class RestStd {
   }
 
   /**
-   * Update an existing item on the server.
-   *
-   * @param id The ID of the item to update.
-   * @param data The updated data for the item.
-   * @param options Additional options for the fetch function.
-   * @returns The result of the fetch function (typically a promise).
+   * Updates an existing item by its ID.
+   * @template T The expected response type.
+   * @param {string|number} id - The ID of the item to update.
+   * @param {*} data - The updated data for the item.
+   * @param {object} [options={}] - Additional options for the fetch function.
+   * @returns {Promise<T>} The result of the fetch function.
    */
   static update<T>(id: string | number, data: any, options: object = {}) {
     const transformedData = this.transformData(data);
@@ -150,11 +159,11 @@ export class RestStd {
   }
 
   /**
-   * Update multiple existing items on the server.
-   *
-   * @param data An array of data for the items to update (each object should have an ID).
-   * @param options Additional options for the fetch function.
-   * @returns The result of the fetch function.
+   * Updates multiple existing items in a single request.
+   * @template T The expected response type.
+   * @param {any[]} data - An array of items to update. Each item should have an ID.
+   * @param {object} [options={}] - Additional options for the fetch function.
+   * @returns {Promise<T>} The result of the fetch function.
    */
   static bulkUpdate<T>(data: any[], options: object = {}) {
     const transformedData = this.isFormData
@@ -177,12 +186,12 @@ export class RestStd {
   }
 
   /**
-   * Partially update an existing item on the server.
-   *
-   * @param id The ID of the item to update.
-   * @param data The updated data for the item.
-   * @param options Additional options for the fetch function.
-   * @returns The result of the fetch function (typically a promise).
+   * Partially updates an existing item by its ID.
+   * @template T The expected response type.
+   * @param {string|number} id - The ID of the item to update.
+   * @param {*} data - The partial data for the item.
+   * @param {object} [options={}] - Additional options for the fetch function.
+   * @returns {Promise<T>} The result of the fetch function.
    */
   static patch<T>(id: string | number, data: any, options: object = {}) {
     const transformedData = this.transformData(data);
@@ -203,11 +212,11 @@ export class RestStd {
   }
 
   /**
-   * Delete an item from the server.
-   *
-   * @param id The ID of the item to delete.
-   * @param options Additional options for the fetch function.
-   * @returns The result of the fetch function (typically a promise).
+   * Deletes an item by its ID.
+   * @template T The expected response type.
+   * @param {string|number} id - The ID of the item to delete.
+   * @param {object} [options={}] - Additional options for the fetch function.
+   * @returns {Promise<T>} The result of the fetch function.
    */
   static delete<T>(id: string | number, options: object = {}) {
     return this.fetchFn(
@@ -221,11 +230,11 @@ export class RestStd {
   }
 
   /**
-   * Delete multiple items from the server by their IDs.
-   *
-   * @param ids An array of IDs of the items to delete.
-   * @param options Additional options for the fetch function.
-   * @returns The result of the fetch function.
+   * Deletes multiple items by their IDs in a single request.
+   * @template T The expected response type.
+   * @param {(string|number)[]} ids - An array of IDs of the items to delete.
+   * @param {object} [options={}] - Additional options for the fetch function.
+   * @returns {Promise<T>} The result of the fetch function.
    */
   static bulkDelete<T>(ids: (string | number)[], options: object = {}) {
     return this.fetchFn(
@@ -240,11 +249,11 @@ export class RestStd {
   }
 
   /**
-   * Upsert method that decides whether to create or update based on the presence of 'id'.
-   *
-   * @param data The data for the item to create or update.
-   * @param options Additional options for the fetch function.
-   * @returns The result of the fetch function (typically a promise).
+   * Creates a new item or updates an existing one, based on the presence of an `id` property in the data.
+   * @template T The expected response type.
+   * @param {*} data - The data for the item to be created or updated.
+   * @param {object} [options={}] - Additional options for the fetch function.
+   * @returns {Promise<T>} The result of the create or update operation.
    */
   static upsert<T>(data: any, options: object = {}) {
     if (data.id) {
@@ -255,14 +264,14 @@ export class RestStd {
   }
 
   /**
-   * Custom request method for more flexibility.
-   *
-   * @param method HTTP method (GET, POST, etc.).
-   * @param url The custom URL for the request.
-   * @param params Query parameters.
-   * @param data Request body data.
-   * @param options Additional options for the fetch function.
-   * @returns The result of the fetch function (typically a promise).
+   * Makes a custom HTTP request, providing full flexibility over the method, URL, and data.
+   * @template T The expected response type.
+   * @param {string} method - The HTTP method (e.g., 'GET', 'POST').
+   * @param {string} url - The URL for the request.
+   * @param {Record<string, any>} [params] - Query parameters.
+   * @param {*} [data] - The request body data.
+   * @param {object} [options={}] - Additional options for the fetch function.
+   * @returns {Promise<T>} The result of the fetch function.
    */
   static customRequest<T>(
     method: string,

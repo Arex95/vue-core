@@ -1,5 +1,5 @@
 /**
- * Disables the right-click context menu on the window.
+ * Disables the default right-click context menu on the entire window.
  */
 export function disableRightClick(): void {
     const handler = (event: MouseEvent) => event.preventDefault();
@@ -12,7 +12,7 @@ export function disableRightClick(): void {
 disableRightClick.handler = null as any;
 
 /**
- * Enables the right-click context menu on the window.
+ * Re-enables the right-click context menu if it was previously disabled by `disableRightClick`.
  */
 export function enableRightClick(): void {
     if (disableRightClick.handler) {
@@ -21,8 +21,9 @@ export function enableRightClick(): void {
 }
 
 /**
- * Disables specific mouse buttons.
- * @param {Array<number>} buttons Array of mouse button codes to disable (0 for left, 1 for middle, 2 for right).
+ * Prevents the default action for specific mouse buttons on the `mousedown` event.
+ *
+ * @param {number[]} buttons - An array of mouse button codes to disable (0 for left, 1 for middle, 2 for right).
  */
 export function disableMouseButtons(buttons: number[]): void {
     const handler = (event: MouseEvent) => {
@@ -41,7 +42,7 @@ export function disableMouseButtons(buttons: number[]): void {
 disableMouseButtons.handlers = [] as ((event: MouseEvent) => void)[];
 
 /**
- * Enables all previously disabled mouse buttons.
+ * Re-enables all mouse buttons that were previously disabled by `disableMouseButtons`.
  */
 export function enableMouseButtons(): void {
     for (const handler of disableMouseButtons.handlers) {
@@ -52,18 +53,20 @@ export function enableMouseButtons(): void {
 }
 
 /**
- * Adds a double-click event listener to a specific element.
- * @param {HTMLElement} element The target element.
- * @param {(event: MouseEvent) => void} callback The callback function to execute on double click.
+ * Attaches a `dblclick` event listener to a specified HTML element.
+ *
+ * @param {HTMLElement} element - The DOM element to attach the listener to.
+ * @param {(event: MouseEvent) => void} callback - The function to execute when the element is double-clicked.
  */
 export function addDoubleClickListener(element: HTMLElement, callback: (event: MouseEvent) => void): void {
     element.addEventListener('dblclick', callback);
 }
 
 /**
- * Removes a double-click event listener from a specific element.
- * @param {HTMLElement} element The target element.
- * @param {(event: MouseEvent) => void} callback The callback function to remove.
+ * Removes a `dblclick` event listener from a specified HTML element.
+ *
+ * @param {HTMLElement} element - The DOM element to remove the listener from.
+ * @param {(event: MouseEvent) => void} callback - The callback function that was originally added.
  */
 export function removeDoubleClickListener(element: HTMLElement, callback: (event: MouseEvent) => void): void {
     element.removeEventListener('dblclick', callback);
@@ -73,9 +76,10 @@ export function removeDoubleClickListener(element: HTMLElement, callback: (event
 // addDoubleClickListener(document.body, () => alert('Double clicked!'));
 
 /**
- * Detects a click outside a specific element and triggers a callback.
- * @param {HTMLElement} element The element to detect clicks outside of.
- * @param {() => void} callback The callback function to execute when a click outside is detected.
+ * Sets up a global click listener to detect when a user clicks outside of a specified element.
+ *
+ * @param {HTMLElement} element - The element to monitor for outside clicks.
+ * @param {() => void} callback - The function to execute when a click outside the element is detected.
  */
 export function clickOutside(element: HTMLElement, callback: () => void): void {
     const handler = (event: MouseEvent) => {
@@ -93,8 +97,9 @@ export function clickOutside(element: HTMLElement, callback: () => void): void {
 clickOutside.handlers = [] as { element: HTMLElement; handler: (event: MouseEvent) => void }[];
 
 /**
- * Removes the click outside listener for a specific element.
- * @param {HTMLElement} element The element to stop detecting clicks outside of.
+ * Removes the "click outside" event listener for a specific element that was added by `clickOutside`.
+ *
+ * @param {HTMLElement} element - The element for which to remove the listener.
  */
 export function removeClickOutside(element: HTMLElement): void {
     const index = clickOutside.handlers.findIndex(h => h.element === element);
@@ -111,7 +116,8 @@ export function removeClickOutside(element: HTMLElement): void {
 // }
 
 /**
- * Disables the F12 key and certain key combinations for developer tools.
+ * Disables the F12 key and common developer tool shortcuts (Ctrl+Shift+I, Ctrl+Shift+J)
+ * to prevent users from easily opening the browser's developer console.
  */
 export function disableF12Key(): void {
     const handler = function (event: KeyboardEvent): boolean {
@@ -128,8 +134,9 @@ export function disableF12Key(): void {
 }
 
 /**
- * Enables or disables the tab navigation (Tab key) on the page.
- * @param {boolean} enable Whether to enable or disable tab navigation.
+ * Enables or disables the ability to navigate through focusable elements using the Tab key.
+ *
+ * @param {boolean} enable - If `true`, tab navigation is enabled; if `false`, it is disabled.
  */
 export function toggleTabNavigation(enable: boolean): void {
     if (enable) {
@@ -146,7 +153,7 @@ export function toggleTabNavigation(enable: boolean): void {
 }
 
 /**
- * Disables the copy (Ctrl + C) functionality on the page.
+ * Prevents users from copying content from the page by intercepting the `copy` event.
  */
 export function disableCopy(): void {
     document.addEventListener('copy', (event: ClipboardEvent) => {
@@ -156,11 +163,12 @@ export function disableCopy(): void {
 }
 
 /**
- * Adds a custom keyboard shortcut to execute a given callback function.
- * @param {string} key The key to trigger the callback.
- * @param {Function} callback The function to execute on the key press.
- * @param {boolean} [ctrlKey=false] Whether Ctrl key should be pressed.
- * @param {boolean} [shiftKey=false] Whether Shift key should be pressed.
+ * Registers a global keyboard shortcut that triggers a callback when a specific key combination is pressed.
+ *
+ * @param {string} key - The main key for the shortcut (e.g., 'S', 'F1').
+ * @param {() => void} callback - The function to execute when the shortcut is pressed.
+ * @param {boolean} [ctrlKey=false] - If `true`, the Ctrl key must be pressed.
+ * @param {boolean} [shiftKey=false] - If `true`, the Shift key must be pressed.
  */
 export function addCustomKeyboardShortcut(
     key: string,
@@ -181,10 +189,11 @@ export function addCustomKeyboardShortcut(
 }
 
 /**
- * Removes a custom keyboard shortcut by key and modifiers.
- * @param {string} key The key to trigger the callback.
- * @param {boolean} [ctrlKey=false] Whether Ctrl key should be pressed.
- * @param {boolean} [shiftKey=false] Whether Shift key should be pressed.
+ * Removes a global keyboard shortcut that was previously added.
+ *
+ * @param {string} key - The main key of the shortcut to remove.
+ * @param {boolean} [ctrlKey=false] - The Ctrl key modifier of the shortcut.
+ * @param {boolean} [shiftKey=false] - The Shift key modifier of the shortcut.
  */
 export function removeCustomKeyboardShortcut(
     key: string,
@@ -205,8 +214,9 @@ export function removeCustomKeyboardShortcut(
 }
 
 /**
- * Disables specific keys or key combinations.
- * @param {Array<string>} keys Array of key names to disable (e.g., ['F1', 'F5', 'Control+S']).
+ * Disables a list of specified keys or key combinations.
+ *
+ * @param {string[]} keys - An array of key names or combinations (e.g., 'F1', 'Control+S') to disable.
  */
 export function disableSpecificKeys(keys: string[]): void {
     const handler = (event: KeyboardEvent) => {
@@ -224,7 +234,7 @@ export function disableSpecificKeys(keys: string[]): void {
 disableSpecificKeys.handlers = [] as ((event: KeyboardEvent) => void)[];
 
 /**
- * Enables keys that were previously disabled using disableSpecificKeys.
+ * Re-enables all keys that were previously disabled by `disableSpecificKeys`.
  */
 export function enableSpecificKeys(): void {
     for (const handler of disableSpecificKeys.handlers) {
@@ -234,8 +244,9 @@ export function enableSpecificKeys(): void {
 }
 
 /**
- * Registers multiple keyboard shortcuts with their respective callback functions.
- * @param {Array<{ key: string, ctrlKey?: boolean, shiftKey?: boolean, altKey?: boolean, callback: Function }>} shortcuts Array of shortcut objects.
+ * Registers multiple keyboard shortcuts from an array of shortcut configurations.
+ *
+ * @param {Array<{ key: string; ctrlKey?: boolean; shiftKey?: boolean; altKey?: boolean; callback: () => void }>} shortcuts - An array of shortcut objects.
  */
 export function registerKeyboardShortcuts(shortcuts: { key: string; ctrlKey?: boolean; shiftKey?: boolean; altKey?: boolean; callback: () => void }[]): void {
     const handler = (event: KeyboardEvent) => {
@@ -260,7 +271,7 @@ export function registerKeyboardShortcuts(shortcuts: { key: string; ctrlKey?: bo
 registerKeyboardShortcuts.handlers = [] as ((event: KeyboardEvent) => void)[];
 
 /**
- * Unregisters all keyboard shortcuts that were registered with registerKeyboardShortcuts.
+ * Removes all keyboard shortcuts that were registered using `registerKeyboardShortcuts`.
  */
 export function unregisterKeyboardShortcuts(): void {
     for (const handler of registerKeyboardShortcuts.handlers) {
@@ -270,9 +281,10 @@ export function unregisterKeyboardShortcuts(): void {
 }
 
 /**
- * Adds a listener for a specific key to trigger a custom event.
- * @param {string} key The key to listen for (e.g., 'Enter', 'Escape').
- * @param {Function} callback The function to execute when the key is pressed.
+ * Adds a global `keydown` listener for a specific key.
+ *
+ * @param {string} key - The key to listen for (e.g., 'Enter', 'Escape').
+ * @param {() => void} callback - The function to execute when the key is pressed.
  */
 export function addKeyListener(key: string, callback: () => void): void {
     const handler = (event: KeyboardEvent) => {
@@ -290,7 +302,7 @@ export function addKeyListener(key: string, callback: () => void): void {
 addKeyListener.handlers = [] as ((event: KeyboardEvent) => void)[];
 
 /**
- * Removes all custom key listeners added by addKeyListener.
+ * Removes all key listeners that were added using `addKeyListener`.
  */
 export function removeKeyListeners(): void {
     for (const handler of addKeyListener.handlers) {
@@ -300,9 +312,10 @@ export function removeKeyListeners(): void {
 }
 
 /**
- * Detects if a specific key is held down.
- * @param {string} key The key to detect (e.g., 'Shift', 'Control', 'Alt', 'a').
- * @param {Function} onHold Callback function to execute while the key is held down.
+ * Executes a callback function repeatedly while a specific key is held down.
+ *
+ * @param {string} key - The key to monitor.
+ * @param {() => void} onHold - The callback function to execute on each `keydown` event for the specified key.
  */
 export function detectKeyHold(key: string, onHold: () => void): void {
     const keyDownHandler = (event: KeyboardEvent) => {
@@ -319,7 +332,7 @@ export function detectKeyHold(key: string, onHold: () => void): void {
 detectKeyHold.handlers = [] as ((event: KeyboardEvent) => void)[];
 
 /**
- * Stops detecting if a specific key is held down.
+ * Removes all key hold listeners that were added by `detectKeyHold`.
  */
 export function stopDetectingKeyHold(): void {
     for (const handler of detectKeyHold.handlers) {
@@ -329,8 +342,9 @@ export function stopDetectingKeyHold(): void {
 }
 
 /**
- * Tracks currently pressed keys and provides a map of active keys.
- * @returns {Set<string>} A set of currently pressed keys.
+ * Creates and maintains a `Set` of currently pressed keys.
+ *
+ * @returns {Set<string>} A `Set` that dynamically updates with the keys being pressed.
  */
 export function createKeyMap(): Set<string> {
     const pressedKeys = new Set<string>();
@@ -356,14 +370,15 @@ export function createKeyMap(): Set<string> {
 }
 
 /**
- * Clears listeners for the key map tracking.
+ * Clears the `keydown` and `keyup` event listeners created by `createKeyMap`.
  */
 createKeyMap.clearListeners = () => {};
 
 /**
- * Sets up custom keyboard shortcuts with flexible order.
- * @param {Array<string>} keys The combination of keys for the shortcut.
- * @param {Function} callback The callback function to execute when the combination is detected.
+ * Sets up a keyboard shortcut that triggers a callback when a specific combination of keys is held down, regardless of order.
+ *
+ * @param {string[]} keys - An array of keys that constitute the shortcut.
+ * @param {() => void} callback - The function to execute when the key combination is active.
  */
 export function customShortcut(keys: string[], callback: () => void): void {
     const pressedKeys = new Set<string>();
@@ -389,7 +404,7 @@ export function customShortcut(keys: string[], callback: () => void): void {
 customShortcut.handlers = [] as { keyDownHandler: (event: KeyboardEvent) => void; keyUpHandler: (event: KeyboardEvent) => void }[];
 
 /**
- * Removes all custom keyboard shortcuts added by customShortcut.
+ * Removes all keyboard shortcut listeners that were added by `customShortcut`.
  */
 export function removeCustomShortcuts(): void {
     for (const { keyDownHandler, keyUpHandler } of customShortcut.handlers) {
@@ -400,11 +415,12 @@ export function removeCustomShortcuts(): void {
 }
 
 /**
- * Simulates a key press event.
- * @param {string} key The key to simulate (e.g., 'Enter', 'a').
- * @param {boolean} ctrlKey If true, include Ctrl key in the event.
- * @param {boolean} shiftKey If true, include Shift key in the event.
- * @param {boolean} altKey If true, include Alt key in the event.
+ * Programmatically dispatches a `keydown` event to simulate a key press.
+ *
+ * @param {string} key - The key to simulate (e.g., 'Enter', 'a').
+ * @param {boolean} [ctrlKey=false] - Whether to simulate the Ctrl key being pressed.
+ * @param {boolean} [shiftKey=false] - Whether to simulate the Shift key being pressed.
+ * @param {boolean} [altKey=false] - Whether to simulate the Alt key being pressed.
  */
 export function simulateKeyPress(key: string, ctrlKey = false, shiftKey = false, altKey = false): void {
     const event = new KeyboardEvent('keydown', {

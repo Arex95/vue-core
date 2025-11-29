@@ -1,7 +1,9 @@
 /**
- * Parses a date string into a Date object.
- * @param {string} dateString The date string in 'YYYY-MM-DD' format.
- * @returns {Date | null} The parsed Date object or null if the format is invalid.
+ * Parses a date string in the format 'YYYY-MM-DD' and returns a `Date` object.
+ * It includes validation to ensure the parsed date is a valid calendar date.
+ *
+ * @param {string} dateString - The date string to parse.
+ * @returns {Date | null} A `Date` object if the string is a valid date, otherwise `null`.
  */
 export function parseDate(dateString: string): Date | null {
     const parts = dateString.split('-');
@@ -18,9 +20,11 @@ export function parseDate(dateString: string): Date | null {
 }
 
 /**
- * Formats a Date object into a string.
- * @param {Date} date The date to format.
- * @param {string} format The format string (e.g., 'YYYY-MM-DD').
+ * Formats a `Date` object into a custom string format.
+ * Supported format specifiers: YYYY, MM, DD, HH, mm, ss.
+ *
+ * @param {Date} date - The `Date` object to format.
+ * @param {string} format - The desired string format (e.g., 'YYYY-MM-DD HH:mm:ss').
  * @returns {string} The formatted date string.
  */
 export function formatDate(date: Date, format: string): string {
@@ -37,9 +41,10 @@ export function formatDate(date: Date, format: string): string {
 }
 
 /**
- * Calculates the number of days between two dates.
- * @param {Date} startDate The start date.
- * @param {Date} endDate The end date.
+ * Calculates the total number of full days between two dates.
+ *
+ * @param {Date} startDate - The starting date.
+ * @param {Date} endDate - The ending date.
  * @returns {number} The number of days between the two dates.
  */
 export function daysBetween(startDate: Date, endDate: Date): number {
@@ -48,10 +53,11 @@ export function daysBetween(startDate: Date, endDate: Date): number {
 }
 
 /**
- * Adds a specified number of days to a date.
- * @param {Date} date The date to modify.
- * @param {number} days The number of days to add.
- * @returns {Date} The new date with days added.
+ * Adds a specified number of days to a given date.
+ *
+ * @param {Date} date - The original date.
+ * @param {number} days - The number of days to add (can be negative to subtract).
+ * @returns {Date} A new `Date` object representing the resulting date.
  */
 export function addDays(date: Date, days: number): Date {
     const result = new Date(date);
@@ -60,45 +66,50 @@ export function addDays(date: Date, days: number): Date {
 }
 
 /**
- * Subtracts a specified number of days from a date.
- * @param {Date} date The date to modify.
- * @param {number} days The number of days to subtract.
- * @returns {Date} The new date with days subtracted.
+ * Subtracts a specified number of days from a given date.
+ *
+ * @param {Date} date - The original date.
+ * @param {number} days - The number of days to subtract.
+ * @returns {Date} A new `Date` object representing the resulting date.
  */
 export function subtractDays(date: Date, days: number): Date {
     return addDays(date, -days);
 }
 
 /**
- * Determines if a year is a leap year.
- * @param {number} year The year to check.
- * @returns {boolean} True if the year is a leap year, false otherwise.
+ * Determines whether a given year is a leap year according to the Gregorian calendar rules.
+ *
+ * @param {number} year - The year to check.
+ * @returns {boolean} `true` if the year is a leap year, otherwise `false`.
  */
 export function isLeapYear(year: number): boolean {
     return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
 }
 
 /**
- * Gets the first day of the month for a given date.
- * @param {Date} date The date to use.
- * @returns {Date} The first day of the month.
+ * Returns a new `Date` object set to the first day of the month for a given date.
+ *
+ * @param {Date} date - The date from which to determine the month and year.
+ * @returns {Date} A `Date` object representing the start of the month.
  */
 export function getStartOfMonth(date: Date): Date {
     return new Date(date.getFullYear(), date.getMonth(), 1);
 }
 
 /**
- * Gets the last day of the month for a given date.
- * @param {Date} date The date to use.
- * @returns {Date} The last day of the month.
+ * Returns a new `Date` object set to the last day of the month for a given date.
+ *
+ * @param {Date} date - The date from which to determine the month and year.
+ * @returns {Date} A `Date` object representing the end of the month.
  */
 export function getEndOfMonth(date: Date): Date {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0);
 }
 
 /**
- * Calculates age from a given birth date.
- * @param {Date} birthDate The birth date.
+ * Calculates the current age in years based on a given birth date.
+ *
+ * @param {Date} birthDate - The date of birth.
  * @returns {number} The calculated age.
  */
 export function calculateAge(birthDate: Date): number {
@@ -112,8 +123,9 @@ export function calculateAge(birthDate: Date): number {
 }
 
 /**
- * Calculates the number of days until the next birthday.
- * @param {Date} birthDate The birth date.
+ * Calculates the number of days from the current date until the next birthday.
+ *
+ * @param {Date} birthDate - The date of birth.
  * @returns {number} The number of days until the next birthday.
  */
 export function daysToNextBirthday(birthDate: Date): number {
@@ -130,10 +142,11 @@ export function daysToNextBirthday(birthDate: Date): number {
 }
 
 /**
- * Calculates the age at a specific date.
- * @param {Date} birthDate The birth date.
- * @param {Date} atDate The date to calculate the age at.
- * @returns {number} The calculated age.
+ * Calculates the age of a person on a specific date in the past or future.
+ *
+ * @param {Date} birthDate - The date of birth.
+ * @param {Date} atDate - The target date for which to calculate the age.
+ * @returns {number} The age on the specified date.
  */
 export function ageAtDate(birthDate: Date, atDate: Date): number {
     let age = atDate.getFullYear() - birthDate.getFullYear();

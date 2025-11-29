@@ -19,10 +19,7 @@
   "scripts": {
     "build": "rollup -c",
     "changelog": "conventional-changelog -p angular -o CHANGELOG.md -r 0",
-    "release": "npm version patch && npm run changelog && git add CHANGELOG.md package.json pnpm-lock.yaml && git commit -m \"chore(release): update changelog\" && git push && npm publish --access public",
-    "test": "vitest",
-    "test:watch": "vitest --watch",
-    "test:ui": "vitest --ui"
+    "release": "npm version patch && npm run changelog && git add CHANGELOG.md package.json pnpm-lock.yaml && git commit -m \"chore(release): update changelog\" && git push && npm publish --access public"
   },
   "repository": {
     "type": "git",
@@ -53,20 +50,15 @@
     "@rollup/plugin-typescript": "^12.1.2",
     "@types/crypto-js": "^4.2.2",
     "@types/node": "^22.13.10",
-    "@vitest/spy": "^3.2.3",
-    "@vitest/ui": "^3.2.3",
-    "@vue/test-utils": "^2.4.6",
     "conventional-changelog-cli": "^5.0.0",
     "eslint": "^9.23.0",
     "eslint-plugin-vue": "^10.0.0",
     "globals": "^16.0.0",
-    "jsdom": "^26.1.0",
     "rollup": "^4.35.0",
     "ts-node": "^10.9.2",
     "tslib": "^2.8.1",
     "typescript": "^5.8.2",
-    "typescript-eslint": "^8.28.0",
-    "vitest": "^3.2.3"
+    "typescript-eslint": "^8.28.0"
   },
   "dependencies": {
     "@tanstack/vue-query": ">=5.0.0",

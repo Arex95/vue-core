@@ -1,5 +1,7 @@
 /**
- * Enum representing all HTTP exception codes.
+ * An enum that defines a comprehensive set of HTTP status codes, organized by category
+ * (Informational, Success, Redirection, Client Errors, Server Errors). It also includes
+ * custom error codes for application-specific scenarios like network errors.
  * @readonly
  */
 export enum ExceptionEnum {

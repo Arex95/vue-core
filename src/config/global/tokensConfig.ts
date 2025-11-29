@@ -14,14 +14,14 @@ interface TokenKeyConfig {
 }
 
 /**
- * Configures the global keys for access and refresh tokens.
- * Once set, they cannot be modified.
+ * Configures the global storage keys for the access and refresh tokens.
+ * This function should be called once at application startup to define the keys
+ * used for storing tokens in `localStorage` or `sessionStorage`. The configuration
+ * is frozen to prevent runtime changes.
  *
- * @param {TokenKeyConfig} config - An object containing the token keys.
- * @param {string} config.accessTokenKey - The name of the key for the access token.
- * @param {string} config.refreshTokenKey - The name of the key for the refresh token.
- *
- * @returns {void} Does not return anything, but freezes the token configuration object.
+ * @param {TokenKeyConfig} config - An object containing the token storage keys.
+ * @param {string} config.accessTokenKey - The key for the access token.
+ * @param {string} config.refreshTokenKey - The key for the refresh token.
  */
 export function configTokenKeys(config: TokenKeyConfig): void {
   tokensConfig = Object.freeze({
@@ -31,9 +31,9 @@ export function configTokenKeys(config: TokenKeyConfig): void {
 }
 
 /**
- * Retrieves the current token configuration.
+ * Retrieves the configured storage keys for the access and refresh tokens.
  *
- * @returns {TokensConfig} The configuration of the access and refresh token keys.
+ * @returns {TokensConfig} A frozen object containing the `ACCESS_TOKEN` and `REFRESH_TOKEN` keys.
  */
 export function getTokenConfig(): TokensConfig {
   return tokensConfig;

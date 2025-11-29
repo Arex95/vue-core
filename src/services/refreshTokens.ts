@@ -11,17 +11,17 @@ import { AxiosInstance } from 'axios';
 import { cleanCredentials } from "@/services/credentials";
 
 /**
-   * Refreshes the authentication tokens using the stored refresh token.
-   * This function can also accept optional token paths if the refresh endpoint
-   * returns tokens with a different structure than the default login.
-   * If no refresh token is found, it throws an error and initiates a logout.
-   *
-   * @param {AuthTokenPaths} [tokenPaths] - Optional configuration for the paths (in dot notation) of the access and refresh tokens in the refresh endpoint response.
-   * @returns {Promise<AuthResponse>} The new authentication response with refreshed tokens.
-   * @throws {Error} If the refresh token is missing or the refresh request fails.
-   */
+ * Refreshes the access and refresh tokens by making a POST request to the refresh endpoint.
+ * It retrieves the current refresh token from storage, sends it to the refresh endpoint,
+ * and then stores the new tokens upon a successful response. If the refresh process fails
+ * or no refresh token is found, it clears all credentials and reloads the page.
+ *
+ * @param {AxiosInstance} axiosInstance - The Axios instance to use for the refresh request.
+ * @returns {Promise<AuthResponse>} A promise that resolves with the new authentication response containing the refreshed tokens.
+ * @throws {Error} Throws an error if the refresh token is missing or if the refresh request fails, which is then caught to trigger a logout.
+ */
   export const refreshTokens = async (
-    axiosInstance: AxiosInstance,
+    axiosInstance: AxiosiosInstance,
   ): Promise<AuthResponse> => {
     const tokenPaths: AuthTokenPaths = getRefreshTokenPathsConfig();
     const endpoints = getEndpointsConfig();
