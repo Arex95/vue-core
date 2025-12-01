@@ -1,8 +1,6 @@
 /**
- * Enum for key codes used in keyboard events.
- * This object holds various key codes commonly used for handling keyboard events.
- * The keys defined here correspond to specific key codes that can be used to detect
- * user input in web applications.
+ * An enum that provides a comprehensive mapping of common keyboard keys to their corresponding key codes.
+ * This is useful for handling keyboard events in a readable and standardized way, avoiding the use of magic numbers.
  * @readonly
  * @enum {number}
  */

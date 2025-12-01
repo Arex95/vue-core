@@ -72,15 +72,16 @@ async function loadSessionConfig(): Promise<void> {
 }
 
 /**
- * Configures the session identifier and/or data persistence preference
- * for the active browser session.
+ * Configures the session ID and persistence preference for the application.
+ * This function allows setting a custom session ID and specifying whether session-related
+ * data should be stored in `localStorage` or `sessionStorage`. The configuration is
+ * then encrypted and saved to the chosen storage.
  *
- * This function is asynchronous because it will always attempt to load the current configuration
- * before applying changes and then saving them.
- *
- * @param {SessionConfigObject} config - An object containing the unique session identifier and/or
- * the persistence preference.
- * @returns {Promise<void>} A promise that resolves when the session has been configured and saved.
+ * @param {SessionConfigObject} config - An object containing the session configuration.
+ * @param {string} [config.sessionId] - A unique identifier for the session. If not provided, the existing one is maintained.
+ * @param {LocationPreference} [config.persistencePreference] - The storage location ('local' or 'session').
+ *   If not provided, the existing preference is maintained.
+ * @returns {Promise<void>} A promise that resolves once the session has been configured and saved.
  */
 export async function configSession(
   config: SessionConfigObject
@@ -96,10 +97,9 @@ export async function configSession(
 }
 
 /**
- * Retrieves the current session identifier.
- * Always attempts to load the configuration from storage. If it fails, it uses the internal state.
+ * Retrieves the current session identifier, loading it from storage if available.
  *
- * @returns {Promise<string>} A promise that resolves with the unique session identifier.
+ * @returns {Promise<string>} A promise that resolves with the session ID.
  */
 export async function getSessionId(): Promise<string> {
   await loadSessionConfig();
@@ -107,10 +107,9 @@ export async function getSessionId(): Promise<string> {
 }
 
 /**
- * Retrieves the current data persistence preference.
- * Always attempts to load the configuration from storage. If it fails, it uses the internal state.
+ * Retrieves the current data persistence preference, loading it from storage if available.
  *
- * @returns {Promise<SessionPreference>} A promise that resolves with the configured persistence preference ('local' or 'session').
+ * @returns {Promise<LocationPreference>} A promise that resolves with the persistence preference ('local' or 'session').
  */
 export async function getSessionPersistence(): Promise<LocationPreference> {
   await loadSessionConfig();
@@ -118,10 +117,9 @@ export async function getSessionPersistence(): Promise<LocationPreference> {
 }
 
 /**
- * Retrieves the complete session configuration.
- * Always attempts to load the configuration from storage. If it fails, it uses the internal state.
+ * Retrieves the complete session configuration object, loading it from storage if available.
  *
- * @returns {Promise<SessionConfig>} A promise that resolves with the session configuration object.
+ * @returns {Promise<SessionConfig>} A promise that resolves with the full session configuration.
  */
 export async function getSessionConfig(): Promise<SessionConfig> {
   await loadSessionConfig();

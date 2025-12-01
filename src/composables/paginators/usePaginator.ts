@@ -1,12 +1,20 @@
 import { computed, Ref } from "vue";
 
 /**
- * Composable to handle pagination logic.
+ * A composable that provides pagination logic based on reactive refs for the current page,
+ * total number of items, and items per page.
  *
- * @param page - Reactive ref for the current page number.
- * @param total - Reactive ref for total number of items.
- * @param pageSize - Reactive ref for number of items per page.
- * @returns An object with pagination controls.
+ * @param {Ref<number>} page - A reactive ref representing the current page number.
+ * @param {Ref<number>} total - A reactive ref representing the total number of items to be paginated.
+ * @param {Ref<number>} pageSize - A reactive ref representing the number of items per page.
+ * @returns {{
+ *   totalPages: import('vue').ComputedRef<number>,
+ *   canFetchNextPage: () => boolean,
+ *   canFetchPreviousPage: () => boolean
+ * }} An object containing:
+ *   - `totalPages`: A computed property that calculates the total number of pages.
+ *   - `canFetchNextPage`: A function that returns `true` if there is a next page.
+ *   - `canFetchPreviousPage`: A function that returns `true` if there is a previous page.
  */
 export function usePagination(page: Ref<number>, total: Ref<number>, pageSize: Ref<number>) {
     // Calculate the total number of pages

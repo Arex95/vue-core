@@ -14,6 +14,7 @@ import { handleError } from "@utils/errors";
 import { getEndpointsConfig } from "@config/global/endpointsConfig";
 
 import { refreshTokens } from "@/services";
+import { createAxiosFetcher } from "@/fetchers/axios";
 
 declare module "axios" {
   interface InternalAxiosRequestConfig {
@@ -21,6 +22,12 @@ declare module "axios" {
   }
 }
 
+/**
+ * A service class that encapsulates a customizable Axios instance with built-in interceptors
+ * for handling authentication, token refreshing, and request cancellation. It is designed to
+ * streamline API communication by automatically attaching authorization headers and managing
+ * token refresh logic for 401 Unauthorized responses.
+ */
 export class AxiosService {
   private readonly instance: AxiosInstance;
   private cancelTokenSource: CancelTokenSource;
@@ -33,6 +40,10 @@ export class AxiosService {
     reject: (reason: AxiosError | Error) => void;
   }[] = [];
 
+  /**
+   * Creates an instance of AxiosService.
+   * @param {AxiosServiceOptions} options - Configuration options for the Axios instance, such as `baseURL`, `timeout`, and custom `headers`.
+   */
   constructor(options: AxiosServiceOptions) {
     this.cancelTokenSource = axios.CancelToken.source();
 
@@ -90,7 +101,7 @@ export class AxiosService {
         return config;
       },
       (error: AxiosError) => {
-        handleError(error, false);
+        handleError(error);
         return Promise.reject(error);
       }
     );
@@ -110,12 +121,12 @@ export class AxiosService {
         const isRetry = originalRequest?._retry === true;
 
         if (!isAuthError || isRefreshCall || isRetry) {
-          handleError(error, false);
+          handleError(error);
           return Promise.reject(error);
         }
 
         if (!originalRequest) {
-          handleError(error, false);
+          handleError(error);
           return Promise.reject(error);
         }
 
@@ -136,7 +147,8 @@ export class AxiosService {
         originalRequest._retry = true;
 
         try {
-          await refreshTokens(this.instance);
+          const fetcher = createAxiosFetcher(this.instance);
+          await refreshTokens(fetcher);
           const newToken = await getAuthToken(getAppKey(), "any");
 
           if (newToken) {
@@ -155,30 +167,50 @@ export class AxiosService {
         } catch (refreshError) {
           this.processQueue(refreshError as AxiosError, null);
           this.isRefreshing = false;
-          handleError(refreshError, false);
+          handleError(refreshError);
           return Promise.reject(error);
         }
       }
     );
   }
 
+  /**
+   * Returns the number of active (in-flight) requests.
+   * @returns {number} The number of active requests.
+   */
   public getActiveRequests(): number {
     return this.activeRequests;
   }
 
+  /**
+   * Returns the underlying Axios instance.
+   * @returns {AxiosInstance} The Axios instance.
+   */
   public getAxiosInstance(): AxiosInstance {
     return this.instance;
   }
 
+  /**
+   * Cancels all ongoing requests made by this Axios instance.
+   */
   public cancelAllRequests() {
     this.cancelTokenSource.cancel("Operation canceled by the user.");
     this.cancelTokenSource = axios.CancelToken.source();
   }
 
+  /**
+   * Sets a default header for all subsequent requests.
+   * @param {string} key - The header key.
+   * @param {string} value - The header value.
+   */
   public setHeader(key: string, value: string) {
     this.instance.defaults.headers.common[key] = value;
   }
 
+  /**
+   * Removes a default header.
+   * @param {string} key - The header key to remove.
+   */
   public removeHeader(key: string) {
     delete this.instance.defaults.headers.common[key];
   }

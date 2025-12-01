@@ -3,9 +3,18 @@ import { ref, watch } from 'vue';
 
 let notified = false;
 /**
- * Composable to manage breakpoints using Tailwind CSS and shared window resize listener.
+ * A composable that provides a reactive interface to Tailwind CSS breakpoints using `@vueuse/core`.
+ * It simplifies working with responsive layouts by offering a set of reactive booleans for different
+ * screen sizes and combinations. On its first invocation, it also logs the current device type (Mobile,
+ * Tablet, Laptop, or Desktop) to the console for easier debugging during development.
  *
- * @returns {Object} An object containing the breakpoints and their states.
+ * @returns {object} An object containing various reactive properties for screen sizes, window dimensions, and breakpoint utilities, including:
+ *   - `current`: A ref to the current breakpoint name.
+ *   - `active`: A ref to the currently active breakpoint name.
+ *   - `sm_S`, `md_GE`, etc.: A series of refs indicating if the screen is smaller than, greater than or equal to, or between specific breakpoints.
+ *   - `mobile`, `tablet`, `laptop`, `desktop`: Refs that are true for common device width ranges.
+ *   - `windowWidth`, `windowHeight`: Reactive refs for the window's width and height.
+ *   - `breakpoints`: The original `useBreakpoints` return object from `@vueuse/core`.
  */
 export function useBreakpoint() {
     const breakpoints = useBreakpoints(breakpointsTailwind);

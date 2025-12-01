@@ -1,7 +1,8 @@
 /**
- * Creates and downloads a file from Blob data.
- * @param {Blob} blob The Blob containing the file data.
- * @param {string} fileName The name of the file to create.
+ * Triggers a browser download for a file created from a `Blob` object.
+ *
+ * @param {Blob} blob - The `Blob` containing the file's data.
+ * @param {string} fileName - The desired name for the downloaded file.
  */
 function downloadFile(blob: Blob, fileName: string): void {
     const link = document.createElement('a');
@@ -19,10 +20,11 @@ function downloadFile(blob: Blob, fileName: string): void {
 }
 
 /**
- * Exports data to a CSV file.
- * @param {string[]} headers The headers for the CSV.
- * @param {any[][]} data The data to export, as an array of arrays.
- * @param {string} fileName The name of the file to create.
+ * Converts an array of data into a CSV format and triggers a download.
+ *
+ * @param {string[]} headers - An array of strings to be used as the CSV header row.
+ * @param {any[][]} data - A 2D array representing the rows and cells of the data to be exported.
+ * @param {string} fileName - The desired name for the downloaded CSV file.
  */
 export function exportToCSV(headers: string[], data: any[][], fileName: string): void {
     const csvRows: string[] = [];
@@ -44,10 +46,11 @@ export function exportToCSV(headers: string[], data: any[][], fileName: string):
 }
 
 /**
- * Exports data to an Excel file (.xls) using HTML table.
- * @param {string[]} headers The headers for the Excel file.
- * @param {any[][]} data The data to export, as an array of arrays.
- * @param {string} fileName The name of the file to create.
+ * Converts an array of data into an HTML table, then triggers a download as an Excel (.xls) file.
+ *
+ * @param {string[]} headers - An array of strings for the table headers.
+ * @param {any[][]} data - A 2D array of the data to be exported.
+ * @param {string} fileName - The desired name for the downloaded Excel file.
  */
 export function exportToExcel(headers: string[], data: any[][], fileName: string): void {
     // Create a table element
@@ -81,9 +84,10 @@ export function exportToExcel(headers: string[], data: any[][], fileName: string
 }
 
 /**
- * Exports data to a JSON file.
- * @param {any[]} data The data to export.
- * @param {string} fileName The name of the file to create.
+ * Converts an array of data into a pretty-printed JSON string and triggers a download.
+ *
+ * @param {any[]} data - The data to be serialized into JSON.
+ * @param {string} fileName - The desired name for the downloaded JSON file.
  */
 export function exportToJSON(data: any[], fileName: string): void {
     const jsonContent = JSON.stringify(data, null, 2); // Pretty print with 2 spaces
@@ -94,10 +98,11 @@ export function exportToJSON(data: any[], fileName: string): void {
 }
 
 /**
- * Exports data to an XML file.
- * @param {string[]} headers The headers for the XML.
- * @param {any[][]} data The data to export, as an array of arrays.
- * @param {string} fileName The name of the file to create.
+ * Converts an array of data into a simple XML format and triggers a download.
+ *
+ * @param {string[]} headers - An array of strings to be used as column headers in the XML.
+ * @param {any[][]} data - A 2D array of the data to be exported.
+ * @param {string} fileName - The desired name for the downloaded XML file.
  */
 export function exportToXML(headers: string[], data: any[][], fileName: string): void {
     let xmlContent = '<?xml version="1.0" encoding="UTF-8"?>\n<rows>\n';
@@ -127,10 +132,11 @@ export function exportToXML(headers: string[], data: any[][], fileName: string):
 }
 
 /**
- * Exports data to a plain text file.
- * @param {string[]} headers The headers for the text file.
- * @param {any[][]} data The data to export, as an array of arrays.
- * @param {string} fileName The name of the file to create.
+ * Converts an array of data into a tab-separated text format and triggers a download.
+ *
+ * @param {string[]} headers - An array of strings for the header row.
+ * @param {any[][]} data - A 2D array of the data to be exported.
+ * @param {string} fileName - The desired name for the downloaded text file.
  */
 export function exportToText(headers: string[], data: any[][], fileName: string): void {
     const textRows: string[] = [];

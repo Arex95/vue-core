@@ -1,10 +1,11 @@
 /**
- * Opens a new window with the specified URL and options.
- * @param {string} url The URL to open.
- * @param {Object} [opt] Options for the new window.
- * @param {string} [opt.target='__blank'] The target window name.
- * @param {boolean} [opt.noopener=true] Whether to add 'noopener' attribute.
- * @param {boolean} [opt.noreferrer=true] Whether to add 'noreferrer' attribute.
+ * Opens a new browser window or tab with a specified URL, providing options for the target and security attributes.
+ *
+ * @param {string} url - The URL to open in the new window.
+ * @param {object} [opt] - Optional configuration for the new window.
+ * @param {string} [opt.target='_blank'] - The target attribute for the link, specifying where to open the content (e.g., '_blank', '_self').
+ * @param {boolean} [opt.noopener=true] - If `true`, adds `noopener` to the window features to prevent the new window from accessing the original window's object.
+ * @param {boolean} [opt.noreferrer=true] - If `true`, adds `noreferrer` to prevent the browser from sending the `Referer` HTTP header.
  */
 export function openWindow(
     url: string,
@@ -22,9 +23,11 @@ export function openWindow(
 }
 
 /**
- * Copies text to the clipboard.
- * @param {string} text The text to copy.
- * @returns {Promise<void>} A promise that resolves when the text has been copied.
+ * Asynchronously copies a given string to the user's clipboard. It uses the modern `navigator.clipboard` API
+ * with a fallback to the deprecated `document.execCommand` for older browsers.
+ *
+ * @param {string} text - The string to be copied to the clipboard.
+ * @returns {Promise<void>} A promise that resolves when the text has been successfully copied.
  */
 export async function copyToClipboard(text: string): Promise<void> {
     if (navigator.clipboard) {
@@ -41,8 +44,10 @@ export async function copyToClipboard(text: string): Promise<void> {
 }
 
 /**
- * Scrolls the window to the top smoothly.
- * @param {number} [duration=300] Duration of the scroll animation in milliseconds.
+ * Smoothly scrolls the window to the top of the page using a `requestAnimationFrame` loop
+ * for a fluid animation.
+ *
+ * @param {number} [duration=300] - The total duration of the scroll animation in milliseconds.
  */
 export function scrollToTop(duration: number = 300): void {
     const start = window.scrollY;
@@ -62,9 +67,10 @@ export function scrollToTop(duration: number = 300): void {
 }
 
 /**
- * Gets the value of a query parameter from the URL.
- * @param {string} paramName The name of the query parameter.
- * @returns {string | null} The value of the query parameter, or null if it does not exist.
+ * Retrieves the value of a specified query parameter from the current URL's search string.
+ *
+ * @param {string} paramName - The name of the query parameter to retrieve.
+ * @returns {string | null} The value of the query parameter, or `null` if the parameter is not present in the URL.
  */
 export function getQueryParam(paramName: string): string | null {
     const urlParams = new URLSearchParams(window.location.search);

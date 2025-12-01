@@ -10,9 +10,8 @@ export default {
   ],
   external: [
     "vue",
-    "vue-router",
     "axios",
-    "@tanstack/vue-query",
+    "ofetch",
     "@vueuse/core",
     "jwt-decode",
     "uuid",

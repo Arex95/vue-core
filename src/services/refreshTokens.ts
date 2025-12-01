@@ -4,59 +4,61 @@ import { handleError } from "@utils/errors";
 import { getAppKey } from "@config/global/keyConfig";
 import { getEndpointsConfig } from "@config/global/endpointsConfig";
 import { getRefreshTokenPathsConfig } from "@config/global/tokenPathsConfig";
-import { AuthResponse, AuthTokenPaths } from "@/types";
+import { AuthResponse, AuthTokenPaths, Fetcher } from "@/types";
 import { extractAndValidateTokens } from "@services/extractTokens";
 import { storeTokens } from "@services/storeTokens";
-import { AxiosInstance } from 'axios';
 import { cleanCredentials } from "@/services/credentials";
+import { getDefaultAuthFetcher } from "@/config/auth/authFetcher";
 
 /**
-   * Refreshes the authentication tokens using the stored refresh token.
-   * This function can also accept optional token paths if the refresh endpoint
-   * returns tokens with a different structure than the default login.
-   * If no refresh token is found, it throws an error and initiates a logout.
-   *
-   * @param {AuthTokenPaths} [tokenPaths] - Optional configuration for the paths (in dot notation) of the access and refresh tokens in the refresh endpoint response.
-   * @returns {Promise<AuthResponse>} The new authentication response with refreshed tokens.
-   * @throws {Error} If the refresh token is missing or the refresh request fails.
-   */
-  export const refreshTokens = async (
-    axiosInstance: AxiosInstance,
-  ): Promise<AuthResponse> => {
-    const tokenPaths: AuthTokenPaths = getRefreshTokenPathsConfig();
-    const endpoints = getEndpointsConfig();
-    const secretKey = getAppKey();
-    const persistence = await getSessionPersistence();
+ * Refreshes the access and refresh tokens by making a POST request to the refresh endpoint.
+ * It retrieves the current refresh token from storage, sends it to the refresh endpoint,
+ * and then stores the new tokens upon a successful response. If the refresh process fails
+ * or no refresh token is found, it clears all credentials and reloads the page.
+ *
+ * @param {Fetcher} [fetcher] - Optional fetcher function to use for the refresh request. If not provided, uses the default configured fetcher.
+ * @returns {Promise<AuthResponse>} A promise that resolves with the new authentication response containing the refreshed tokens.
+ * @throws {Error} Throws an error if the refresh token is missing or if the refresh request fails, which is then caught to trigger a logout.
+ */
+export const refreshTokens = async (
+  fetcher?: Fetcher
+): Promise<AuthResponse> => {
+  const tokenPaths: AuthTokenPaths = getRefreshTokenPathsConfig();
+  const endpoints = getEndpointsConfig();
+  const secretKey = getAppKey();
+  const persistence = await getSessionPersistence();
+  const getFetcher = (): Fetcher => fetcher || getDefaultAuthFetcher();
 
-    try {
-      const refreshTokenFromStorage = await getAuthRefreshToken(
-        secretKey,
-        "any"
-      );
+  try {
+    const refreshTokenFromStorage = await getAuthRefreshToken(
+      secretKey,
+      "any"
+    );
 
-      if (!refreshTokenFromStorage) {
-        throw new Error("TOKEN_MISSING: No refresh token found in storage.");
-      }
-
-      const { data } = await axiosInstance.post<AuthResponse>(
-        endpoints.REFRESH
-      );
-
-      const { accessToken, refreshToken } = extractAndValidateTokens(
-        data,
-        tokenPaths,
-        "REFRESH"
-      );
-
-      await storeTokens(accessToken, refreshToken, persistence);
-
-      return data;
-    } catch (error) {
-      handleError(error, false);
-      await cleanCredentials(persistence);
-      if (window) { 
-        window.location.reload();
-      }
-      throw error;
+    if (!refreshTokenFromStorage) {
+      throw new Error("TOKEN_MISSING: No refresh token found in storage.");
     }
-  };
+
+    const data = await getFetcher()({
+      method: 'POST',
+      url: endpoints.REFRESH,
+    }) as AuthResponse;
+
+    const { accessToken, refreshToken } = extractAndValidateTokens(
+      data,
+      tokenPaths,
+      "REFRESH"
+    );
+
+    await storeTokens(accessToken, refreshToken, persistence);
+
+    return data;
+  } catch (error) {
+    handleError(error);
+    await cleanCredentials(persistence);
+    if (typeof window !== 'undefined') { 
+      window.location.reload();
+    }
+    throw error;
+  }
+};

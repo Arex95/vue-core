@@ -1,11 +1,12 @@
 import { useTimeoutFn } from '@vueuse/core';
 
 /**
- * Creates a debounced asynchronous validator function.
+ * Creates a debounced version of an asynchronous validator function. This is useful for scenarios
+ * like form input validation where you want to delay validation until the user has stopped typing.
  *
- * @param validator - The async validator function to debounce.
- * @param delay - The debounce delay in milliseconds.
- * @returns A debounced version of the validator function.
+ * @param validator - The asynchronous validator function to be debounced. It receives the value to validate and a `debounce` function.
+ * @param {number} delay - The debounce delay in milliseconds.
+ * @returns A new function that takes a value and returns a promise that resolves or rejects based on the debounced validation.
  */
 export function debounceAsyncValidator(
     validator: (value: any, debounce: () => Promise<void>) => Promise<void>,
@@ -45,10 +46,13 @@ export function debounceAsyncValidator(
 }
 
 /**
- * Creates a debounced version of an asynchronous function.
- * @param {Function} func The asynchronous function to debounce.
- * @param {number} wait The number of milliseconds to wait before invoking the function.
- * @returns {Function} The debounced function.
+ * Creates a debounced version of an asynchronous function. The debounced function will only
+ * resolve the promise of the last invocation within the `wait` period.
+ *
+ * @template T - The type of the asynchronous function.
+ * @param {T} func - The asynchronous function to debounce.
+ * @param {number} wait - The debounce delay in milliseconds.
+ * @returns A new debounced asynchronous function.
  */
 export function debounceAsync<T extends (...args: any[]) => Promise<any>>(
     func: T,
@@ -74,10 +78,13 @@ export function debounceAsync<T extends (...args: any[]) => Promise<any>>(
 }
 
 /**
- * Creates a debounced asynchronous function that executes immediately on the first call.
- * @param {Function} func The asynchronous function to debounce.
- * @param {number} wait The number of milliseconds to wait before invoking the function.
- * @returns {Function} The debounced function with immediate execution on the first call.
+ * Creates a debounced version of an asynchronous function that executes immediately on the first call
+ * and then waits for the specified delay before allowing the next execution.
+ *
+ * @template T - The type of the asynchronous function.
+ * @param {T} func - The asynchronous function to debounce.
+ * @param {number} wait - The cooldown period in milliseconds after an immediate execution.
+ * @returns A new debounced asynchronous function that executes on the leading edge.
  */
 export function debounceAsyncWithImmediate<T extends (...args: any[]) => Promise<any>>(
     func: T,
@@ -116,10 +123,13 @@ export function debounceAsyncWithImmediate<T extends (...args: any[]) => Promise
 }
 
 /**
- * Creates a debounced version of a function that executes on the leading edge.
- * @param {Function} func The function to debounce.
- * @param {number} wait The number of milliseconds to wait before invoking the function.
- * @returns {Function} The debounced function.
+ * Creates a debounced function that invokes `func` on the leading edge of the `wait` timeout.
+ * Subsequent calls within the `wait` period are ignored.
+ *
+ * @template T - The type of the function.
+ * @param {T} func - The function to debounce.
+ * @param {number} wait - The debounce delay in milliseconds.
+ * @returns A new debounced function.
  */
 export function debounceLeading<T extends (...args: any[]) => void>(func: T, wait: number): T {
   let timeoutReject: ((reason?: any) => void) | null = null;
@@ -146,10 +156,13 @@ export function debounceLeading<T extends (...args: any[]) => void>(func: T, wai
 }
 
 /**
- * Creates a debounced version of a function that executes on the trailing edge.
- * @param {Function} func The function to debounce.
- * @param {number} wait The number of milliseconds to wait before invoking the function.
- * @returns {Function} The debounced function.
+ * Creates a debounced function that invokes `func` on the trailing edge of the `wait` timeout.
+ * The function is called only after `wait` milliseconds of inactivity.
+ *
+ * @template T - The type of the function.
+ * @param {T} func - The function to debounce.
+ * @param {number} wait - The debounce delay in milliseconds.
+ * @returns A new debounced function.
  */
 export function debounceTrailing<T extends (...args: any[]) => void>(func: T, wait: number): T {
   let timeoutReject: ((reason?: any) => void) | null = null;
@@ -172,10 +185,13 @@ export function debounceTrailing<T extends (...args: any[]) => void>(func: T, wa
 }
 
 /**
- * Creates a debounced version of a function that executes on both leading and trailing edges.
- * @param {Function} func The function to debounce.
- * @param {number} wait The number of milliseconds to wait before invoking the function.
- * @returns {Function} The debounced function.
+ * Creates a debounced function that invokes `func` on both the leading and trailing edges of the `wait` timeout.
+ * This is useful for UIs where an action should happen immediately on the first event, but also after a pause in events.
+ *
+ * @template T - The type of the function.
+ * @param {T} func - The function to debounce.
+ * @param {number} wait - The debounce delay in milliseconds.
+ * @returns A new debounced function.
  */
 export function debounceLeadingTrailing<T extends (...args: any[]) => void>(func: T, wait: number): T {
   let timeoutReject: ((reason?: any) => void) | null = null;
@@ -205,10 +221,13 @@ export function debounceLeadingTrailing<T extends (...args: any[]) => void>(func
 }
 
 /**
- * Creates a debounced version of a function.
- * @param {Function} func The function to debounce.
- * @param {number} wait The number of milliseconds to wait before invoking the function.
- * @returns {Function} The debounced function.
+ * Creates a standard debounced function that delays invoking `func` until after `wait` milliseconds
+ * have elapsed since the last time the debounced function was invoked. (This is an alias for `debounceTrailing`).
+ *
+ * @template T - The type of the function.
+ * @param {T} func - The function to debounce.
+ * @param {number} wait - The debounce delay in milliseconds.
+ * @returns A new debounced function.
  */
 export function debounce<T extends (...args: any[]) => void>(func: T, wait: number): T {
   let timeoutReject: ((reason?: any) => void) | null = null;
@@ -229,10 +248,13 @@ export function debounce<T extends (...args: any[]) => void>(func: T, wait: numb
 }
 
 /**
- * Creates a throttled version of a function.
- * @param {Function} func The function to throttle.
- * @param {number} limit The number of milliseconds to wait between function calls.
- * @returns {Function} The throttled function.
+ * Creates a throttled function that only invokes `func` at most once per every `limit` milliseconds.
+ * This is useful for rate-limiting events that fire frequently, such as scrolling or resizing.
+ *
+ * @template T - The type of the function.
+ * @param {T} func - The function to throttle.
+ * @param {number} limit - The throttle duration in milliseconds.
+ * @returns A new throttled function.
  */
 export function throttle<T extends (...args: any[]) => void>(func: T, limit: number): T {
   let lastCall = 0;

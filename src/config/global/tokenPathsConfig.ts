@@ -16,14 +16,12 @@ let refreshTokenPathsConfig: AuthTokenPaths = {
 };
 
 /**
- * Configures the paths for access and refresh tokens in the authentication response.
- * This function freezes the object to prevent further modifications.
+ * Configures the dot-notation paths for extracting access and refresh tokens from the initial login response.
+ * The configuration is frozen to prevent runtime changes.
  *
- * @param {TokenPathsConfig} config - An object containing the paths for access and refresh tokens.
- * @param {string} [config.accessTokenPath="data.access_token"] - Path to the access token in the response.
- * @param {string} [config.refreshTokenPath="data.refresh_token"] - Path to the refresh token in the response.
- *
- * @returns {void} Does not return anything but freezes the token paths configuration object.
+ * @param {TokenPathsConfig} config - An object containing the token paths.
+ * @param {string} [config.accessTokenPath="data.access_token"] - The path to the access token.
+ * @param {string} [config.refreshTokenPath="data.refresh_token"] - The path to the refresh token.
  */
 export function configTokenPaths(config: TokenPathsConfig): void {
   tokenPathsConfig = Object.freeze({
@@ -33,14 +31,12 @@ export function configTokenPaths(config: TokenPathsConfig): void {
 }
 
 /**
- * Configures the paths for access and refresh tokens in the refresh response.
- * This function freezes the object to prevent further modifications.
+ * Configures the dot-notation paths for extracting access and refresh tokens from the token refresh response.
+ * The configuration is frozen to prevent runtime changes.
  *
- * @param {TokenPathsConfig} config - An object containing the paths for access and refresh tokens.
- * @param {string} [config.accessTokenPath="data.access_token"] - Path to the access token in the response.
- * @param {string} [config.refreshTokenPath="data.refresh_token"] - Path to the refresh token in the response.
- *
- * @returns {void} Does not return anything but freezes the refresh token paths configuration object.
+ * @param {TokenPathsConfig} config - An object containing the token paths for the refresh response.
+ * @param {string} [config.accessTokenPath="data.access_token"] - The path to the new access token.
+ * @param {string} [config.refreshTokenPath="data.refresh_token"] - The path to the new refresh token.
  */
 export function configRefreshTokenPaths(config: TokenPathsConfig): void {
   refreshTokenPathsConfig = Object.freeze({
@@ -50,16 +46,19 @@ export function configRefreshTokenPaths(config: TokenPathsConfig): void {
 }
 
 /**
- * Retrieves the configured authentication token paths.
+ * Retrieves the configured token paths for the initial login response.
  *
- * @returns {AuthTokenPaths} An object containing the configured authentication token paths.
- * @property {string} accessTokenPath - Path to the access token in the response.
- * @property {string} refreshTokenPath - Path to the refresh token in the response.
+ * @returns {AuthTokenPaths} A frozen object containing the `accessTokenPath` and `refreshTokenPath`.
  */
 export function getTokenPathsConfig(): TokenPathsConfig {
   return tokenPathsConfig;
 }
 
+/**
+ * Retrieves the configured token paths for the token refresh response.
+ *
+ * @returns {AuthTokenPaths} A frozen object containing the `accessTokenPath` and `refreshTokenPath` for the refresh response.
+ */
 export function getRefreshTokenPathsConfig(): TokenPathsConfig {
   return refreshTokenPathsConfig;
 }

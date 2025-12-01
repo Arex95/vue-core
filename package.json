@@ -1,6 +1,6 @@
 {
   "name": "@arex95/vue-core",
-  "version": "1.1.43",
+  "version": "2.0.0",
   "description": "Opinionated Vue Core",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -20,9 +20,8 @@
     "build": "rollup -c",
     "changelog": "conventional-changelog -p angular -o CHANGELOG.md -r 0",
     "release": "npm version patch && npm run changelog && git add CHANGELOG.md package.json pnpm-lock.yaml && git commit -m \"chore(release): update changelog\" && git push && npm publish --access public",
-    "test": "vitest",
-    "test:watch": "vitest --watch",
-    "test:ui": "vitest --ui"
+    "release:major": "npm version major && npm run changelog && git add CHANGELOG.md package.json pnpm-lock.yaml && git commit -m \"chore(release): update changelog\" && git push && npm publish --access public",
+    "release:minor": "npm version minor && npm run changelog && git add CHANGELOG.md package.json pnpm-lock.yaml && git commit -m \"chore(release): update changelog\" && git push && npm publish --access public"
   },
   "repository": {
     "type": "git",
@@ -37,13 +36,12 @@
   "author": "Arturo Rafael Serrano Girón",
   "license": "MIT",
   "peerDependencies": {
-    "@tanstack/vue-query": ">=5.0.0",
     "@vueuse/core": ">=12.8.2",
     "axios": ">=1.6.0",
     "jwt-decode": "^4.0.0",
+    "ofetch": ">=1.0.0",
     "uuid": ">=11.1.0",
-    "vue": ">=3.0.0",
-    "vue-router": ">=4.5.0"
+    "vue": ">=3.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.23.0",
@@ -53,28 +51,21 @@
     "@rollup/plugin-typescript": "^12.1.2",
     "@types/crypto-js": "^4.2.2",
     "@types/node": "^22.13.10",
-    "@vitest/spy": "^3.2.3",
-    "@vitest/ui": "^3.2.3",
-    "@vue/test-utils": "^2.4.6",
     "conventional-changelog-cli": "^5.0.0",
     "eslint": "^9.23.0",
     "eslint-plugin-vue": "^10.0.0",
     "globals": "^16.0.0",
-    "jsdom": "^26.1.0",
     "rollup": "^4.35.0",
     "ts-node": "^10.9.2",
     "tslib": "^2.8.1",
     "typescript": "^5.8.2",
-    "typescript-eslint": "^8.28.0",
-    "vitest": "^3.2.3"
+    "typescript-eslint": "^8.28.0"
   },
   "dependencies": {
-    "@tanstack/vue-query": ">=5.0.0",
     "@vueuse/core": ">=12.8.2",
     "axios": ">=1.6.0",
     "jwt-decode": "^4.0.0",
     "uuid": ">=11.1.0",
-    "vue": ">=3.0.0",
-    "vue-router": ">=4.5.0"
+    "vue": ">=3.0.0"
   }
 }

@@ -1,5 +1,6 @@
 /**
- * Enum defining available screen sizes.
+ * An enum that defines a set of standardized screen size labels, ranging from extra-small (XS) to extra-extra-large (XXL).
+ * These labels are used to create a consistent vocabulary for responsive design across the application.
  */
 export enum ScreenSize {
   XS = 'XS',
@@ -11,8 +12,8 @@ export enum ScreenSize {
 }
 
 /**
- * Enum defining breakpoints for design based on screen width.
- * Values are in pixels.
+ * An enum that establishes specific pixel values for screen width breakpoints, corresponding to the labels in `ScreenSize`.
+ * These values are used to implement responsive design changes at standard device widths.
  */
 export enum ScreenBreakpoint {
   XS = 480,
@@ -24,7 +25,9 @@ export enum ScreenBreakpoint {
 }
 
 /**
- * Map that associates each screen size defined in `ScreenSize` with its corresponding pixel value from `ScreenBreakpoint`.
+ * A map that associates the symbolic screen size names from the `ScreenSize` enum with their
+ * corresponding pixel values from the `ScreenBreakpoint` enum. This provides an easy way to
+ * look up the pixel width for a given screen size label.
  * @type {Map<ScreenSize, number>}
  */
 const screenMap = new Map<ScreenSize, number>();
