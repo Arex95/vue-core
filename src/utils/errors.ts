@@ -1,48 +1,103 @@
-import { useRouter } from 'vue-router'
-import { ErrorType, ErrorPassMethod } from '@/types'
+import { ErrorType } from '@/types'
 import { ERROR_MESSAGES, ERROR_STYLES } from '@/enums'
+import { BaseError, NetworkError, AuthError, ValidationError, ServerError } from '@/errors'
+
+export interface ErrorInfo {
+  message: string;
+  type: ErrorType;
+  errorData?: Record<string, unknown>;
+}
 
 /**
- * Handles and logs errors to the console, with an option to redirect to a dedicated error page.
- * It infers the error type, logs a styled message, and can pass the error message to the error page
- * via query parameters or web storage.
+ * Handles and logs errors to the console. Supports both standard Error objects and custom error classes
+ * (BaseError, NetworkError, etc.). It infers the error type, logs a styled message with detailed information,
+ * and returns structured error information for further handling.
  *
- * @param {unknown} error - The captured error, which can be a string or an `Error` object.
- * @param {boolean} [redirect=false] - If `true`, redirects the user to an error page.
- * @param {string} [route='/error'] - The path to the error page.
- * @param {ErrorPassMethod} [passMethod='query'] - The method to pass the error message to the error route ('query', 'localStorage', 'sessionStorage').
- * @returns {string | undefined} The user-friendly error message, or `undefined` if the error is of an unknown type.
+ * @param {unknown} error - The captured error, which can be a string, Error object, or custom error class.
+ * @returns {ErrorInfo | undefined} An object containing the error message, type, and additional error data,
+ *   or `undefined` if the error is not an Error instance.
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   await someOperation();
+ * } catch (error) {
+ *   const errorInfo = handleError(error);
+ *   if (errorInfo) {
+ *     // Use errorInfo.message, errorInfo.type, errorInfo.errorData
+ *     // Handle redirect or other actions as needed
+ *   }
+ * }
+ * ```
  */
-export function handleError(
-  error: unknown,
-  redirect = false,
-  route: string = '/error',
-  passMethod: ErrorPassMethod = 'query'
-) {
+export function handleError(error: unknown): ErrorInfo | undefined {
   if (!(error instanceof Error)) {
     console.error("Unrecognized error:", error)
-    return
+    return undefined
   }
 
-  const router = useRouter()
-  const type: ErrorType = inferErrorType(error)
-  const message = ERROR_MESSAGES[type] || 'Error desconocido.'
+  let type: ErrorType;
+  let message: string;
+  let errorData: Record<string, unknown> | undefined = undefined;
 
-  console.log(`%c[${type.toUpperCase()}] ${message}`, ERROR_STYLES[type])
+  if (error instanceof BaseError) {
+    type = inferErrorTypeFromBaseError(error);
+    message = error.message || ERROR_MESSAGES[type] || 'Error desconocido.';
+    errorData = {
+      code: error.code,
+      statusCode: error.statusCode,
+      context: error.context,
+      timestamp: error.timestamp,
+    };
 
-  if (redirect) {
-    if (passMethod === 'query') {
-      router.push({ path: route, query: { errorMessage: encodeURIComponent(message) } })
-    } else if (passMethod === 'localStorage') {
-      localStorage.setItem('errorMessage', message)
-      router.push(route)
-    } else if (passMethod === 'sessionStorage') {
-      sessionStorage.setItem('errorMessage', message)
-      router.push(route)
+    if (error instanceof ValidationError && error.issues.length > 0) {
+      errorData.issues = error.issues;
     }
+  } else {
+    type = inferErrorType(error);
+    message = ERROR_MESSAGES[type] || error.message || 'Error desconocido.';
   }
 
-  return message
+  const logMessage = `%c[${type.toUpperCase()}] ${message}`;
+  const logStyle = ERROR_STYLES[type] || ERROR_STYLES.error;
+
+  console.group(logMessage, logStyle);
+  console.error('Error details:', error);
+  if (errorData) {
+    console.error('Error data:', errorData);
+  }
+  if (error.stack) {
+    console.error('Stack trace:', error.stack);
+  }
+  console.groupEnd();
+
+  return {
+    message,
+    type,
+    ...(errorData && { errorData }),
+  };
+}
+
+function inferErrorTypeFromBaseError(error: BaseError): ErrorType {
+  if (error instanceof NetworkError) {
+    if (error.statusCode === 401 || error.statusCode === 403) {
+      return 'authentication';
+    }
+    return 'network';
+  }
+  if (error instanceof AuthError) {
+    return 'authentication';
+  }
+  if (error instanceof ValidationError) {
+    return 'validation';
+  }
+  if (error instanceof ServerError) {
+    if (error.statusCode >= 500) {
+      return 'critical';
+    }
+    return 'error';
+  }
+  return 'error';
 }
 
 /**

@@ -4,12 +4,15 @@ A comprehensive Vue.js core library designed to streamline the development of Vu
 
 ## Features
 
-- **Modular Architecture**: A clean, service-based architecture that promotes separation of concerns and code reusability.
-- **Authentication**: Built-in support for JWT-based authentication, including token storage, refresh logic, and route protection.
-- **API Communication**: A standardized RESTful service class for easy CRUD operations, powered by a configurable Axios instance.
-- **Vue Query Integration**: Wrappers for TanStack Vue Query to simplify asynchronous state management.
-- **Utility Functions**: A rich collection of utilities for dates, strings, validations, and more.
-- **TypeScript Support**: Fully typed to ensure code quality and provide a better developer experience.
+- **RESTful Standard**: A standardized RESTful class (`RestStd`) that you can extend directly from your models for clean, semantic API calls (e.g., `User.getOne()`).
+- **Fetching Agnostic**: Works with any fetching system (Axios, ofetch, fetch API, or custom fetchers).
+- **Flexible Authentication**: JWT-based authentication system that works with any fetcher (not tied to Axios).
+- **Enhanced Error Handling**: Custom error classes (`NetworkError`, `AuthError`, `ValidationError`, etc.) with structured error information.
+- **Retry Logic**: Built-in retry mechanism with exponential backoff for failed requests.
+- **Secure Storage**: Support for localStorage, sessionStorage, and cookies with encryption and security options (Secure, SameSite).
+- **SSR/SSG Support**: Full support for server-side rendering with automatic cookie fallback.
+- **Type Safety**: Improved generic types for better TypeScript inference and autocompletion.
+- **Utility Functions**: A rich collection of utilities for dates, strings, validations, encryption, and more.
 
 ## Installation
 
@@ -55,14 +58,38 @@ app.use(ArexVueCore, {
 app.mount('#app');
 ```
 
-For more detailed usage examples, please refer to the [EXAMPLES.md](./EXAMPLES.md) file.
+**Create a model:**
+
+```typescript
+import { RestStd } from '@arex95/vue-core';
+
+export interface UserData {
+  id: number;
+  name: string;
+  email: string;
+}
+
+export class User extends RestStd {
+  static override resource = 'users';
+  // fetchFn is optional if you configured Axios with configAxios()
+}
+
+// Use directly in components
+const { data: users } = useQuery({
+  queryKey: ['users'],
+  queryFn: () => User.getAll<UserData[]>(),
+});
+```
+
+For more detailed usage examples, please refer to the [documentation](./docs/getting-started.md) and [EXAMPLES.md](./EXAMPLES.md) file.
 
 ## Project Structure
 
 - **`src/composables`**: Reusable Vue composables for various functionalities.
 - **`src/config`**: Global configuration for Axios, API endpoints, and tokens.
 - **`src/enums`**: Enums for constants used throughout the library.
-- **`src/rest`**: A standardized RESTful service class for CRUD operations.
+- **`src/fetchers`**: Optional helpers for creating fetchers (Axios, ofetch).
+- **`src/rest`**: A standardized RESTful class (`RestStd`) for CRUD operations.
 - **`src/services`**: Services for authentication and token management.
 - **`src/types`**: TypeScript type definitions.
 - **`src/utils`**: A collection of utility functions.

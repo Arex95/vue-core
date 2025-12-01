@@ -45,8 +45,11 @@ export function useApiActivity(
    * This function should be called on any user activity.
    */
   const updateTimestamp = (): void => {
-    localStorage.setItem("lastActivity", Date.now().toString());
-    handleError("KEEP ALIVE", false);
+    if (!isServer) {
+      const storage = getStorage();
+      storage?.setItem("lastActivity", Date.now().toString());
+    }
+    handleError("KEEP ALIVE");
   };
 
   /**
@@ -68,10 +71,11 @@ export function useApiActivity(
    * If timed out, it performs a logout.
    */
   const checkTimeout = async (): Promise<void> => {
-    const lastActivity = localStorage.getItem("lastActivity");
+    const storage = getStorage();
+    const lastActivity = storage?.getItem("lastActivity") || null;
     if (!lastActivity) return;
 
-    handleError("CHECK LAST ACTIVITY", false);
+    handleError("CHECK LAST ACTIVITY");
     const elapsedMinutes = (Date.now() - Number(lastActivity)) / 60000;
 
     if (elapsedMinutes >= sessionTimeoutMin) {

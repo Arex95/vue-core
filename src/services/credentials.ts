@@ -8,12 +8,13 @@ import { LocationPreference } from "@/types/SessionConfig"
 import { jwtDecode } from "jwt-decode";
 import { handleError } from "@utils/errors";
 import { getAppKey } from "@/config/global";
+import { getStorage, getSessionStorage, getCookieStorage, isServer } from "@utils/ssr";
 
 /**
  * Removes all stored authentication credentials (access and refresh tokens) from the specified storage locations.
  *
  * @param {LocationPreference} location - The storage location to clear. Can be 'local' for `localStorage`,
- *   'session' for `sessionStorage`, or 'any' to clear both.
+ *   'session' for `sessionStorage`, 'cookie' for cookies, or 'any' to clear all.
  * @returns {Promise<void>} A promise that resolves when the credentials have been cleared.
  */
 export const cleanCredentials = async (
@@ -21,15 +22,27 @@ export const cleanCredentials = async (
 ): Promise<void> => {
   const tokensConfig = getTokenConfig();
 
+  if (location === "cookie" || isServer) {
+    const cookieStorage = getCookieStorage();
+    (Object.keys(tokensConfig) as (keyof TokensConfig)[]).forEach((key) => {
+      cookieStorage.removeItem(tokensConfig[key], { path: '/' });
+    });
+    if (location === "cookie") {
+      return;
+    }
+  }
+
   (Object.keys(tokensConfig) as (keyof TokensConfig)[]).forEach((key) => {
     const itemKey = tokensConfig[key];
 
     if (location === "local" || location === "any") {
-      localStorage.removeItem(itemKey);
+      const storage = getStorage();
+      storage?.removeItem(itemKey);
     }
 
     if (location === "session" || location === "any") {
-      sessionStorage.removeItem(itemKey);
+      const sessionStorage = getSessionStorage();
+      sessionStorage?.removeItem(itemKey);
     }
   });
 };
@@ -38,7 +51,7 @@ export const cleanCredentials = async (
  * Retrieves and decrypts the access token from the specified storage location.
  *
  * @param {string} secretKey - The secret key to use for decryption.
- * @param {LocationPreference} location - The storage location to search ('local', 'session', or 'any').
+ * @param {LocationPreference} location - The storage location to search ('local', 'session', 'cookie', or 'any').
  * @returns {Promise<string | null>} A promise that resolves with the decrypted access token, or `null` if it's not found.
  */
 export const getAuthToken = async (
@@ -57,7 +70,7 @@ export const getAuthToken = async (
  * Retrieves and decrypts the refresh token from the specified storage location.
  *
  * @param {string} secretKey - The secret key to use for decryption.
- * @param {LocationPreference} location - The storage location to search ('local', 'session', or 'any').
+ * @param {LocationPreference} location - The storage location to search ('local', 'session', 'cookie', or 'any').
  * @returns {Promise<string | null>} A promise that resolves with the decrypted refresh token, or `null` if it's not found.
  */
 export const getAuthRefreshToken = async (
@@ -77,7 +90,7 @@ export const getAuthRefreshToken = async (
  *
  * @param {string} token - The access token to store.
  * @param {string} secretKey - The secret key to use for encryption.
- * @param {LocationPreference} location - The storage location ('local' or 'session').
+ * @param {LocationPreference} location - The storage location ('local', 'session', or 'cookie').
  * @returns {Promise<void>} A promise that resolves when the token has been stored.
  */
 export const storeAuthToken = async (
@@ -99,7 +112,7 @@ export const storeAuthToken = async (
  *
  * @param {string} token - The refresh token to store.
  * @param {string} secretKey - The secret key to use for encryption.
- * @param {LocationPreference} location - The storage location ('local' or 'session').
+ * @param {LocationPreference} location - The storage location ('local', 'session', or 'cookie').
  * @returns {Promise<void>} A promise that resolves when the token has been stored.
  */
 export const storeAuthRefreshToken = async (
@@ -118,8 +131,8 @@ export const storeAuthRefreshToken = async (
 
 /**
  * Verifies the current user's authentication status by checking for a valid, unexpired access token.
- * It searches for the token in both `localStorage` and `sessionStorage`. If the token is missing,
- * malformed, or expired, it logs the issue, clears credentials, and returns `false`.
+ * It searches for the token in all storage locations (sessionStorage, localStorage, cookies). 
+ * If the token is missing, malformed, or expired, it logs the issue, clears credentials, and returns `false`.
  *
  * @returns {Promise<boolean>} A promise that resolves to `true` if the user is authenticated, and `false` otherwise.
  */
@@ -127,7 +140,7 @@ export const verifyAuth = async (): Promise<boolean> => {
   const sessionPersistence ='any';
 
   const handleAuthError = async (message: string, shouldClean: boolean = true) => {
-    handleError(message, false);
+    handleError(message);
     if (shouldClean) {
       await cleanCredentials(sessionPersistence);
     }

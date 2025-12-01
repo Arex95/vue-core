@@ -14,6 +14,7 @@ import { handleError } from "@utils/errors";
 import { getEndpointsConfig } from "@config/global/endpointsConfig";
 
 import { refreshTokens } from "@/services";
+import { createAxiosFetcher } from "@/fetchers/axios";
 
 declare module "axios" {
   interface InternalAxiosRequestConfig {
@@ -100,7 +101,7 @@ export class AxiosService {
         return config;
       },
       (error: AxiosError) => {
-        handleError(error, false);
+        handleError(error);
         return Promise.reject(error);
       }
     );
@@ -120,12 +121,12 @@ export class AxiosService {
         const isRetry = originalRequest?._retry === true;
 
         if (!isAuthError || isRefreshCall || isRetry) {
-          handleError(error, false);
+          handleError(error);
           return Promise.reject(error);
         }
 
         if (!originalRequest) {
-          handleError(error, false);
+          handleError(error);
           return Promise.reject(error);
         }
 
@@ -146,7 +147,8 @@ export class AxiosService {
         originalRequest._retry = true;
 
         try {
-          await refreshTokens(this.instance);
+          const fetcher = createAxiosFetcher(this.instance);
+          await refreshTokens(fetcher);
           const newToken = await getAuthToken(getAppKey(), "any");
 
           if (newToken) {
@@ -165,7 +167,7 @@ export class AxiosService {
         } catch (refreshError) {
           this.processQueue(refreshError as AxiosError, null);
           this.isRefreshing = false;
-          handleError(refreshError, false);
+          handleError(refreshError);
           return Promise.reject(error);
         }
       }

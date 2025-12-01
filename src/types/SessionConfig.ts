@@ -2,9 +2,10 @@
  * Defines the possible storage locations for session data.
  * - `local`: `localStorage`, persists after the browser is closed.
  * - `session`: `sessionStorage`, cleared when the browser is closed.
- * - `any`: Used for retrieval operations to check both `localStorage` and `sessionStorage`.
+ * - `cookie`: Cookies with encryption and security options (Secure, SameSite).
+ * - `any`: Used for retrieval operations to check all storage locations (session, local, cookie).
  */
-export type LocationPreference = "local" | "session" | "any";
+export type LocationPreference = "local" | "session" | "cookie" | "any";
 
 /**
  * Defines the structure of the session configuration object that is stored and retrieved.

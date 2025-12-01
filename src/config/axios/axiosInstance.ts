@@ -2,7 +2,8 @@ import { AxiosService } from "@config/axios/axiosConfig";
 import { AxiosServiceOptions } from "@/types/AxiosServiceOptions";
 import { AxiosInstance } from "axios";
 
-let axiosServiceInstance: AxiosService;
+let axiosServiceInstance: AxiosService | null = null;
+let defaultConfig: AxiosServiceOptions | null = null;
 
 /**
  * Configures the singleton Axios service instance for the application.
@@ -12,26 +13,39 @@ let axiosServiceInstance: AxiosService;
  * @param {AxiosServiceOptions} config - The configuration options for the Axios service.
  */
 export const configAxios = (config: AxiosServiceOptions): void => {
-  axiosServiceInstance = new AxiosService(
-    {
-      baseURL: config.baseURL,
-      headers: config.headers,
-      timeout: config.timeout,
-      withCredentials: config.withCredentials
-    }
-  );
+  defaultConfig = config;
+  axiosServiceInstance = new AxiosService({
+    baseURL: config.baseURL,
+    headers: config.headers,
+    timeout: config.timeout,
+    withCredentials: config.withCredentials
+  });
 };
 
 /**
  * Retrieves the configured singleton Axios instance.
- * It ensures that the instance has been configured by `configAxios` before being used.
+ * If not configured yet, creates a default instance with minimal configuration.
+ * This allows lazy initialization to avoid dependency circular issues in Nuxt and other frameworks.
  *
  * @returns {AxiosInstance} The configured Axios instance.
- * @throws {Error} If `configAxios` has not been called before this function is invoked.
  */
 export const getConfiguredAxiosInstance = (): AxiosInstance => {
   if (!axiosServiceInstance) {
-    throw new Error("Axios instance not configured. Call configAxios first.");
+    if (defaultConfig) {
+      axiosServiceInstance = new AxiosService({
+        baseURL: defaultConfig.baseURL,
+        headers: defaultConfig.headers,
+        timeout: defaultConfig.timeout,
+        withCredentials: defaultConfig.withCredentials
+      });
+    } else {
+      axiosServiceInstance = new AxiosService({
+        baseURL: '',
+        headers: {},
+        timeout: 30000,
+        withCredentials: false
+      });
+    }
   }
   return axiosServiceInstance.getAxiosInstance();
 };

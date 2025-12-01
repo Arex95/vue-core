@@ -1,10 +1,9 @@
-import { getConfiguredAxiosInstance } from "@config/axios/axiosInstance";
 import { getEndpointsConfig } from "@config/global/endpointsConfig";
 import { handleError } from "@utils/errors";
 import {
   cleanCredentials,
 } from "@/services/credentials";
-import { AuthResponse, AuthTokenPaths, LocationPreference } from "@/types";
+import { AuthResponse, AuthTokenPaths, LocationPreference, Fetcher } from "@/types";
 import {
   configSession,
   getSessionPersistence,
@@ -14,35 +13,57 @@ import {
 } from "@config/global/tokenPathsConfig";
 import { extractAndValidateTokens } from "@services/extractTokens";
 import { storeTokens } from "@services/storeTokens";
+import { getDefaultAuthFetcher } from "@/config/auth/authFetcher";
 
 /**
  * Custom hook for authentication logic, including login, logout, token management, and session preference.
+ * Accepts an optional fetcher function. If not provided, uses the default configured fetcher or falls back to Axios.
  *
+ * @param {Fetcher} [fetcher] - Optional fetcher function to use for auth requests. If not provided, uses the default configured fetcher.
  * @returns {{
- *   logout: (params?: any) => Promise<void>,
- *   login: (params: any, persistence: LocationPreference, tokenPaths?: AuthTokenPaths) => Promise<AuthResponse>
+ *   logout: (params?: Record<string, unknown>) => Promise<void>,
+ *   login: (params: Record<string, unknown>, persistence: LocationPreference, tokenPaths?: AuthTokenPaths) => Promise<AuthResponse>
  * }} An object containing authentication functions.
+ * 
+ * @example
+ * ```typescript
+ * // Using default fetcher (Axios)
+ * const auth = useAuth();
+ * 
+ * // Using custom fetcher
+ * const customFetcher = createOfetchFetcher();
+ * const auth = useAuth(customFetcher);
+ * ```
  */
-export function useAuth() {
-  const axiosInstance = getConfiguredAxiosInstance();
+export function useAuth(fetcher?: Fetcher) {
   const endpoints = getEndpointsConfig();
+  
+  const getFetcher = (): Fetcher => {
+    return fetcher || getDefaultAuthFetcher();
+  };
 
   /**
    * Logs out the user by making a POST request to the logout endpoint,
    * cleaning all stored credentials, and reloading the page.
    * The session persistence preference is NOT reset here; it persists across logouts.
    *
-   * @param {any} [params={}] - Optional parameters to send with the logout request.
+   * @param {Record<string, unknown>} [params={}] - Optional parameters to send with the logout request.
    * @returns {Promise<void>}
    */
-  const logout = async (params: any = {}): Promise<void> => {
+  const logout = async (params: Record<string, unknown> = {}): Promise<void> => {
     try {
-      await axiosInstance.post(endpoints.LOGOUT, params);
+      await getFetcher()({
+        method: 'POST',
+        url: endpoints.LOGOUT,
+        data: params,
+      });
     } catch (error) {
-      handleError(error, false);
+      handleError(error);
     } finally {
       await cleanCredentials(await getSessionPersistence());
-      window.location.reload();
+      if (typeof window !== 'undefined') {
+        window.location.reload();
+      }
     }
   };
 
@@ -57,15 +78,16 @@ export function useAuth() {
    * @throws {Error} If the login request fails, or if the access/refresh tokens are not found or are invalid in the response.
    */
   const login = async (
-    params: any = {},
+    params: Record<string, unknown> = {},
     persistence: LocationPreference,
     tokenPaths: AuthTokenPaths = getTokenPathsConfig()
   ): Promise<AuthResponse> => {
     try {
-      const { data } = await axiosInstance.post<AuthResponse>(
-        endpoints.LOGIN,
-        params
-      );
+      const data = await getFetcher()({
+        method: 'POST',
+        url: endpoints.LOGIN,
+        data: params,
+      }) as AuthResponse;
 
       const { accessToken, refreshToken } = extractAndValidateTokens(
         data,
@@ -80,7 +102,7 @@ export function useAuth() {
       await storeTokens(accessToken, refreshToken, persistence);
       return data;
     } catch (error) {
-      handleError(error, false);
+      handleError(error);
       throw error;
     }
   };

@@ -10,3 +10,5 @@ export * from './ArexVueCoreOptions';
 export * from './AppKeyConfig';
 export * from './AxiosServiceOptions';
 export * from './TokenValidationResult'
+export * from './Fetcher'
+export * from './RestStdOptions'
