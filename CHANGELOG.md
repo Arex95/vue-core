@@ -1,3 +1,12 @@
+# [3.0.0](https://github.com/Arex95/npm-arex-core/compare/v1.1.43...v3.0.0) (2025-12-01)
+
+
+### Features
+
+* Add comprehensive documentation and remove all tests ([5297128](https://github.com/Arex95/npm-arex-core/commit/52971282124b91947a59b7d39a0c925b9cebb04d))
+
+
+
 ## [1.1.43](https://github.com/Arex95/npm-arex-core/compare/v1.1.42...v1.1.43) (2025-11-25)
 
 
