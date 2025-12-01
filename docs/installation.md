@@ -34,7 +34,7 @@ La biblioteca requiere las siguientes dependencias peer que debes instalar segú
 
 **Dependencias requeridas:**
 ```bash
-npm install vue@^3.0.0 vue-router@^4.5.0 @vueuse/core@^12.8.2 jwt-decode@^4.0.0 uuid@^11.1.0
+npm install vue@^3.0.0 @vueuse/core@^12.8.2 jwt-decode@^4.0.0 uuid@^11.1.0
 ```
 
 **Dependencias opcionales (solo instala las que necesites):**

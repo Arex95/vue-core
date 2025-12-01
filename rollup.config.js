@@ -10,7 +10,6 @@ export default {
   ],
   external: [
     "vue",
-    "vue-router",
     "axios",
     "ofetch",
     "@vueuse/core",

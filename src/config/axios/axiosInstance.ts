@@ -20,6 +20,13 @@ export const configAxios = (config: AxiosServiceOptions): void => {
     timeout: config.timeout,
     withCredentials: config.withCredentials
   });
+  
+  // Configure auth fetcher factory to avoid circular dependency
+  const { setDefaultAuthFetcherFactory } = require("@/config/auth/authFetcher");
+  const { createAxiosFetcher } = require("@/fetchers/axios");
+  setDefaultAuthFetcherFactory(() => {
+    return createAxiosFetcher(axiosServiceInstance!.getAxiosInstance());
+  });
 };
 
 /**
@@ -46,6 +53,13 @@ export const getConfiguredAxiosInstance = (): AxiosInstance => {
         withCredentials: false
       });
     }
+    
+    // Configure auth fetcher factory to avoid circular dependency
+    const { setDefaultAuthFetcherFactory } = require("@/config/auth/authFetcher");
+    const { createAxiosFetcher } = require("@/fetchers/axios");
+    setDefaultAuthFetcherFactory(() => {
+      return createAxiosFetcher(axiosServiceInstance!.getAxiosInstance());
+    });
   }
   return axiosServiceInstance.getAxiosInstance();
 };

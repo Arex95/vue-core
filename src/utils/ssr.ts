@@ -24,11 +24,13 @@ export interface CookieOptions {
   httpOnly?: boolean;
 }
 
-export function getCookieStorage(): {
+export interface CookieStorage {
   getItem: (key: string) => string | null;
-  setItem: (key: string, value: string, options?: CookieOptions): void;
-  removeItem: (key: string, options?: { path?: string; domain?: string }): void;
-} {
+  setItem: (key: string, value: string, options?: CookieOptions) => void;
+  removeItem: (key: string, options?: { path?: string; domain?: string }) => void;
+}
+
+export function getCookieStorage(): CookieStorage {
   return {
     getItem: (key: string): string | null => {
       if (isServer) return null;
@@ -41,7 +43,7 @@ export function getCookieStorage(): {
       }
       return null;
     },
-    setItem: (key: string, value: string, options?: CookieOptions): void {
+    setItem: (key: string, value: string, options?: CookieOptions): void => {
       if (isServer) return;
       let cookie = `${key}=${encodeURIComponent(value)}`;
       
@@ -76,7 +78,7 @@ export function getCookieStorage(): {
       
       document.cookie = cookie;
     },
-    removeItem: (key: string, options?: { path?: string; domain?: string }): void {
+    removeItem: (key: string, options?: { path?: string; domain?: string }): void => {
       if (isServer) return;
       const path = options?.path || '/';
       const domain = options?.domain ? `; domain=${options.domain}` : '';
@@ -85,11 +87,13 @@ export function getCookieStorage(): {
   };
 }
 
-export function getPreferredStorage(): {
+export interface PreferredStorage {
   getItem: (key: string) => string | null;
-  setItem: (key: string, value: string): void;
-  removeItem: (key: string): void;
-} {
+  setItem: (key: string, value: string) => void;
+  removeItem: (key: string) => void;
+}
+
+export function getPreferredStorage(): PreferredStorage {
   if (isServer) {
     return getCookieStorage();
   }

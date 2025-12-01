@@ -1,8 +1,7 @@
 import { Fetcher } from '@/types/Fetcher';
-import { createAxiosFetcher } from '@/fetchers/axios';
-import { getConfiguredAxiosInstance } from '@/config/axios/axiosInstance';
 
 let defaultAuthFetcher: Fetcher | null = null;
+let createDefaultFetcher: (() => Fetcher) | null = null;
 
 /**
  * Configures a default fetcher for authentication operations.
@@ -23,6 +22,16 @@ export function configAuthFetcher(fetcher: Fetcher): void {
 }
 
 /**
+ * Configures a factory function to create the default fetcher lazily.
+ * This is used internally to avoid circular dependencies.
+ * 
+ * @param factory - Factory function that creates a fetcher
+ */
+export function setDefaultAuthFetcherFactory(factory: () => Fetcher): void {
+  createDefaultFetcher = factory;
+}
+
+/**
  * Gets the default auth fetcher, creating one from Axios if not configured.
  * This allows lazy initialization to avoid circular dependencies.
  * 
@@ -32,7 +41,10 @@ export function getDefaultAuthFetcher(): Fetcher {
   if (defaultAuthFetcher) {
     return defaultAuthFetcher;
   }
-  const axiosInstance = getConfiguredAxiosInstance();
-  return createAxiosFetcher(axiosInstance);
+  if (createDefaultFetcher) {
+    defaultAuthFetcher = createDefaultFetcher();
+    return defaultAuthFetcher;
+  }
+  throw new Error('Auth fetcher not configured. Please configure Axios or set a custom auth fetcher.');
 }
 

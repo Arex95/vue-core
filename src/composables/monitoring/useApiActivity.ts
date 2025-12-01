@@ -3,6 +3,7 @@ import { getConfiguredAxiosInstance } from "@config/axios";
 import { useAuth } from "@composables/auth/useAuth";
 import { verifyAuth } from "@/utils";
 import { handleError } from "@utils/errors";
+import { isServer, getStorage } from "@/utils/ssr";
 
 /**
  * Default session timeout in minutes.

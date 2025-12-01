@@ -1,3 +1,4 @@
+// @ts-ignore - ofetch is an optional peer dependency
 import { $fetch, FetchOptions } from 'ofetch';
 import { Fetcher, FetcherConfig } from '../types/Fetcher';
 
