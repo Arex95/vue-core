@@ -1,6 +1,6 @@
 {
   "name": "@arex95/vue-core",
-  "version": "1.1.43",
+  "version": "2.0.0",
   "description": "Opinionated Vue Core",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -19,7 +19,9 @@
   "scripts": {
     "build": "rollup -c",
     "changelog": "conventional-changelog -p angular -o CHANGELOG.md -r 0",
-    "release": "npm version patch && npm run changelog && git add CHANGELOG.md package.json pnpm-lock.yaml && git commit -m \"chore(release): update changelog\" && git push && npm publish --access public"
+    "release": "npm version patch && npm run changelog && git add CHANGELOG.md package.json pnpm-lock.yaml && git commit -m \"chore(release): update changelog\" && git push && npm publish --access public",
+    "release:major": "npm version major && npm run changelog && git add CHANGELOG.md package.json pnpm-lock.yaml && git commit -m \"chore(release): update changelog\" && git push && npm publish --access public",
+    "release:minor": "npm version minor && npm run changelog && git add CHANGELOG.md package.json pnpm-lock.yaml && git commit -m \"chore(release): update changelog\" && git push && npm publish --access public"
   },
   "repository": {
     "type": "git",
