@@ -8,6 +8,181 @@ Esta guía te llevará paso a paso para configurar y usar `@arex95/vue-core` en 
 
 **Nota:** Si usas Nuxt, consulta la [guía de integración con Nuxt](./nuxt-integration.md) para evitar problemas de dependencias circulares.
 
+## 🔄 Migración desde Versiones Anteriores (v1.x → v2.0+)
+
+Si estás migrando desde una versión anterior, aquí están los cambios principales:
+
+### Cambio en el uso de `fetchFn` con AxiosService
+
+**❌ Código Antiguo (v1.x):**
+```typescript
+import { axiosFetch, AxiosService, RestStd, useFetch } from "@arex95/vue-core";
+
+const newInstance = new AxiosService({
+  baseURL: "https://fakestoreapi.com/",
+});
+
+export class CartService extends RestStd {
+  static override resource = "carts";
+  static override fetchFn = useFetch(
+    axiosFetch,
+    newInstance.getAxiosInstance()
+  );
+}
+```
+
+**✅ Código Nuevo (v2.0+):**
+```typescript
+import { AxiosService, RestStd, createAxiosFetcher } from "@arex95/vue-core";
+
+const newInstance = new AxiosService({
+  baseURL: "https://fakestoreapi.com/",
+});
+
+export class CartService extends RestStd {
+  static override resource = "carts";
+  static override fetchFn = createAxiosFetcher(newInstance.getAxiosInstance());
+}
+```
+
+### Cambios Principales
+
+1. **Ya no necesitas `useFetch` ni `axiosFetch`**: Usa directamente `createAxiosFetcher(axiosInstance)`
+2. **Más simple y directo**: El fetcher se crea directamente con la instancia de Axios
+3. **Mismo resultado**: Funciona exactamente igual, pero con una API más clara
+
+### Cómo funciona la baseURL
+
+La `baseURL` de Axios se combina automáticamente con el `resource` de tu servicio:
+
+```typescript
+// Si defines:
+const newInstance = new AxiosService({
+  baseURL: "https://fakestoreapi.com/",
+});
+
+export class CartService extends RestStd {
+  static override resource = "carts";
+  static fetchFn = createAxiosFetcher(newInstance.getAxiosInstance());
+}
+
+// Cuando llamas:
+await CartService.getAll();
+// Axios hace la petición a: https://fakestoreapi.com/carts
+
+await CartService.getOne({ id: 1 });
+// Axios hace la petición a: https://fakestoreapi.com/carts/1
+```
+
+### Usar la misma baseURL para todos los endpoints
+
+Tienes **dos opciones** para usar la misma `baseURL` en todos tus servicios:
+
+#### Opción 1: Configurar la instancia global (Recomendado)
+
+Configura Axios una vez en tu `main.ts` y todos tus servicios la usarán automáticamente:
+
+```typescript
+// main.ts
+import { createApp } from 'vue';
+import { ArexVueCore } from '@arex95/vue-core';
+
+const app = createApp(App);
+
+app.use(ArexVueCore, {
+  // ... otras configuraciones
+  axios: {
+    baseURL: "https://fakestoreapi.com/", // ← Esta baseURL se usa para todos
+    timeout: 10000,
+  },
+});
+
+app.mount('#app');
+```
+
+Luego, en tus servicios **no necesitas definir `fetchFn`**:
+
+```typescript
+// src/models/Cart.ts
+import { RestStd } from "@arex95/vue-core";
+
+export class Cart extends RestStd {
+  static override resource = "carts";
+  // fetchFn es opcional - usa automáticamente la instancia global
+}
+
+// src/models/Product.ts
+export class Product extends RestStd {
+  static override resource = "products";
+  // También usa la misma baseURL automáticamente
+}
+
+// src/models/User.ts
+export class User extends RestStd {
+  static override resource = "users";
+  // Todos usan: https://fakestoreapi.com/
+}
+```
+
+#### Opción 2: Crear una instancia compartida
+
+Si necesitas una instancia personalizada pero quieres reutilizarla en múltiples servicios:
+
+```typescript
+// src/config/apiInstance.ts
+import { AxiosService, createAxiosFetcher } from "@arex95/vue-core";
+
+// Crea la instancia una vez
+const apiInstance = new AxiosService({
+  baseURL: "https://fakestoreapi.com/",
+});
+
+// Exporta el fetcher para reutilizar
+export const apiFetcher = createAxiosFetcher(apiInstance.getAxiosInstance());
+```
+
+Luego úsala en todos tus servicios:
+
+```typescript
+// src/models/Cart.ts
+import { RestStd } from "@arex95/vue-core";
+import { apiFetcher } from "@/config/apiInstance";
+
+export class Cart extends RestStd {
+  static override resource = "carts";
+  static fetchFn = apiFetcher; // ← Reutiliza el mismo fetcher
+}
+
+// src/models/Product.ts
+import { RestStd } from "@arex95/vue-core";
+import { apiFetcher } from "@/config/apiInstance";
+
+export class Product extends RestStd {
+  static override resource = "products";
+  static fetchFn = apiFetcher; // ← Mismo fetcher, misma baseURL
+}
+```
+
+### Resumen
+
+- **Opción 1 (Global)**: Configura `configAxios()` en `main.ts` → Todos los servicios usan la misma baseURL automáticamente
+- **Opción 2 (Compartida)**: Crea una instancia y exporta el fetcher → Reutilízalo en múltiples servicios
+- **Opción 3 (Individual)**: Crea una instancia por servicio si cada uno necesita una baseURL diferente
+
+### Resumen de Imports
+
+**Antes:**
+```typescript
+import { axiosFetch, AxiosService, RestStd, useFetch } from "@arex95/vue-core";
+```
+
+**Ahora:**
+```typescript
+import { AxiosService, RestStd, createAxiosFetcher } from "@arex95/vue-core";
+```
+
+**Nota:** `useFetch` y `axiosFetch` aún están disponibles para compatibilidad, pero se recomienda usar `createAxiosFetcher` para nuevos proyectos.
+
 ## Paso 1: Instalación
 
 ### Instalar el paquete

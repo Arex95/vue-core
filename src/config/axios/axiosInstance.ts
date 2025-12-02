@@ -1,6 +1,8 @@
-import { AxiosService } from "@config/axios/axiosConfig";
-import { AxiosServiceOptions } from "@/types/AxiosServiceOptions";
+import { AxiosService } from "./axiosConfig";
+import { AxiosServiceOptions } from "../../types/AxiosServiceOptions";
 import { AxiosInstance } from "axios";
+import { setDefaultAuthFetcherFactory } from "../auth/authFetcher";
+import { createAxiosFetcher } from "../../fetchers/axios";
 
 let axiosServiceInstance: AxiosService | null = null;
 let defaultConfig: AxiosServiceOptions | null = null;
@@ -21,9 +23,8 @@ export const configAxios = (config: AxiosServiceOptions): void => {
     withCredentials: config.withCredentials
   });
   
-  // Configure auth fetcher factory to avoid circular dependency
-  const { setDefaultAuthFetcherFactory } = require("@/config/auth/authFetcher");
-  const { createAxiosFetcher } = require("@/fetchers/axios");
+  // Configure auth fetcher factory lazily to avoid circular dependency
+  // The factory function is only called when getDefaultAuthFetcher() is invoked
   setDefaultAuthFetcherFactory(() => {
     return createAxiosFetcher(axiosServiceInstance!.getAxiosInstance());
   });
@@ -54,9 +55,8 @@ export const getConfiguredAxiosInstance = (): AxiosInstance => {
       });
     }
     
-    // Configure auth fetcher factory to avoid circular dependency
-    const { setDefaultAuthFetcherFactory } = require("@/config/auth/authFetcher");
-    const { createAxiosFetcher } = require("@/fetchers/axios");
+    // Configure auth fetcher factory lazily to avoid circular dependency
+    // The factory function is only called when getDefaultAuthFetcher() is invoked
     setDefaultAuthFetcherFactory(() => {
       return createAxiosFetcher(axiosServiceInstance!.getAxiosInstance());
     });
