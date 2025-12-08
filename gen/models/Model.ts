@@ -1,4 +1,5 @@
 import { Schema } from './Schema.js';
+import { CustomEndpoint } from '../core/CustomEndpointDetector.js';
 
 /**
  * Represents a model with its schema and resource
@@ -9,6 +10,7 @@ export class Model {
   public readonly resource: string;
   public readonly folderName: string;
   public readonly relatedTypes: Map<string, Schema> = new Map();
+  public readonly customEndpoints: CustomEndpoint[] = [];
 
   constructor(name: string, schema: Schema | {
     type?: string;
@@ -30,6 +32,10 @@ export class Model {
 
   addRelatedType(name: string, schema: Schema): void {
     this.relatedTypes.set(name, schema);
+  }
+
+  addCustomEndpoints(endpoints: CustomEndpoint[]): void {
+    this.customEndpoints.push(...endpoints);
   }
 
   getAllTypes(): string[] {

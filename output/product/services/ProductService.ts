@@ -1,4 +1,6 @@
 import { RestStd } from '@arex95/vue-core';
+import { Product } from '../types/Product';
+import { ProductUpdate } from '../types/ProductUpdate';
 
 /**
  * @generated from OpenAPI
@@ -13,4 +15,12 @@ import { RestStd } from '@arex95/vue-core';
  */
 export class ProductService extends RestStd {
   static override resource = 'products';
+
+  /**
+   * Do something weird with product
+   * @generated from operationId: doSomethingWithProduct
+   */
+  static doSomethingWithProduct(id: number, params?: Record<string, unknown>, data: ProductUpdate): Promise<Product> {
+    return this.update<Product, ProductUpdate>({ id: id, data, url: '/api/v2/products/{id}/do-something' });
+  }
 }
