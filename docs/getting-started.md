@@ -690,7 +690,7 @@ const deleteMutation = useMutation({
 });
 ```
 
-## Paso 10: Manejo de Errores
+## Paso 11: Manejo de Errores
 
 ### 10.1 Con Try/Catch y handleError
 
@@ -758,7 +758,7 @@ export class Role extends RestStd {
 const roles = await Role.getAll<RoleData[]>();
 ```
 
-## Paso 11: Ejemplo Completo
+## Paso 12: Ejemplo Completo
 
 Aquí tienes un ejemplo completo de un modelo y su uso:
 
@@ -841,7 +841,7 @@ const createNewUser = () => {
 </script>
 ```
 
-## Paso 11: Retry Logic y Manejo de Errores Avanzado
+## Paso 13: Retry Logic y Manejo de Errores Avanzado
 
 ### 11.1 Configurar Retry en Modelos
 
@@ -897,7 +897,7 @@ try {
 }
 ```
 
-## Paso 12: Uso de Cookies para Storage
+## Paso 14: Uso de Cookies para Storage
 
 ### 12.1 Login con Cookies
 
@@ -928,7 +928,7 @@ await storeEncryptedItem('key', 'value', secretKey, 'cookie', cookieOptions);
 
 ## Resumen de Conceptos Clave
 
-1. **`RestStd`**: Clase base que extiendes para crear modelos/servicios
+1. **`RestStd`**: Clase base que extiendes para crear modelos/servicios REST
 2. **`resource`**: El endpoint del recurso (obligatorio, debe usar `override`)
 3. **`fetchFn`**: Función fetcher (opcional, usa Axios por defecto si está configurado)
 4. **`retryConfig`**: Configuración de retry con exponential backoff (opcional)
@@ -936,7 +936,7 @@ await storeEncryptedItem('key', 'value', secretKey, 'cookie', cookieOptions);
 6. **Métodos**: Todos usan objetos de parámetros para mejor autocompletado
 7. **Tipos genéricos**: Mejor inferencia de TypeScript con `TResponse`, `TData`, `TParams`
 8. **URLs personalizadas**: Puedes sobrescribir el `resource` con el parámetro `url`
-9. **Modelo vs Servicio**: Extiende `RestStd` directamente desde tu modelo (ej: `User.getOne()`) para casos simples
+9. **Modelo vs Servicio**: Extiende `RestStd` directamente desde tu modelo para casos simples
 10. **Storage**: Soporte para localStorage, sessionStorage y cookies con encriptación
 11. **Errores**: Clases de error personalizadas con información estructurada
 12. **useAuth flexible**: Funciona con cualquier fetcher, no acoplado a Axios

@@ -1,0 +1,17 @@
+import { RestStd } from '@arex95/vue-core';
+import { User } from '../types/User';
+
+/**
+ * @generated from OpenAPI
+ * Auto-generated service
+ * 
+ * Métodos estándar RESTful disponibles automáticamente desde RestStd:
+ * - UserService.getAll<T[]>({ params }) → GET /users
+ * - UserService.getOne<T>({ id }) → GET /users/{id}
+ * - UserService.create<T>({ data }) → POST /users
+ * - UserService.update<T>({ id, data }) → PUT /users/{id}
+ * - UserService.delete({ id }) → DELETE /users/{id}
+ */
+export class UserService extends RestStd {
+  static override resource = 'users';
+}

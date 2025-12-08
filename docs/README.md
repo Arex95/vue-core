@@ -37,7 +37,7 @@ Sistema completo de autenticación basado en JWT con:
 - Soporte para cookies con opciones de seguridad (Secure, SameSite)
 
 ### 🌐 Comunicación API
-- Clase REST estándar para operaciones CRUD
+- **Clase REST estándar** (`RestStd`) para operaciones CRUD
 - Agnóstico del sistema de fetching (Axios, ofetch, fetch, etc.)
 - Helpers opcionales para Axios y ofetch
 - Soporte para fetchers personalizados
@@ -118,7 +118,7 @@ app.use(ArexVueCore, {
 app.mount('#app');
 ```
 
-**Crear un modelo:**
+**Crear un modelo REST:**
 
 ```typescript
 import { RestStd } from '@arex95/vue-core';
@@ -139,6 +139,7 @@ const { data: roles } = useQuery({
   queryFn: () => Role.getAll<RoleData[]>(),
 });
 ```
+
 
 ## Recursos Adicionales
 

@@ -1,1 +1,1 @@
-export * from './RestStd'
+export * from './RestStd';
