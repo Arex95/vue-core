@@ -1,31 +1,39 @@
 # Generador de Código desde OpenAPI
 
-Generador que toma un spec OpenAPI y genera DTOs y Servicios TypeScript que extienden RestStd.
+Generador que toma un spec OpenAPI y genera tipos TypeScript y servicios que extienden RestStd.
 
-## Requisitos
+## Documentación Completa
 
-- Node.js
-- TypeScript (`npm install -g typescript`)
-- ts-node (`npm install -g ts-node`) para ejecutar directamente
+📖 **Ver la documentación completa en:** [`docs/openapi-generator.md`](../docs/openapi-generator.md)
 
-## Uso
+## Uso Rápido
 
-### Opción 1: Con ts-node (desarrollo)
+### 1. Compilar
 ```bash
-ts-node gen/index.ts openapi.json src/generated
-```
-
-### Opción 2: Compilar y ejecutar
-```bash
-# Compilar
 cd gen
-tsc
-
-# Ejecutar
-node dist/index.js ../openapi.json ../src/generated
+npx tsc
 ```
 
-## Estructura
+### 2. Ejecutar
+```bash
+# Desde la raíz del proyecto
+node gen/dist/index.js openapi.json output
+```
+
+## Estructura Generada
+
+```
+output/
+├── user/
+│   ├── types/
+│   │   ├── User.ts
+│   │   ├── UserCreate.ts
+│   │   └── UserUpdate.ts
+│   └── services/
+│       └── UserService.ts
+```
+
+## Estructura del Generador
 
 ```
 gen/
@@ -48,18 +56,7 @@ gen/
 │   └── OpenAPISpec.ts
 ├── CodeGenerator.ts  # Orquestador principal
 ├── index.ts          # CLI entry point
-├── tsconfig.json     # Configuración TypeScript
-└── README.md
+└── tsconfig.json     # Configuración TypeScript
 ```
 
-## Ejemplo
-
-```bash
-# Generar código desde openapi.json
-ts-node gen/index.ts openapi.json src/generated
-```
-
-Esto generará:
-- DTOs en `src/generated/{model}/dto/`
-- Servicios en `src/generated/{model}/{Model}Service.ts`
-- Index files para exports
+Para más detalles, consulta la [documentación completa](../docs/openapi-generator.md).

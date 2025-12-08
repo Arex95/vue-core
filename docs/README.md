@@ -5,7 +5,7 @@ Bienvenido a la documentación completa de `@arex95/vue-core`, una biblioteca co
 ## Índice
 
 ### 🚀 Para Empezar
-- [**Guía de Inicio**](./GETTING_STARTED.md) - **Empieza aquí** - Guía paso a paso completa
+- [**Guía de Inicio**](./getting-started.md) - **Empieza aquí** - Guía paso a paso completa
 - [Instalación](./installation.md) - Instalación y dependencias
 - [Configuración](./configuration.md) - Opciones de configuración detalladas
 
@@ -15,6 +15,7 @@ Bienvenido a la documentación completa de `@arex95/vue-core`, una biblioteca co
 - [Autenticación](./authentication.md) - Sistema de autenticación
 - [Manejo de Errores](./error-handling.md) - Sistema mejorado de manejo de errores
 - [Utilidades](./utils.md) - Funciones utilitarias
+- [**Generador OpenAPI**](./openapi-generator.md) - Genera código automáticamente desde OpenAPI
 
 ### 🔍 Análisis y Diseño
 - [Análisis de Arquitectura](./analysis/readme.md) - Documentos de análisis y decisiones de diseño
