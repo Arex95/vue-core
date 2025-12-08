@@ -1,5 +1,4 @@
 import { RestStd } from '@arex95/vue-core';
-import { Product } from '../types/Product';
 
 /**
  * @generated from OpenAPI

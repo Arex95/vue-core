@@ -46,14 +46,26 @@ export class CodeGenerator {
   private generateModel(model: Model): void {
     this.log(`📝 Generating code for ${model.name}...`);
 
-    // Generar Type
-    const typeCode = this.dtoGenerator.generate(model);
+    // Generar todos los tipos (modelo principal + DTOs relacionados)
+    const allTypes = model.getAllTypes();
+    const typeFiles = new Map<string, string>();
 
-    // Generar Service
+    // Generar tipo principal
+    const mainTypeCode = this.dtoGenerator.generate(model);
+    typeFiles.set(model.name, mainTypeCode);
+
+    // Generar tipos relacionados (DTOs)
+    for (const [typeName, schema] of model.relatedTypes.entries()) {
+      const relatedModel = new Model(typeName, schema, model.resource);
+      const typeCode = this.dtoGenerator.generate(relatedModel);
+      typeFiles.set(typeName, typeCode);
+    }
+
+    // Generar Service (solo uno por modelo principal)
     const serviceCode = this.serviceGenerator.generate(model);
 
     // Escribir archivos
-    this.fileWriter.writeModel(model, typeCode, serviceCode);
+    this.fileWriter.writeModel(model, typeFiles, serviceCode);
   }
 
   private log(message: string): void {

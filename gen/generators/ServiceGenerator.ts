@@ -21,11 +21,7 @@ ${classBody}
   }
 
   private generateImports(model: Model): string {
-    const typeImports = model.getDTOs()
-      .map(dtoName => `import { ${dtoName} } from '../types/${dtoName}';`)
-      .join('\n');
-    return `import { RestStd } from '@arex95/vue-core';
-${typeImports}`;
+    return `import { RestStd } from '@arex95/vue-core';`;
   }
 
   private generateDocumentation(className: string, resource: string): string {

@@ -8,6 +8,7 @@ export class Model {
   public readonly schema: Schema;
   public readonly resource: string;
   public readonly folderName: string;
+  public readonly relatedTypes: Map<string, Schema> = new Map();
 
   constructor(name: string, schema: Schema | {
     type?: string;
@@ -27,10 +28,20 @@ export class Model {
       .toLowerCase();
   }
 
+  addRelatedType(name: string, schema: Schema): void {
+    this.relatedTypes.set(name, schema);
+  }
+
+  getAllTypes(): string[] {
+    const types = [this.name];
+    for (const typeName of this.relatedTypes.keys()) {
+      types.push(typeName);
+    }
+    return types;
+  }
+
   getDTOs(): string[] {
-    // Por ahora solo retornamos el DTO principal
-    // En el futuro se pueden detectar UserCreate, UserUpdate, etc.
-    return [this.name];
+    return this.getAllTypes();
   }
 }
 

@@ -23,14 +23,20 @@ export class FileWriter {
     fs.writeFileSync(fullPath, content, 'utf-8');
   }
 
-  writeModel(model: Model, typeCode: string, serviceCode: string): void {
+  writeModel(
+    model: Model,
+    typeFiles: Map<string, string>,
+    serviceCode: string
+  ): void {
     const structure = this.directoryStructure;
 
-    // Escribir Type
-    const typePath = structure.getTypeFilePath(model, model.name);
-    this.write(typePath, typeCode);
+    // Escribir todos los tipos
+    for (const [typeName, typeCode] of typeFiles.entries()) {
+      const typePath = structure.getTypeFilePath(model, typeName);
+      this.write(typePath, typeCode);
+    }
 
-    // Escribir Service
+    // Escribir Service (solo uno por modelo principal)
     const servicePath = structure.getServiceFilePath(model);
     this.write(servicePath, serviceCode);
   }
