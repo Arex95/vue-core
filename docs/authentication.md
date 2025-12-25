@@ -12,7 +12,8 @@ El sistema de autenticación está basado en JWT (JSON Web Tokens) y proporciona
 - **Cookies Seguras**: Soporte para cookies con opciones de seguridad (Secure, SameSite)
 - **Flexible**: Funciona con cualquier fetcher (no acoplado a Axios)
 - **Refresh Automático**: Renovación automática de tokens expirados
-- **SSR/SSG Compatible**: Funciona perfectamente en entornos server-side
+- **SSR/SSG Compatible**: Funciona perfectamente en entornos server-side con configuración framework-agnóstica
+- **Framework-Agnóstico**: Funciona en Vue puro, Nuxt, Next.js, SvelteKit, o cualquier framework
 
 ## Configuración Inicial
 

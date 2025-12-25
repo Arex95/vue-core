@@ -20,7 +20,8 @@ export const configAxios = (config: AxiosServiceOptions): void => {
     baseURL: config.baseURL,
     headers: config.headers,
     timeout: config.timeout,
-    withCredentials: config.withCredentials
+    withCredentials: config.withCredentials,
+    storageFactory: config.storageFactory
   });
   
   // Configure auth fetcher factory lazily to avoid circular dependency
@@ -44,7 +45,8 @@ export const getConfiguredAxiosInstance = (): AxiosInstance => {
         baseURL: defaultConfig.baseURL,
         headers: defaultConfig.headers,
         timeout: defaultConfig.timeout,
-        withCredentials: defaultConfig.withCredentials
+        withCredentials: defaultConfig.withCredentials,
+        storageFactory: defaultConfig.storageFactory
       });
     } else {
       axiosServiceInstance = new AxiosService({

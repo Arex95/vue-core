@@ -16,8 +16,19 @@ interface ArexVueCoreOptions {
   tokenPaths: TokenPathsConfig;
   refreshTokenPaths: TokenPathsConfig;
   axios: AxiosServiceOptions;
+  storage?: {
+    driver?: StorageDriver;
+    defaultLocation?: LocationPreference;
+    defaultCookieOptions?: StorageOptions;
+  };
+  ssr?: {
+    getContext?: () => StorageContext | Promise<StorageContext>;
+    redirectStrategy?: RedirectStrategy;
+  };
 }
 ```
+
+**Nota:** Las opciones `storage` y `ssr` son completamente opcionales y solo necesarias para soporte SSR. Consulta la [guía de integración SSR](./ssr-integration.md) para más detalles.
 
 ## appKey
 

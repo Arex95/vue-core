@@ -8,6 +8,14 @@ import {
   configTokenPaths,
   configRefreshTokenPaths,
 } from "./config";
+import {
+  setGlobalStorageDriver,
+  setGlobalSSRContextGetter,
+  setGlobalRedirectStrategy,
+  getGlobalSSRContextGetter,
+} from "./config/global/storageConfig";
+import { getDefaultStorageDriver } from "./utils/storage/drivers";
+import { UniversalStorage } from "./utils/storage/UniversalStorage";
 
 /**
  * A Vue plugin that serves as the entry point for the `@arex95/vue-core` library.
@@ -49,11 +57,39 @@ export const ArexVueCore = {
       accessTokenPath: options.refreshTokenPaths.accessToken,
       refreshTokenPath: options.refreshTokenPaths.refreshToken,
     });
+    // Configurar storage driver
+    if (options.storage?.driver) {
+      setGlobalStorageDriver(options.storage.driver);
+    } else {
+      // Auto-detectar según entorno
+      const driver = getDefaultStorageDriver();
+      setGlobalStorageDriver(driver);
+    }
+
+    // Configurar SSR context getter
+    if (options.ssr?.getContext) {
+      setGlobalSSRContextGetter(options.ssr.getContext);
+    }
+
+    // Configurar redirect strategy
+    if (options.ssr?.redirectStrategy) {
+      setGlobalRedirectStrategy(options.ssr.redirectStrategy);
+    }
+
+    // Crear factory de storage para usar en AxiosService
+    const storageFactory = (): UniversalStorage => {
+      const contextGetter = getGlobalSSRContextGetter();
+      const driver = getGlobalStorageDriver();
+      const appKey = options.appKey;
+      return new UniversalStorage(driver, appKey, contextGetter || undefined);
+    };
+
     configAxios({
       baseURL: options.axios.baseURL,
       headers: options.axios.headers,
       timeout: options.axios.timeout,
-      withCredentials: options.axios.withCredentials
+      withCredentials: options.axios.withCredentials,
+      storageFactory, // Nueva opción para SSR
     });
   },
 };

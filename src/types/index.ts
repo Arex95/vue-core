@@ -12,3 +12,4 @@ export * from './AxiosServiceOptions';
 export * from './TokenValidationResult'
 export * from './Fetcher'
 export * from './RestStdOptions'
+export * from './Storage'

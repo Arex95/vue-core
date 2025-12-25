@@ -1,4 +1,6 @@
 import { AxiosServiceOptions } from "./AxiosServiceOptions";
+import { StorageDriver, StorageOptions, RedirectStrategy, StorageContext } from "./Storage";
+import { LocationPreference } from "./SessionConfig";
 
 /**
  * Defines the comprehensive configuration object for initializing the Arex-Vue-Core library.
@@ -40,4 +42,20 @@ export interface ArexVueCoreOptions {
   };
   /** The configuration options for the underlying Axios instance. */
   axios: AxiosServiceOptions;
+  /** Optional storage configuration for SSR support */
+  storage?: {
+    /** Custom storage driver. If not provided, auto-detected based on environment. */
+    driver?: StorageDriver;
+    /** Default storage location preference */
+    defaultLocation?: LocationPreference;
+    /** Default cookie options */
+    defaultCookieOptions?: StorageOptions;
+  };
+  /** Optional SSR configuration */
+  ssr?: {
+    /** Function to get SSR context (cookies, headers, etc.) */
+    getContext?: () => StorageContext | Promise<StorageContext>;
+    /** Custom redirect strategy for SSR */
+    redirectStrategy?: RedirectStrategy;
+  };
 }

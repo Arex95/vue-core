@@ -1,3 +1,5 @@
+import { UniversalStorage } from "@/utils/storage/UniversalStorage";
+
 /**
  * Defines the configuration options for creating a new `AxiosService` instance.
  * This interface allows for setting the base URL, default headers, request timeout,
@@ -12,4 +14,6 @@ export interface AxiosServiceOptions {
   timeout?: number;
   /** A boolean indicating whether cross-site Access-Control requests should be made using credentials. */
   withCredentials?: boolean;
+  /** Optional factory function to create UniversalStorage instances for SSR token refresh */
+  storageFactory?: () => UniversalStorage;
 }

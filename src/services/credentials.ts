@@ -9,6 +9,9 @@ import { jwtDecode } from "jwt-decode";
 import { handleError } from "@utils/errors";
 import { getAppKey } from "@/config/global";
 import { getStorage, getSessionStorage, getCookieStorage, isServer } from "@utils/ssr";
+import { StorageContext } from "@/types/Storage";
+import { createStorageForRequest } from "@/utils/storage/storageFactory";
+import { getGlobalSSRContextGetter } from "@/config/global/storageConfig";
 
 /**
  * Removes all stored authentication credentials (access and refresh tokens) from the specified storage locations.
@@ -52,13 +55,24 @@ export const cleanCredentials = async (
  *
  * @param {string} secretKey - The secret key to use for decryption.
  * @param {LocationPreference} location - The storage location to search ('local', 'session', 'cookie', or 'any').
+ * @param {StorageContext} [context] - Optional SSR context. If provided, uses UniversalStorage for SSR-aware operations.
  * @returns {Promise<string | null>} A promise that resolves with the decrypted access token, or `null` if it's not found.
  */
 export const getAuthToken = async (
   secretKey: string,
-  location: LocationPreference
+  location: LocationPreference,
+  context?: StorageContext
 ): Promise<string | null> => {
   const tokensConfig = getTokenConfig();
+  
+  // Si se proporciona contexto, usar UniversalStorage
+  if (context) {
+    const contextGetter = () => Promise.resolve(context);
+    const storage = createStorageForRequest(contextGetter);
+    return await storage.getDecrypted(tokensConfig.ACCESS_TOKEN);
+  }
+  
+  // Método tradicional para compatibilidad hacia atrás
   return await getDecryptedItem(
     tokensConfig.ACCESS_TOKEN,
     secretKey,
@@ -134,9 +148,10 @@ export const storeAuthRefreshToken = async (
  * It searches for the token in all storage locations (sessionStorage, localStorage, cookies). 
  * If the token is missing, malformed, or expired, it logs the issue, clears credentials, and returns `false`.
  *
+ * @param {StorageContext} [context] - Optional SSR context. If provided, uses UniversalStorage for SSR-aware operations.
  * @returns {Promise<boolean>} A promise that resolves to `true` if the user is authenticated, and `false` otherwise.
  */
-export const verifyAuth = async (): Promise<boolean> => {
+export const verifyAuth = async (context?: StorageContext): Promise<boolean> => {
   const sessionPersistence ='any';
 
   const handleAuthError = async (message: string, shouldClean: boolean = true) => {
@@ -147,7 +162,7 @@ export const verifyAuth = async (): Promise<boolean> => {
     return false;
   };
 
-  const token = await getAuthToken(getAppKey(), sessionPersistence);
+  const token = await getAuthToken(getAppKey(), sessionPersistence, context);
   if (!token) {
     return handleAuthError("TOKEN_MISSING: No valid token found");
   }

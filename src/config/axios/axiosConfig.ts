@@ -15,6 +15,7 @@ import { getEndpointsConfig } from "@config/global/endpointsConfig";
 
 import { refreshTokens } from "@/services";
 import { createAxiosFetcher } from "@/fetchers/axios";
+import { UniversalStorage } from "@/utils/storage/UniversalStorage";
 
 declare module "axios" {
   interface InternalAxiosRequestConfig {
@@ -33,6 +34,7 @@ export class AxiosService {
   private cancelTokenSource: CancelTokenSource;
   private activeRequests: number = 0;
   private readonly refreshTokenUrl: string;
+  private readonly storageFactory?: () => UniversalStorage;
 
   private isRefreshing = false;
   private failedQueue: {
@@ -45,6 +47,7 @@ export class AxiosService {
    * @param {AxiosServiceOptions} options - Configuration options for the Axios instance, such as `baseURL`, `timeout`, and custom `headers`.
    */
   constructor(options: AxiosServiceOptions) {
+    this.storageFactory = options.storageFactory;
     this.cancelTokenSource = axios.CancelToken.source();
 
     const endpointsConfig = getEndpointsConfig();
@@ -92,7 +95,15 @@ export class AxiosService {
       async (
         config: InternalAxiosRequestConfig
       ): Promise<InternalAxiosRequestConfig> => {
-        const token = await getAuthToken(getAppKey(), "any");
+        // Usar storage factory si está disponible (SSR), sino usar método tradicional
+        let token: string | null = null;
+        if (this.storageFactory) {
+          const storage = this.storageFactory();
+          token = await storage.getDecrypted('ACCESS_TOKEN');
+        } else {
+          token = await getAuthToken(getAppKey(), "any");
+        }
+        
         if (token) {
           this.setAuthHeader(config, token);
         }
@@ -148,8 +159,18 @@ export class AxiosService {
 
         try {
           const fetcher = createAxiosFetcher(this.instance);
-          await refreshTokens(fetcher);
-          const newToken = await getAuthToken(getAppKey(), "any");
+          // Usar storage factory si está disponible (SSR), sino usar método tradicional
+          const storage = this.storageFactory ? this.storageFactory() : undefined;
+          await refreshTokens(fetcher, storage);
+          
+          // Obtener nuevo token usando el mismo método
+          let newToken: string | null = null;
+          if (this.storageFactory) {
+            const refreshedStorage = this.storageFactory();
+            newToken = await refreshedStorage.getDecrypted('ACCESS_TOKEN');
+          } else {
+            newToken = await getAuthToken(getAppKey(), "any");
+          }
 
           if (newToken) {
             this.processQueue(null, newToken);

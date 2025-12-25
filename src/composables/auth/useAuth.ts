@@ -14,6 +14,9 @@ import {
 import { extractAndValidateTokens } from "@services/extractTokens";
 import { storeTokens } from "@services/storeTokens";
 import { getDefaultAuthFetcher } from "@/config/auth/authFetcher";
+import { createStorageForRequest } from "@/utils/storage/storageFactory";
+import { getGlobalRedirectStrategy, getGlobalSSRContextGetter } from "@/config/global/storageConfig";
+import { getTokenConfig } from "@/config/global/tokensConfig";
 
 /**
  * Custom hook for authentication logic, including login, logout, token management, and session preference.
@@ -37,6 +40,9 @@ import { getDefaultAuthFetcher } from "@/config/auth/authFetcher";
  */
 export function useAuth(fetcher?: Fetcher) {
   const endpoints = getEndpointsConfig();
+  const contextGetter = getGlobalSSRContextGetter();
+  const storage = createStorageForRequest(contextGetter || undefined);
+  const tokensConfig = getTokenConfig();
   
   const getFetcher = (): Fetcher => {
     return fetcher || getDefaultAuthFetcher();
@@ -51,6 +57,8 @@ export function useAuth(fetcher?: Fetcher) {
    * @returns {Promise<void>}
    */
   const logout = async (params: Record<string, unknown> = {}): Promise<void> => {
+    const redirectStrategy = getGlobalRedirectStrategy();
+    
     try {
       await getFetcher()({
         method: 'POST',
@@ -60,10 +68,12 @@ export function useAuth(fetcher?: Fetcher) {
     } catch (error) {
       handleError(error);
     } finally {
-      await cleanCredentials(await getSessionPersistence());
-      if (typeof window !== 'undefined') {
-        window.location.reload();
-      }
+      // Limpiar tokens usando UniversalStorage
+      await storage.removeEncrypted(tokensConfig.ACCESS_TOKEN);
+      await storage.removeEncrypted(tokensConfig.REFRESH_TOKEN);
+      
+      // Usar redirect strategy en lugar de window.location.reload()
+      await redirectStrategy.redirect('/login');
     }
   };
 
@@ -99,7 +109,10 @@ export function useAuth(fetcher?: Fetcher) {
         persistencePreference: persistence,
       });
 
-      await storeTokens(accessToken, refreshToken, persistence);
+      // Usar UniversalStorage para guardar tokens
+      await storage.setEncrypted(tokensConfig.ACCESS_TOKEN, accessToken);
+      await storage.setEncrypted(tokensConfig.REFRESH_TOKEN, refreshToken);
+      
       return data;
     } catch (error) {
       handleError(error);
