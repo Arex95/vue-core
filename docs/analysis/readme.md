@@ -10,6 +10,8 @@ Esta carpeta contiene documentos de análisis y decisiones de diseño tomadas du
 - [**Plan de Implementación**](./implementation-plan.md) - Plan detallado de implementación
 - [**Modelo vs Servicio**](./model-vs-service-analysis.md) - Análisis de patrón: modelo directo vs servicio separado
 - [**Diseño de RestStd**](./reststd-design-analysis.md) - Análisis de diseño de la clase RestStd
+- [**Compatibilidad SSR**](./ssr-compatibility-analysis.md) - Análisis inicial de problemas y soluciones para Server-Side Rendering
+- [**Arquitectura SSR Final**](./ssr-architecture-final.md) - **Documento definitivo** con arquitectura completa, decisiones técnicas y plan de implementación para SSR
 
 ## Nota
 
