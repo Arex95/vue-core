@@ -146,21 +146,29 @@ export class RestStd {
      * Fetches a list of items from the resource's endpoint.
      * @template TResponse The expected response type
      * @template TParams The type of query parameters
-     * @param options - Options including params, options, and optional url override
+     * @template TData The type of request body data
+     * @param options - Options including params, data, and optional url override
      * @returns A promise that resolves with the response data
      */
-    static getAll<TResponse = unknown, TParams extends Record<string, unknown> = Record<string, unknown>>(
-        options: GetAllOptions<TParams> = {}
+    static getAll<TResponse = unknown, TParams extends Record<string, unknown> = Record<string, unknown>, TData = unknown>(
+        options: GetAllOptions<TParams, TData> = {}
     ): Promise<TResponse> {
         this.validateResource();
-        const { params, url } = options;
+        const { params, data, url } = options;
         const finalUrl = url || this.resource;
+        
+        const hasData = data !== undefined && data !== null;
+        const headers: Record<string, string> = { ...this.headers };
+        if (hasData) {
+            headers["Content-Type"] = ContentTypeEnum.JSON;
+        }
         
         const config: FetcherConfig = {
             method: "GET",
             url: finalUrl,
-            params,
-            headers: this.headers,
+            params: hasData ? undefined : params,
+            data: hasData ? data : undefined,
+            headers,
         };
         
         return this.executeFetch<TResponse>(config);

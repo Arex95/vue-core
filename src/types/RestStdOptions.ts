@@ -1,7 +1,8 @@
 import { Fetcher } from './Fetcher';
 
-export interface GetAllOptions<TParams extends Record<string, unknown> = Record<string, unknown>> {
+export interface GetAllOptions<TParams extends Record<string, unknown> = Record<string, unknown>, TData = unknown> {
     params?: TParams;
+    data?: TData;
     options?: Record<string, unknown>;
     url?: string;
 }
