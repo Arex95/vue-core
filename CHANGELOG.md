@@ -1,3 +1,12 @@
+# [3.2.0](https://github.com/Arex95/npm-arex-core/compare/v3.1.0...v3.2.0) (2026-03-02)
+
+
+### Bug Fixes
+
+* **ssr:** harden auth flow for SSR and SPA environments ([db251bd](https://github.com/Arex95/npm-arex-core/commit/db251bdf321d3d62259e1ff4d5c7c9398304a988))
+
+
+
 # [3.1.0](https://github.com/Arex95/npm-arex-core/compare/v3.0.1...v3.1.0) (2026-01-09)
 
 
