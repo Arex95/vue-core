@@ -11,6 +11,7 @@ import {
 import {
   getTokenPathsConfig
 } from "@config/global/tokenPathsConfig";
+import { getCallbacksConfig } from "@config/global/callbacksConfig";
 import { extractAndValidateTokens } from "@services/extractTokens";
 import { storeTokens } from "@services/storeTokens";
 import { getDefaultAuthFetcher } from "@/config/auth/authFetcher";
@@ -61,7 +62,10 @@ export function useAuth(fetcher?: Fetcher) {
       handleError(error);
     } finally {
       await cleanCredentials(await getSessionPersistence());
-      if (typeof window !== 'undefined') {
+      const { onLogout } = getCallbacksConfig();
+      if (onLogout) {
+        onLogout();
+      } else if (typeof window !== 'undefined') {
         window.location.reload();
       }
     }

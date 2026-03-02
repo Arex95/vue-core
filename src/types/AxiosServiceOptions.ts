@@ -12,4 +12,10 @@ export interface AxiosServiceOptions {
   timeout?: number;
   /** A boolean indicating whether cross-site Access-Control requests should be made using credentials. */
   withCredentials?: boolean;
+  /**
+   * Whether to mount the authentication interceptors (token attachment + 401 refresh).
+   * Set to `false` in SSR environments where browser storage is unavailable.
+   * Defaults to `true`.
+   */
+  setupAuthInterceptors?: boolean;
 }

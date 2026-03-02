@@ -149,7 +149,7 @@ export const verifyAuth = async (): Promise<boolean> => {
 
   const token = await getAuthToken(getAppKey(), sessionPersistence);
   if (!token) {
-    return handleAuthError("TOKEN_MISSING: No valid token found");
+    return handleAuthError("TOKEN_MISSING: No valid token found", false);
   }
 
   try {
@@ -161,7 +161,7 @@ export const verifyAuth = async (): Promise<boolean> => {
     }
 
     if (decoded.exp <= currentTime) {
-      return handleAuthError("TOKEN_EXPIRED: Token is expired");
+      return handleAuthError("TOKEN_EXPIRED: Token is expired", false);
     }
 
     return true;

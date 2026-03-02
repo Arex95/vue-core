@@ -61,7 +61,9 @@ export class AxiosService {
       withCredentials: options.withCredentials ?? false,
     });
 
-    this.initializeInterceptors();
+    if (options.setupAuthInterceptors !== false) {
+      this.initializeInterceptors();
+    }
   }
 
   private processQueue(
@@ -113,6 +115,11 @@ export class AxiosService {
       },
       async (error: AxiosError) => {
         this.activeRequests--;
+
+        if (typeof window === 'undefined') {
+          return Promise.reject(error);
+        }
+
         const originalRequest = error.config;
 
         const isAuthError =

@@ -4,6 +4,7 @@ import { handleError } from "@utils/errors";
 import { getAppKey } from "@config/global/keyConfig";
 import { getEndpointsConfig } from "@config/global/endpointsConfig";
 import { getRefreshTokenPathsConfig } from "@config/global/tokenPathsConfig";
+import { getCallbacksConfig } from "@config/global/callbacksConfig";
 import { AuthResponse, AuthTokenPaths, Fetcher } from "@/types";
 import { extractAndValidateTokens } from "@services/extractTokens";
 import { storeTokens } from "@services/storeTokens";
@@ -56,7 +57,10 @@ export const refreshTokens = async (
   } catch (error) {
     handleError(error);
     await cleanCredentials(persistence);
-    if (typeof window !== 'undefined') { 
+    const { onRefreshFailed } = getCallbacksConfig();
+    if (onRefreshFailed) {
+      onRefreshFailed();
+    } else if (typeof window !== 'undefined') {
       window.location.reload();
     }
     throw error;

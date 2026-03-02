@@ -40,4 +40,14 @@ export interface ArexVueCoreOptions {
   };
   /** The configuration options for the underlying Axios instance. */
   axios: AxiosServiceOptions;
+  /**
+   * Called when a token refresh attempt fails (e.g., to redirect to login via Vue Router).
+   * Falls back to `window.location.reload()` if not provided.
+   */
+  onRefreshFailed?: () => void;
+  /**
+   * Called after a successful logout (e.g., to redirect to login via Vue Router).
+   * Falls back to `window.location.reload()` if not provided.
+   */
+  onLogout?: () => void;
 }

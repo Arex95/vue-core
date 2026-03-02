@@ -7,6 +7,7 @@ import {
   configAppKey,
   configTokenPaths,
   configRefreshTokenPaths,
+  configCallbacks,
 } from "./config";
 
 /**
@@ -53,7 +54,12 @@ export const ArexVueCore = {
       baseURL: options.axios.baseURL,
       headers: options.axios.headers,
       timeout: options.axios.timeout,
-      withCredentials: options.axios.withCredentials
+      withCredentials: options.axios.withCredentials,
+      setupAuthInterceptors: options.axios.setupAuthInterceptors,
+    });
+    configCallbacks({
+      onRefreshFailed: options.onRefreshFailed,
+      onLogout: options.onLogout,
     });
   },
 };
