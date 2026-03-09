@@ -1,97 +1,86 @@
-import { getTokenConfig } from "@config/global/tokensConfig";
-import { getDecryptedItem, storeEncryptedItem } from "@utils/storage";
-import { TokensConfig } from "@/types";
-import {
-  getSessionPersistence,
-} from "@config/global/sessionConfig";
-import { LocationPreference } from "@/types/SessionConfig"
-import { jwtDecode } from "jwt-decode";
-import { handleError } from "@utils/errors";
-import { getAppKey } from "@/config/global";
-import { getStorage, getSessionStorage, getCookieStorage, isServer } from "@utils/ssr";
+import { getTokenConfig } from '@config/global/tokensConfig';
+import { getDecryptedItem, storeEncryptedItem } from '@utils/storage';
+import { TokensConfig } from '@/types';
+import { getSessionPersistence } from '@config/global/sessionConfig';
+import { LocationPreference } from '@/types/SessionConfig';
+import { jwtDecode } from 'jwt-decode';
+import { handleError } from '@utils/errors';
+import { getAppKey } from '@/config/global';
+import { getStorage, getSessionStorage, getCookieStorage, isServer } from '@utils/ssr';
 
 /**
- * Removes all stored authentication credentials (access and refresh tokens) from the specified storage locations.
+ * Removes all stored authentication credentials (access + refresh tokens)
+ * from the specified storage location(s).
  *
- * @param {LocationPreference} location - The storage location to clear. Can be 'local' for `localStorage`,
- *   'session' for `sessionStorage`, 'cookie' for cookies, or 'any' to clear all.
- * @returns {Promise<void>} A promise that resolves when the credentials have been cleared.
+ * With location='any', ALL storage locations are cleared — including cookies.
+ * This prevents orphaned tokens surviving a logout.
  */
 export const cleanCredentials = async (
   location: LocationPreference
 ): Promise<void> => {
   const tokensConfig = getTokenConfig();
+  const keys = Object.keys(tokensConfig) as (keyof TokensConfig)[];
+  const tokenItemKeys = keys.map((k) => tokensConfig[k]);
 
-  if (location === "cookie" || isServer) {
+  const removeCookies = () => {
     const cookieStorage = getCookieStorage();
-    (Object.keys(tokensConfig) as (keyof TokensConfig)[]).forEach((key) => {
-      cookieStorage.removeItem(tokensConfig[key], { path: '/' });
-    });
-    if (location === "cookie") {
-      return;
-    }
+    tokenItemKeys.forEach((itemKey) =>
+      cookieStorage.removeItem(itemKey, { path: '/' })
+    );
+  };
+
+  const removeFromStorage = (storage: Storage | null) => {
+    tokenItemKeys.forEach((itemKey) => storage?.removeItem(itemKey));
+  };
+
+  if (location === 'cookie') {
+    removeCookies();
+    return;
   }
 
-  (Object.keys(tokensConfig) as (keyof TokensConfig)[]).forEach((key) => {
-    const itemKey = tokensConfig[key];
+  if (isServer) {
+    removeCookies();
+    return;
+  }
 
-    if (location === "local" || location === "any") {
-      const storage = getStorage();
-      storage?.removeItem(itemKey);
-    }
-
-    if (location === "session" || location === "any") {
-      const sessionStorage = getSessionStorage();
-      sessionStorage?.removeItem(itemKey);
-    }
-  });
+  // Client — clear every requested location
+  if (location === 'local' || location === 'any') {
+    removeFromStorage(getStorage());
+  }
+  if (location === 'session' || location === 'any') {
+    removeFromStorage(getSessionStorage());
+  }
+  // 'any' also clears cookies so that tokens stored explicitly with
+  // location='cookie' don't survive a logout
+  if (location === 'any') {
+    removeCookies();
+  }
 };
 
 /**
  * Retrieves and decrypts the access token from the specified storage location.
- *
- * @param {string} secretKey - The secret key to use for decryption.
- * @param {LocationPreference} location - The storage location to search ('local', 'session', 'cookie', or 'any').
- * @returns {Promise<string | null>} A promise that resolves with the decrypted access token, or `null` if it's not found.
  */
 export const getAuthToken = async (
   secretKey: string,
   location: LocationPreference
 ): Promise<string | null> => {
   const tokensConfig = getTokenConfig();
-  return await getDecryptedItem(
-    tokensConfig.ACCESS_TOKEN,
-    secretKey,
-    location
-  );
+  return getDecryptedItem(tokensConfig.ACCESS_TOKEN, secretKey, location);
 };
 
 /**
  * Retrieves and decrypts the refresh token from the specified storage location.
- *
- * @param {string} secretKey - The secret key to use for decryption.
- * @param {LocationPreference} location - The storage location to search ('local', 'session', 'cookie', or 'any').
- * @returns {Promise<string | null>} A promise that resolves with the decrypted refresh token, or `null` if it's not found.
  */
 export const getAuthRefreshToken = async (
   secretKey: string,
   location: LocationPreference
 ): Promise<string | null> => {
   const tokensConfig = getTokenConfig();
-  return await getDecryptedItem(
-    tokensConfig.REFRESH_TOKEN,
-    secretKey,
-    location
-  );
+  return getDecryptedItem(tokensConfig.REFRESH_TOKEN, secretKey, location);
 };
 
 /**
- * Encrypts and stores the access token in the specified storage location.
- *
- * @param {string} token - The access token to store.
- * @param {string} secretKey - The secret key to use for encryption.
- * @param {LocationPreference} location - The storage location ('local', 'session', or 'cookie').
- * @returns {Promise<void>} A promise that resolves when the token has been stored.
+ * Encrypts and stores the access token.
  */
 export const storeAuthToken = async (
   token: string,
@@ -99,21 +88,11 @@ export const storeAuthToken = async (
   location: LocationPreference
 ): Promise<void> => {
   const tokensConfig = getTokenConfig();
-  await storeEncryptedItem(
-    tokensConfig.ACCESS_TOKEN,
-    token,
-    secretKey,
-    location
-  );
+  await storeEncryptedItem(tokensConfig.ACCESS_TOKEN, token, secretKey, location);
 };
 
 /**
- * Encrypts and stores the refresh token in the specified storage location.
- *
- * @param {string} token - The refresh token to store.
- * @param {string} secretKey - The secret key to use for encryption.
- * @param {LocationPreference} location - The storage location ('local', 'session', or 'cookie').
- * @returns {Promise<void>} A promise that resolves when the token has been stored.
+ * Encrypts and stores the refresh token.
  */
 export const storeAuthRefreshToken = async (
   token: string,
@@ -121,51 +100,38 @@ export const storeAuthRefreshToken = async (
   location: LocationPreference
 ): Promise<void> => {
   const tokensConfig = getTokenConfig();
-  await storeEncryptedItem(
-    tokensConfig.REFRESH_TOKEN,
-    token,
-    secretKey,
-    location
-  );
+  await storeEncryptedItem(tokensConfig.REFRESH_TOKEN, token, secretKey, location);
 };
 
 /**
- * Verifies the current user's authentication status by checking for a valid, unexpired access token.
- * It searches for the token in all storage locations (sessionStorage, localStorage, cookies). 
- * If the token is missing, malformed, or expired, it logs the issue, clears credentials, and returns `false`.
+ * Verifies the current user's authentication status by checking for a
+ * valid, unexpired access token across all storage locations.
  *
- * @returns {Promise<boolean>} A promise that resolves to `true` if the user is authenticated, and `false` otherwise.
+ * Returns false (without throwing) if the token is missing, malformed, or expired.
  */
 export const verifyAuth = async (): Promise<boolean> => {
-  const sessionPersistence ='any';
-
-  const handleAuthError = async (message: string, shouldClean: boolean = true) => {
-    handleError(message);
-    if (shouldClean) {
-      await cleanCredentials(sessionPersistence);
-    }
-    return false;
-  };
-
-  const token = await getAuthToken(getAppKey(), sessionPersistence);
-  if (!token) {
-    return handleAuthError("TOKEN_MISSING: No valid token found", false);
-  }
+  const token = await getAuthToken(getAppKey(), 'any');
+  if (!token) return false;
 
   try {
     const decoded: { exp?: number } = jwtDecode(token);
     const currentTime = Date.now() / 1000;
 
-    if (typeof decoded.exp !== "number") {
-      return handleAuthError("TOKEN_INVALID: Invalid expiration format");
+    if (typeof decoded.exp !== 'number') {
+      handleError('TOKEN_INVALID: Invalid expiration format');
+      await cleanCredentials('any');
+      return false;
     }
 
     if (decoded.exp <= currentTime) {
-      return handleAuthError("TOKEN_EXPIRED: Token is expired", false);
+      handleError('TOKEN_EXPIRED: Token is expired');
+      return false;
     }
 
     return true;
-  } catch (error) {
-    return handleAuthError("TOKEN_INVALID: Invalid token format");
+  } catch {
+    handleError('TOKEN_INVALID: Could not decode token');
+    await cleanCredentials('any');
+    return false;
   }
 };

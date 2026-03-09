@@ -1,3 +1,25 @@
+# [3.4.0] (2026-03-09)
+
+### Bug Fixes
+
+* **storage:** `storeEncryptedItem('any')` now stores in localStorage instead of sessionStorage — tokens were being lost on tab close ([storage.ts])
+* **storage:** `getDecryptedItem('any')` now reads cookies as a final fallback on the client — previously skipped them, contradicting the JSDoc ([storage.ts])
+* **credentials:** `cleanCredentials('any')` now clears cookies in addition to localStorage and sessionStorage — orphaned cookie tokens could survive logout ([credentials.ts])
+* **refreshTokens:** use `persistence` (actual storage location) instead of hardcoded `"any"` when looking up the refresh token — tokens stored in cookies were never found ([refreshTokens.ts])
+* **refreshTokens:** send the refresh token in the request body so the backend always receives it regardless of `withCredentials` setting ([refreshTokens.ts])
+* **axiosConfig:** use `persistence` instead of hardcoded `"any"` in request and post-refresh interceptors — same root cause as refreshTokens fix ([axiosConfig.ts])
+* **axiosConfig:** `processQueue(null, null)` now rejects queued promises with a clear error instead of leaving them pending indefinitely ([axiosConfig.ts])
+* **ssr:** cookie parser now splits on the first `=` only — values containing `=` were incorrectly truncated ([ssr.ts])
+* **ssr:** `httpOnly` cookie option now throws a descriptive error instead of silently logging a warning — it cannot be set from JavaScript ([ssr.ts])
+* **encryption:** add `getWebCrypto()` check with a descriptive error when `crypto.subtle` is not available (Node.js < 15) instead of failing silently ([encryption.ts])
+
+### BREAKING CHANGES
+
+* **storage:** `storeEncryptedItem('any')` behavior changed — previously stored in sessionStorage, now stores in localStorage. Sessions stored with `'any'` in v3.3 will not be found until the user logs in again.
+* **ssr:** `httpOnly: true` in cookie options now throws an error instead of warning. Remove any code that passes `httpOnly: true` to cookie functions.
+
+
+
 # [3.3.0](https://github.com/Arex95/npm-arex-core/compare/v3.2.0...v3.3.0) (2026-03-02)
 
 

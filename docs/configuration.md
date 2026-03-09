@@ -182,10 +182,11 @@ refreshTokenPaths: {
 
 ```typescript
 axios: {
-  baseURL?: string;           // URL base de la API
-  headers?: Record<string, string>; // Headers por defecto
-  timeout?: number;            // Timeout en milisegundos
-  withCredentials?: boolean;   // Incluir credenciales en requests
+  baseURL?: string;                  // URL base de la API
+  headers?: Record<string, string>;  // Headers por defecto
+  timeout?: number;                  // Timeout en milisegundos
+  withCredentials?: boolean;         // Incluir credentials en requests cross-origin
+  setupAuthInterceptors?: boolean;   // Montar interceptores de auth (default: true)
 }
 ```
 
@@ -246,6 +247,49 @@ withCredentials: true
 ```
 
 **Valor por defecto:** `false`
+
+#### setupAuthInterceptors
+
+**Tipo:** `boolean`
+**Requerido:** No
+**Descripción:** Cuando `true`, monta interceptores en la instancia Axios que añaden `Authorization: Bearer {token}` a cada request y manejan el refresh automático en 401.
+
+```typescript
+setupAuthInterceptors: true   // default — interceptores activos
+setupAuthInterceptors: false  // control manual — útil en SSR o cuando gestionas headers propios
+```
+
+**Cuándo usar `false`**:
+- En entornos SSR donde `localStorage` no existe en el servidor
+- Cuando registras tus propios interceptores de auth
+- Para evitar el comportamiento automático de refresh/retry
+
+Ver [guía de autenticación](./authentication.md#interceptores-de-axios-setupauthinterceptors) para más detalles.
+
+## onRefreshFailed
+
+**Tipo:** `() => void`
+**Requerido:** No
+**Descripción:** Callback invocado cuando el refresh automático de tokens falla. Si no se proporciona, la librería recarga la página con `window.location.reload()`.
+
+```typescript
+onRefreshFailed: () => {
+  router.push('/login');
+  // o: store.dispatch('auth/logout')
+}
+```
+
+## onLogout
+
+**Tipo:** `() => void`
+**Requerido:** No
+**Descripción:** Callback invocado después de un logout exitoso.
+
+```typescript
+onLogout: () => {
+  router.push('/login');
+}
+```
 
 ## Ejemplo Completo de Configuración
 

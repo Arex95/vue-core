@@ -1,32 +1,51 @@
 /**
- * Converts an `ArrayBuffer` or `Uint8Array` into a hexadecimal string representation.
+ * Returns the Web Crypto API instance, validating availability.
  *
- * @param {ArrayBuffer | Uint8Array} buffer - The buffer to convert.
- * @returns {string} The resulting hexadecimal string.
+ * Compatible with:
+ *   - Modern browsers        (window.crypto.subtle)
+ *   - Node.js 15+            (globalThis.crypto.subtle — built-in Web Crypto API)
+ *   - Nitro / Deno / Workers (globalThis.crypto.subtle)
+ *
+ * Throws a descriptive error on Node.js < 15 instead of failing silently.
+ */
+function getWebCrypto(): Crypto {
+  const c =
+    typeof globalThis !== 'undefined'
+      ? globalThis.crypto
+      : typeof crypto !== 'undefined'
+      ? crypto
+      : undefined;
+
+  if (!c?.subtle) {
+    throw new Error(
+      '[arex-core] Web Crypto API (crypto.subtle) is not available. ' +
+      'Requires Node.js 15+, a modern browser, or a runtime that exposes globalThis.crypto.subtle.'
+    );
+  }
+  return c as Crypto;
+}
+
+/**
+ * Converts an `ArrayBuffer` or `Uint8Array` into a hexadecimal string.
  */
 export function ab2hex(buffer: ArrayBuffer | Uint8Array): string {
   return Array.from(new Uint8Array(buffer))
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("");
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 /**
  * Converts a hexadecimal string into a `Uint8Array`.
- *
- * @param {string} hex - The hexadecimal string to convert.
- * @returns {Uint8Array} The resulting `Uint8Array`.
- * @throws {TypeError} If the input is not a string.
- * @throws {Error} If the hexadecimal string has an invalid format or an odd length.
  */
 export function hex2ab(hex: string): Uint8Array {
-  if (typeof hex !== "string") {
-    throw new TypeError("Input must be a string.");
+  if (typeof hex !== 'string') {
+    throw new TypeError('Input must be a string.');
   }
   if (hex.length === 0) {
     return new Uint8Array();
   }
   if (!/^[0-9a-fA-F]*$/.test(hex) || hex.length % 2 !== 0) {
-    throw new Error("Invalid hexadecimal string format or odd length.");
+    throw new Error('Invalid hexadecimal string format or odd length.');
   }
   const array = new Uint8Array(hex.length / 2);
   for (let i = 0; i < hex.length; i += 2) {
@@ -36,49 +55,39 @@ export function hex2ab(hex: string): Uint8Array {
 }
 
 /**
- * Derives a `CryptoKey` for AES-CBC encryption from a plain-text secret key.
- * It uses SHA-256 to hash the secret key, ensuring a fixed-length key suitable for the Web Crypto API.
+ * Derives a CryptoKey for AES-CBC-256 from a plain-text secret using SHA-256.
  *
- * @param {string} secretKey - The plain-text secret key.
- * @returns {Promise<CryptoKey>} A promise that resolves with the derived `CryptoKey`.
- * @throws {Error} If the `secretKey` is null or empty.
+ * @throws {Error} If secretKey is empty or Web Crypto API is unavailable.
  */
 export async function importKey(secretKey: string): Promise<CryptoKey> {
   if (!secretKey) {
-    throw new Error("Secret key cannot be null or empty.");
+    throw new Error('Secret key cannot be null or empty.');
   }
-
+  const wc = getWebCrypto();
   const keyMaterial = new TextEncoder().encode(secretKey);
-  const digest = await crypto.subtle.digest("SHA-256", keyMaterial);
-
-  return crypto.subtle.importKey(
-    "raw",
+  const digest = await wc.subtle.digest('SHA-256', keyMaterial);
+  return wc.subtle.importKey(
+    'raw',
     digest,
-    { name: "AES-CBC", length: 256 },
+    { name: 'AES-CBC', length: 256 },
     false,
-    ["encrypt", "decrypt"]
+    ['encrypt', 'decrypt']
   );
 }
 
 /**
- * Encrypts a plain-text value using AES-CBC with a given secret key.
- * A random 16-byte initialization vector (IV) is generated for each encryption.
- *
- * @param {string} value - The plain-text string to encrypt.
- * @param {string} secretKey - The secret key to use for encryption.
- * @returns {Promise<string>} A promise that resolves with a concatenated hexadecimal string of the IV and the ciphertext.
- * @throws {Error} If the `secretKey` is null or empty.
+ * Encrypts a plain-text string using AES-CBC-256.
+ * A unique 16-byte IV is generated per call.
+ * Output format: IV_hex (32 chars) + ciphertext_hex.
  */
-export async function encrypt(
-  value: string,
-  secretKey: string
-): Promise<string> {
+export async function encrypt(value: string, secretKey: string): Promise<string> {
+  const wc = getWebCrypto();
   const key = await importKey(secretKey);
-  const iv = crypto.getRandomValues(new Uint8Array(16));
+  const iv = wc.getRandomValues(new Uint8Array(16));
   const encodedValue = new TextEncoder().encode(value);
 
-  const ciphertext = await crypto.subtle.encrypt(
-    { name: "AES-CBC", iv: iv },
+  const ciphertext = await wc.subtle.encrypt(
+    { name: 'AES-CBC', iv },
     key,
     encodedValue
   );
@@ -87,49 +96,31 @@ export async function encrypt(
 }
 
 /**
- * Decrypts a hexadecimal string (IV + ciphertext) using AES-CBC with a given secret key.
- *
- * @param {string} encryptedValue - The concatenated hexadecimal string of the IV and ciphertext.
- * @param {string} secretKey - The secret key to use for decryption.
- * @returns {Promise<string>} A promise that resolves with the decrypted plain-text string.
- * @throws {Error} If the encrypted value is null, empty, or too short, or if the `secretKey` is invalid.
+ * Decrypts a hex string (IV_hex + ciphertext_hex) produced by `encrypt()`.
  */
-export async function decrypt(
-  encryptedValue: string,
-  secretKey: string
-): Promise<string> {
+export async function decrypt(encryptedValue: string, secretKey: string): Promise<string> {
   if (!encryptedValue) {
-    throw new Error("Encrypted value cannot be null or empty.");
+    throw new Error('Encrypted value cannot be null or empty.');
   }
-
-  // For AES-CBC, the IV is ALWAYS 16 bytes.
-  // 16 bytes * 2 hex characters/byte = 32 hex characters for the IV.
   if (encryptedValue.length < 32) {
-    throw new Error(
-      "Encrypted value is too short. Expected at least 32 hexadecimal characters for the IV."
-    );
+    throw new Error('Encrypted value is too short. Expected at least 32 hex chars for the IV.');
   }
 
+  const wc = getWebCrypto();
   const key = await importKey(secretKey);
 
-  const ivHex = encryptedValue.substring(0, 32);
-  const ciphertextHex = encryptedValue.substring(32);
-
-  const iv = hex2ab(ivHex);
-  const ciphertext = hex2ab(ciphertextHex);
+  const iv = hex2ab(encryptedValue.substring(0, 32));
+  const ciphertext = hex2ab(encryptedValue.substring(32));
 
   if (iv.byteLength !== 16) {
-    throw new Error(
-      `Converted IV has incorrect length: ${iv.byteLength} bytes. Expected 16 bytes.`
-    );
+    throw new Error(`IV has incorrect length: ${iv.byteLength} bytes. Expected 16.`);
   }
-
   if (ciphertext.byteLength === 0) {
-    throw new Error("Ciphertext is empty. No data to decrypt.");
+    throw new Error('Ciphertext is empty. Nothing to decrypt.');
   }
 
-  const decryptedBuffer = await crypto.subtle.decrypt(
-    { name: "AES-CBC", iv: iv },
+  const decryptedBuffer = await wc.subtle.decrypt(
+    { name: 'AES-CBC', iv },
     key,
     ciphertext
   );

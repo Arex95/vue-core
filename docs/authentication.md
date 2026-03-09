@@ -8,15 +8,12 @@ El sistema de autenticación está basado en JWT (JSON Web Tokens) y proporciona
 
 - **Login y Logout**: Gestión de sesiones de usuario
 - **Almacenamiento de Tokens**: Soporte para localStorage, sessionStorage y cookies
-- **Encriptación**: Almacenamiento seguro de tokens usando encriptación AES-GCM
+- **Encriptación**: Almacenamiento seguro de tokens usando AES-CBC-256 (Web Crypto API)
 - **Cookies Seguras**: Soporte para cookies con opciones de seguridad (Secure, SameSite)
 - **Flexible**: Funciona con cualquier fetcher (no acoplado a Axios)
-- **Refresh Automático**: Renovación automática de tokens expirados
-- **SSR/SSG Compatible**: Funciona perfectamente en entornos server-side
+- **Refresh Automático**: Renovación automática de tokens expirados (cuando `setupAuthInterceptors: true`)
 
 ## Configuración Inicial
-
-Antes de usar la autenticación, debes configurar los endpoints y las rutas de tokens:
 
 ```typescript
 import { createApp } from 'vue';
@@ -25,529 +22,246 @@ import { ArexVueCore } from '@arex95/vue-core';
 const app = createApp(App);
 
 app.use(ArexVueCore, {
-  appKey: 'your-secret-key', // Clave para encriptar tokens
+  appKey: 'your-secret-key',
   endpoints: {
-    login: '/api/auth/login',
+    login:   '/api/auth/login',
     refresh: '/api/auth/refresh',
-    logout: '/api/auth/logout',
+    logout:  '/api/auth/logout',
   },
   tokenKeys: {
-    accessToken: 'ACCESS_TOKEN',
-    refreshToken: 'REFRESH_TOKEN',
+    accessToken:  'MY_APP_access',
+    refreshToken: 'MY_APP_refresh',
   },
   tokenPaths: {
-    accessToken: 'data.access_token',    // Ruta al access token en respuesta de login
-    refreshToken: 'data.refresh_token',  // Ruta al refresh token en respuesta de login
+    accessToken:  'token',          // lee response.token
+    refreshToken: 'refresh_token',  // lee response.refresh_token
   },
   refreshTokenPaths: {
-    accessToken: 'data.access_token',    // Ruta al access token en respuesta de refresh
-    refreshToken: 'data.refresh_token',  // Ruta al refresh token en respuesta de refresh
+    accessToken:  'token',
+    refreshToken: 'refresh_token',
   },
-  // ... otras configuraciones
+  axios: {
+    baseURL: 'https://api.example.com',
+    setupAuthInterceptors: true,    // ver sección "Interceptores"
+  },
 });
 ```
 
 ## Uso Básico
 
-### useAuth
-
-El composable `useAuth` acepta un fetcher opcional. Si no se proporciona, usa el fetcher configurado globalmente o cae a Axios por defecto.
-
-```typescript
-// Opción 1: Usar fetcher por defecto (Axios si está configurado)
-const { login, logout } = useAuth();
-
-// Opción 2: Usar fetcher personalizado
-import { createOfetchFetcher } from '@arex95/vue-core';
-const ofetchFetcher = createOfetchFetcher('https://api.example.com');
-const { login, logout } = useAuth(ofetchFetcher);
-
-// Opción 3: Configurar fetcher global para auth
-import { configAuthFetcher, createOfetchFetcher } from '@arex95/vue-core';
-configAuthFetcher(createOfetchFetcher('https://api.example.com'));
-// Ahora todos los useAuth() usarán ofetch
-const { login, logout } = useAuth();
-```
-
 ### Login
 
-```vue
-<template>
-  <form @submit.prevent="handleLogin">
-    <input v-model="username" type="text" placeholder="Usuario" />
-    <input v-model="password" type="password" placeholder="Contraseña" />
-    <label>
-      <input v-model="rememberMe" type="checkbox" />
-      Recordarme
-    </label>
-    <label>
-      <input v-model="useCookies" type="checkbox" />
-      Usar cookies (más seguro)
-    </label>
-    <button type="submit" :disabled="isLoading">
-      {{ isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión' }}
-    </button>
-  </form>
-</template>
-
-<script setup lang="ts">
-import { ref } from 'vue';
-import { useAuth, handleError, NetworkError, AuthError } from '@arex95/vue-core';
-import { useRouter } from 'vue-router';
-
+```typescript
 const { login } = useAuth();
-const router = useRouter();
-const username = ref('');
-const password = ref('');
-const rememberMe = ref(false);
-const useCookies = ref(false);
-const isLoading = ref(false);
 
-const handleLogin = async () => {
-  isLoading.value = true;
-  try {
-    const persistence = useCookies.value ? 'cookie' : (rememberMe.value ? 'local' : 'session');
-    
-    const response = await login(
-      {
-        username: username.value,
-        password: password.value,
-      },
-      persistence
-    );
-    
-    console.log('Login exitoso', response);
-    router.push('/dashboard');
-  } catch (error) {
-    const errorInfo = handleError(error);
-    
-    if (error instanceof AuthError) {
-      alert('Credenciales inválidas');
-    } else if (error instanceof NetworkError) {
-      alert('Error de conexión. Por favor intenta de nuevo.');
-    } else if (errorInfo) {
-      alert(errorInfo.message);
-    }
-  } finally {
-    isLoading.value = false;
-  }
-};
-</script>
+// 'local' → localStorage (recomendado para SPAs)
+// 'session' → sessionStorage (se pierde al cerrar la pestaña)
+// 'cookie' → document.cookie (ver advertencias más abajo)
+await login({ email, password }, 'local');
 ```
 
 ### Logout
 
-```vue
-<template>
-  <button @click="handleLogout">Cerrar Sesión</button>
-</template>
-
-<script setup>
-import { useAuth } from '@arex95/vue-core';
-
+```typescript
 const { logout } = useAuth();
-
-const handleLogout = async () => {
-  await logout();
-  // La página se recargará automáticamente
-};
-</script>
+await logout();
 ```
+
+---
 
 ## Persistencia de Sesión
 
-Puedes elegir entre tres tipos de almacenamiento:
+### Tabla de comportamiento real (verificado en código fuente)
 
-### localStorage
-Los tokens persisten incluso después de cerrar el navegador:
+| location | `storeEncryptedItem` guarda en | `getDecryptedItem` busca en | Persistencia |
+|----------|-------------------------------|------------------------------|--------------|
+| `'local'` | localStorage | localStorage | Hasta limpieza explícita |
+| `'session'` | sessionStorage | sessionStorage | Hasta cerrar la pestaña |
+| `'cookie'` | document.cookie | cookies únicamente | Según `expires` option |
+| `'any'` | localStorage | sessionStorage → localStorage → cookies | Hasta limpieza explícita |
+
+> **`'any'`** es el modo de recuperación universal: busca en todos los storages.
+> Al guardar, usa localStorage (persistente). Cambio respecto a v3.3 que usaba sessionStorage.
+
+### `'local'` — Recomendado para SPAs
 
 ```typescript
 await login(credentials, 'local');
 ```
 
-**Características:**
-- Persiste entre sesiones
-- Accesible desde JavaScript
-- Limitado al mismo origen
-- No se envía automáticamente al servidor
+- Tokens en localStorage, persisten entre sesiones del navegador
+- Los interceptores integrados de Axios encuentran el token automáticamente con `getAuthToken("any")`
+- Funciona en SSR solo en el lado cliente (localStorage no existe en Node.js)
 
-### sessionStorage
-Los tokens se eliminan al cerrar la pestaña del navegador:
+### `'session'` — Sesiones temporales
 
 ```typescript
 await login(credentials, 'session');
 ```
 
-**Características:**
-- Solo persiste durante la sesión
-- Accesible desde JavaScript
-- Limitado al mismo origen
-- No se envía automáticamente al servidor
+- Tokens en sessionStorage, se eliminan al cerrar la pestaña
+- Útil cuando el usuario no quiere que la sesión persista
 
-### Cookies
-Los tokens se almacenan en cookies con encriptación y opciones de seguridad:
+### `'cookie'` — Cookies de navegador
 
 ```typescript
 await login(credentials, 'cookie');
 ```
 
-**Características:**
-- Se envían automáticamente al servidor
-- Soporte para opciones de seguridad (Secure, SameSite)
-- Compatible con SSR/SSG
-- Encriptación automática
-- Configuración de expiración
+- Tokens encriptados en `document.cookie`
+- **Advertencia para SPAs**: los interceptores de `AxiosService` buscan con `getAuthToken("any")`, que a partir de v3.4 incluye cookies como último recurso. Sin embargo, `'local'` sigue siendo más eficiente para SPAs.
+- **Advertencia SSR**: `getCookieStorage` usa `document.cookie` — no funciona en el servidor. Para SSR real usa las utilidades de cookies de tu framework (h3, Nuxt `useCookie`, etc.)
 
-**Opciones de cookies (configurables):**
+#### Opciones de cookie
 
 ```typescript
-import { storeEncryptedItem, CookieOptions } from '@arex95/vue-core';
+import { storeEncryptedItem } from '@arex95/vue-core';
 
-const cookieOptions: CookieOptions = {
-  expires: 30,              // Días hasta expiración
-  path: '/',                // Ruta de la cookie
-  domain: '.example.com',   // Dominio (opcional)
-  secure: true,             // Solo HTTPS (automático en producción)
-  sameSite: 'Strict',       // 'Strict', 'Lax', o 'None'
-};
-
-// Las funciones de auth usan estas opciones automáticamente
-// pero puedes configurarlas si necesitas personalización
-```
-
-**Ventajas de cookies:**
-- ✅ Automáticamente enviadas en requests HTTP
-- ✅ Compatible con SSR/SSG
-- ✅ Opciones de seguridad estándar
-- ✅ Encriptación automática
-- ✅ Mejor para aplicaciones que requieren tokens en el servidor
-
-**Cuándo usar cada opción:**
-- **localStorage**: Para "Recordarme" en aplicaciones cliente
-- **sessionStorage**: Para sesiones temporales sin persistencia
-- **Cookies**: Para SSR/SSG, o cuando necesitas tokens accesibles desde el servidor
-
-## Estructura de Respuesta del API
-
-El sistema espera que tu API devuelva los tokens en una estructura específica. Puedes configurar las rutas usando notación de puntos:
-
-### Ejemplo 1: Tokens en el nivel raíz
-
-```json
-{
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
-
-Configuración:
-```typescript
-tokenPaths: {
-  accessToken: 'access_token',
-  refreshToken: 'refresh_token',
-}
-```
-
-### Ejemplo 2: Tokens anidados en data
-
-```json
-{
-  "data": {
-    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-  }
-}
-```
-
-Configuración:
-```typescript
-tokenPaths: {
-  accessToken: 'data.access_token',
-  refreshToken: 'data.refresh_token',
-}
-```
-
-### Ejemplo 3: Tokens en estructura compleja
-
-```json
-{
-  "success": true,
-  "result": {
-    "tokens": {
-      "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-      "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-    }
-  }
-}
-```
-
-Configuración:
-```typescript
-tokenPaths: {
-  accessToken: 'result.tokens.access',
-  refreshToken: 'result.tokens.refresh',
-}
-```
-
-## Refresh Automático de Tokens
-
-El sistema maneja automáticamente la renovación de tokens cuando expiran. Esto se hace a través de interceptores de Axios que detectan errores 401 y intentan refrescar el token.
-
-### Configuración del Endpoint de Refresh
-
-Asegúrate de que tu endpoint de refresh acepte el refresh token y devuelva nuevos tokens:
-
-```typescript
-// Tu API debe aceptar:
-POST /api/auth/refresh
-// Y devolver la misma estructura que el login
-```
-
-## Protección de Rutas
-
-Puedes proteger rutas verificando si el usuario está autenticado:
-
-```typescript
-import { getAuthAccessToken } from '@arex95/vue-core';
-import { getAppKey } from '@arex95/vue-core';
-
-// En tu router guard
-router.beforeEach(async (to, from, next) => {
-  const appKey = getAppKey();
-  const token = await getAuthAccessToken(appKey, 'any');
-  
-  if (to.meta.requiresAuth && !token) {
-    next('/login');
-  } else {
-    next();
-  }
+await storeEncryptedItem(key, value, appKey, 'cookie', {
+  expires:  30,           // días hasta expiración (undefined = session cookie)
+  path:     '/',
+  domain:   '.example.com',
+  secure:   true,         // solo HTTPS (auto-detectado en https: protocol)
+  sameSite: 'Strict',     // 'Strict' | 'Lax' | 'None'
+  // httpOnly: true       // ← LANZA ERROR — no se puede setear desde JS
 });
 ```
 
-## Verificación de Tokens
+> **`httpOnly` lanza un error.** Las cookies HttpOnly solo se pueden establecer desde código de servidor. No las uses con esta función.
 
-Puedes verificar si un token es válido decodificándolo:
+---
+
+## Encriptación
+
+Los tokens se encriptan con **AES-CBC-256** antes de guardarse:
+- Clave derivada con SHA-256 a partir de `appKey`
+- IV aleatorio de 16 bytes por operación
+- Formato almacenado: `IV_hex(32 chars) + ciphertext_hex`
+
+Requiere Web Crypto API (`crypto.subtle`):
+- ✅ Node.js 15+ (Nitro, Deno, Cloudflare Workers)
+- ✅ Todos los navegadores modernos
+- ❌ Node.js < 15 — lanza error descriptivo
+
+---
+
+## Interceptores de Axios (`setupAuthInterceptors`)
 
 ```typescript
-import { jwtDecode } from 'jwt-decode';
-import { getAuthAccessToken } from '@arex95/vue-core';
-import { getAppKey } from '@arex95/vue-core';
-
-const checkTokenValidity = async () => {
-  const appKey = getAppKey();
-  const token = await getAuthAccessToken(appKey, 'any');
-  
-  if (!token) {
-    return false;
-  }
-  
-  try {
-    const decoded = jwtDecode(token);
-    const currentTime = Date.now() / 1000;
-    
-    // Verificar si el token ha expirado
-    if (decoded.exp && decoded.exp < currentTime) {
-      return false;
-    }
-    
-    return true;
-  } catch (error) {
-    return false;
-  }
-};
+axios: {
+  setupAuthInterceptors: true,  // default: true
+}
 ```
+
+Cuando `true`, `AxiosService` registra interceptores que:
+
+**Request:** leen el token usando la ubicación de persistencia configurada para la sesión y añaden `Authorization: Bearer {token}`.
+
+**Response 401:** si el token expiró, intentan el refresh automático:
+1. Leen el refresh token desde la ubicación de persistencia
+2. `POST {endpoints.refresh}` con el refresh token en el body (`{ refresh_token: "..." }`)
+3. Guardan los nuevos tokens
+4. Reintentan la request original
+
+Si el refresh también falla: llama `onRefreshFailed()` (o recarga la página si no está configurado) y lanza el error.
+
+```typescript
+// En arex-core.ts
+onRefreshFailed: () => {
+  // Redirigir a login, limpiar estado, etc.
+},
+```
+
+> **Cuándo usar `setupAuthInterceptors: false`**: En entornos SSR o cuando quieres controlar manualmente la adición de headers y el manejo de 401. Ver [guía de integración con Nuxt](./nuxt-integration.md).
+
+---
+
+## Estructura de Respuesta del API
+
+Usa `tokenPaths` en notación de puntos para mapear cualquier estructura:
+
+```typescript
+// response.token
+tokenPaths: { accessToken: 'token', refreshToken: 'refresh_token' }
+
+// response.data.access_token
+tokenPaths: { accessToken: 'data.access_token', refreshToken: 'data.refresh_token' }
+
+// response.result.tokens.access
+tokenPaths: { accessToken: 'result.tokens.access', refreshToken: 'result.tokens.refresh' }
+```
+
+---
+
+## Refresh Automático
+
+El endpoint de refresh recibe el refresh token en el **body de la request**:
+
+```http
+POST /api/auth/refresh
+Content-Type: application/json
+
+{ "refresh_token": "eyJ..." }
+```
+
+La clave del campo en el body se toma de `refreshTokenPaths.refreshTokenPath` (default: `'refresh_token'`).
+
+Tu backend debe validar este token y devolver nuevos tokens con la misma estructura que el login.
+
+---
 
 ## Limpieza de Credenciales
 
-Si necesitas limpiar manualmente las credenciales:
-
 ```typescript
 import { cleanCredentials } from '@arex95/vue-core';
-import { getSessionPersistence } from '@arex95/vue-core';
 
-const clearAuth = async () => {
-  const persistence = await getSessionPersistence();
-  await cleanCredentials(persistence);
-};
+// Limpia solo localStorage
+await cleanCredentials('local');
+
+// Limpia solo sessionStorage
+await cleanCredentials('session');
+
+// Limpia solo cookies
+await cleanCredentials('cookie');
+
+// Limpia TODOS: localStorage + sessionStorage + cookies
+await cleanCredentials('any');
 ```
 
-## Manejo de Errores
+> Desde v3.4, `cleanCredentials('any')` limpia **todos los storages incluyendo cookies**, garantizando que ningún token sobreviva un logout.
 
-El sistema maneja automáticamente errores comunes:
+---
 
-- **Token no encontrado**: Limpia credenciales y recarga la página
-- **Token expirado**: Intenta refrescar automáticamente
-- **Refresh fallido**: Limpia credenciales y recarga la página
-
-Puedes personalizar el manejo de errores usando la función `handleError` y las clases de error personalizadas:
-
-```typescript
-import { handleError, NetworkError, AuthError, ValidationError } from '@arex95/vue-core';
-
-try {
-  await login(credentials, 'local');
-} catch (error) {
-  const errorInfo = handleError(error); // Logging automático
-  
-  if (error instanceof AuthError) {
-    // Error de autenticación
-    showError('Credenciales inválidas');
-  } else if (error instanceof NetworkError) {
-    // Error de red
-    if (error.statusCode === 401) {
-      showError('Sesión expirada. Por favor inicia sesión nuevamente.');
-    } else {
-      showError('Error de conexión. Por favor intenta de nuevo.');
-    }
-  } else if (error instanceof ValidationError) {
-    // Error de validación
-    error.issues.forEach(issue => {
-      showFieldError(issue.field, issue.message);
-    });
-  }
-}
-```
-
-Para más detalles sobre manejo de errores, consulta la [guía completa de manejo de errores](./error-handling.md).
-
-## Mejores Prácticas
-
-1. **Usa variables de entorno** para la clave de encriptación:
-   ```typescript
-   appKey: process.env.VUE_APP_SECRET_KEY
-   ```
-
-2. **Elige la persistencia adecuada**:
-   - `localStorage` para "Recordarme" en aplicaciones cliente
-   - `sessionStorage` para sesiones temporales
-   - `cookie` para SSR/SSG o cuando necesitas tokens accesibles desde el servidor
-
-3. **Maneja errores de forma apropiada**:
-   - Muestra mensajes amigables al usuario
-   - Registra errores para debugging
-
-4. **Verifica tokens antes de hacer peticiones**:
-   - Evita peticiones innecesarias con tokens inválidos
-
-5. **Implementa timeout de sesión**:
-   - Cierra sesión después de un período de inactividad
-
-## Casos de Uso
-
-### Caso 1: Login con localStorage (Recordarme)
-
-```vue
-<template>
-  <form @submit.prevent="handleLogin">
-    <input v-model="form.username" type="text" />
-    <input v-model="form.password" type="password" />
-    <label>
-      <input v-model="rememberMe" type="checkbox" />
-      Recordarme
-    </label>
-    <button type="submit">Login</button>
-  </form>
-</template>
-
-<script setup lang="ts">
-import { ref } from 'vue';
-import { useAuth, handleError } from '@arex95/vue-core';
-
-const { login } = useAuth();
-const form = ref({ username: '', password: '' });
-const rememberMe = ref(false);
-
-const handleLogin = async () => {
-  try {
-    await login(
-      form.value,
-      rememberMe.value ? 'local' : 'session'
-    );
-    // Redirigir después del login
-  } catch (error) {
-    handleError(error);
-    // Manejar error según tu UI
-  }
-};
-</script>
-```
-
-### Caso 2: Login con Cookies (SSR/SSG)
-
-```vue
-<template>
-  <form @submit.prevent="handleLogin">
-    <input v-model="form.username" type="text" />
-    <input v-model="form.password" type="password" />
-    <button type="submit">Login</button>
-  </form>
-</template>
-
-<script setup lang="ts">
-import { ref } from 'vue';
-import { useAuth, handleError } from '@arex95/vue-core';
-
-const { login } = useAuth();
-const form = ref({ username: '', password: '' });
-
-const handleLogin = async () => {
-  try {
-    // Usar cookies para SSR/SSG
-    await login(form.value, 'cookie');
-    // Redirigir después del login
-  } catch (error) {
-    handleError(error);
-  }
-};
-</script>
-```
-
-### Caso 3: Login con Fetcher Personalizado
-
-```typescript
-import { useAuth, createOfetchFetcher } from '@arex95/vue-core';
-
-// Crear fetcher personalizado
-const customFetcher = createOfetchFetcher('https://api.example.com');
-
-// Usar en useAuth
-const { login, logout } = useAuth(customFetcher);
-
-// O configurar globalmente
-import { configAuthFetcher } from '@arex95/vue-core';
-configAuthFetcher(customFetcher);
-const { login, logout } = useAuth(); // Usará el fetcher global
-```
-
-### Caso 4: Verificación de Autenticación
-
-```typescript
-import { verifyAuth, getAuthToken, getAppKey } from '@arex95/vue-core';
-
-// Verificar si el usuario está autenticado
-const isAuthenticated = await verifyAuth();
-
-// O verificar manualmente
-const appKey = getAppKey();
-const token = await getAuthToken(appKey, 'any'); // Busca en todos los storages
-
-if (token) {
-  // Usuario autenticado
-} else {
-  // Redirigir a login
-}
-```
-
-### Caso 5: Router Guard con Verificación
+## Verificación de Tokens
 
 ```typescript
 import { verifyAuth } from '@arex95/vue-core';
-import { useRouter } from 'vue-router';
 
+// Busca en todos los storages, verifica expiración del JWT
+const isAuthenticated = await verifyAuth(); // → boolean
+```
+
+O manualmente:
+
+```typescript
+import { getAuthToken, getAppKey } from '@arex95/vue-core';
+
+const token = await getAuthToken(getAppKey(), 'any');
+if (token) {
+  // Usuario autenticado — el token existe en algún storage
+}
+```
+
+---
+
+## Protección de Rutas
+
+### Vue Router
+
+```typescript
 router.beforeEach(async (to, from, next) => {
   if (to.meta.requiresAuth) {
     const isAuthenticated = await verifyAuth();
-    
     if (!isAuthenticated) {
       next('/login');
     } else {
@@ -559,113 +273,66 @@ router.beforeEach(async (to, from, next) => {
 });
 ```
 
-## Ejemplo Completo
+### Nuxt (middleware)
 
-```vue
-<template>
-  <div>
-    <div v-if="!isAuthenticated">
-      <h2>Login</h2>
-      <form @submit.prevent="handleLogin">
-        <input 
-          v-model="form.username" 
-          type="text" 
-          placeholder="Usuario"
-          :disabled="isLoading"
-        />
-        <input 
-          v-model="form.password" 
-          type="password" 
-          placeholder="Contraseña"
-          :disabled="isLoading"
-        />
-        <label>
-          <input v-model="rememberMe" type="checkbox" />
-          Recordarme
-        </label>
-        <label>
-          <input v-model="useCookies" type="checkbox" />
-          Usar cookies (recomendado para SSR)
-        </label>
-        <button type="submit" :disabled="isLoading">
-          {{ isLoading ? 'Iniciando sesión...' : 'Login' }}
-        </button>
-        <div v-if="errorMessage" class="error">
-          {{ errorMessage }}
-        </div>
-      </form>
-    </div>
-    
-    <div v-else>
-      <h2>Bienvenido</h2>
-      <button @click="handleLogout">Logout</button>
-    </div>
-  </div>
-</template>
-
-<script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { 
-  useAuth, 
-  verifyAuth, 
-  handleError, 
-  NetworkError, 
-  AuthError 
-} from '@arex95/vue-core';
-import { useRouter } from 'vue-router';
-
-const { login, logout } = useAuth();
-const router = useRouter();
-const form = ref({ username: '', password: '' });
-const rememberMe = ref(false);
-const useCookies = ref(false);
-const isAuthenticated = ref(false);
-const isLoading = ref(false);
-const errorMessage = ref('');
-
-const checkAuth = async () => {
-  isAuthenticated.value = await verifyAuth();
-};
-
-const handleLogin = async () => {
-  isLoading.value = true;
-  errorMessage.value = '';
-  
-  try {
-    const persistence = useCookies.value 
-      ? 'cookie' 
-      : (rememberMe.value ? 'local' : 'session');
-    
-    await login(form.value, persistence);
-    await checkAuth();
-    router.push('/dashboard');
-  } catch (error) {
-    const errorInfo = handleError(error);
-    
-    if (error instanceof AuthError) {
-      errorMessage.value = 'Credenciales inválidas';
-    } else if (error instanceof NetworkError) {
-      if (error.statusCode === 401) {
-        errorMessage.value = 'Usuario o contraseña incorrectos';
-      } else {
-        errorMessage.value = 'Error de conexión. Por favor intenta de nuevo.';
-      }
-    } else if (errorInfo) {
-      errorMessage.value = errorInfo.message;
-    }
-  } finally {
-    isLoading.value = false;
+```typescript
+// middleware/auth.ts
+export default defineNuxtRouteMiddleware(() => {
+  const isAuthenticated = useState('__auth', () => false);
+  if (!isAuthenticated.value) {
+    return navigateTo('/login');
   }
-};
-
-const handleLogout = async () => {
-  await logout();
-  // La página se recargará automáticamente
-};
-
-onMounted(() => {
-  checkAuth();
 });
-</script>
 ```
 
+---
+
+## Manejo de Errores
+
+```typescript
+import { handleError, NetworkError, AuthError } from '@arex95/vue-core';
+
+try {
+  await login(credentials, 'local');
+} catch (error) {
+  if (error instanceof AuthError) {
+    showError('Credenciales inválidas');
+  } else if (error instanceof NetworkError) {
+    showError(error.statusCode === 401
+      ? 'Usuario o contraseña incorrectos'
+      : 'Error de conexión'
+    );
+  }
+}
+```
+
+---
+
+## Mejores Prácticas
+
+1. **Usa `'local'` para SPAs** — es la ubicación más confiable, compatible con los interceptores automáticos y con SSR (el servidor simplemente no tiene token, las queries se activan en el cliente)
+
+2. **No cambies `appKey` en producción sin invalidar sesiones** — todos los tokens encriptados con la clave anterior se vuelven irrecuperables
+
+3. **`setupAuthInterceptors: false` en SSR** — en el servidor, localStorage no existe; controla los headers manualmente con el plugin del lado servidor
+
+4. **Implementa `onRefreshFailed`** — redirecciona al login en lugar de recargar la página (`window.location.reload()` por defecto)
+
+5. **`cleanCredentials('any')` en logout** — limpia todos los storages para evitar tokens huérfanos
+
+---
+
+## Cambios desde v3.3 → v3.4
+
+| Comportamiento | v3.3 | v3.4 |
+|----------------|------|------|
+| `storeEncryptedItem('any')` | sessionStorage | localStorage |
+| `getDecryptedItem('any')` en cliente | sessionStorage → localStorage | sessionStorage → localStorage → cookies |
+| `cleanCredentials('any')` | no limpiaba cookies | limpia todos incluyendo cookies |
+| `refreshTokens` busca refresh token | `"any"` hardcoded | `persistence` (ubicación real) |
+| refresh request body | sin refresh token | `{ refresh_token: "..." }` |
+| Interceptores Axios buscan token | `"any"` hardcoded | `persistence` (ubicación real) |
+| `httpOnly` en cookies | `console.warn` | `throw Error` |
+| `crypto.subtle` no disponible | fallo silencioso | error descriptivo |
+| Cookie parser con valores `=` | split incorrecto | split en primer `=` |
+| `processQueue(null, null)` | promesas colgadas | rechaza con error claro |

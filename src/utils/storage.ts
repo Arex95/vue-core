@@ -1,18 +1,22 @@
-import { encrypt, decrypt } from "./encryption";
-import { LocationPreference } from "@/types";
-import { getStorage, getSessionStorage, getCookieStorage, isServer, CookieOptions } from "./ssr";
+import { encrypt, decrypt } from './encryption';
+import { LocationPreference } from '@/types';
+import { getStorage, getSessionStorage, getCookieStorage, isServer, CookieOptions } from './ssr';
 
 /**
- * Encrypts and stores a key-value pair in either `localStorage`, `sessionStorage`, or cookies.
- * Cookies are automatically used in SSR environments and can be explicitly requested.
- * Cookies include security options: Secure (HTTPS only), SameSite (CSRF protection), and encryption.
+ * Encrypts and stores a value in the requested storage.
  *
- * @param {string} key - The key for the storage item.
- * @param {string} value - The string value to encrypt and store.
- * @param {string} secretKey - The secret key to use for encryption.
- * @param {LocationPreference} location - The storage location: 'local' for `localStorage`, 'session' for `sessionStorage`, 'cookie' for cookies, or 'any' for retrieval.
- * @param {CookieOptions} [cookieOptions] - Optional cookie-specific options (only used when location is 'cookie').
- * @returns {Promise<void>} A promise that resolves when the item has been stored.
+ * | location  | where it goes               | persistence         |
+ * |-----------|----------------------------|---------------------|
+ * | 'cookie'  | document.cookie            | expires option      |
+ * | 'local'   | localStorage               | until explicitly cleared |
+ * | 'any'     | localStorage               | until explicitly cleared |
+ * | 'session' | sessionStorage             | until tab closes    |
+ *
+ * Note: 'any' stores in localStorage (same as 'local') for maximum
+ * persistence. Previously it stored in sessionStorage — that was a bug.
+ *
+ * In SSR environments cookies are always used regardless of location
+ * (localStorage / sessionStorage do not exist on the server).
  */
 export async function storeEncryptedItem(
   key: string,
@@ -22,8 +26,8 @@ export async function storeEncryptedItem(
   cookieOptions?: CookieOptions
 ): Promise<void> {
   const encryptedValue = await encrypt(value, secretKey);
-  
-  if (location === "cookie" || isServer) {
+
+  if (location === 'cookie' || isServer) {
     const cookieStorage = getCookieStorage();
     const defaultCookieOptions: CookieOptions = {
       expires: location === 'local' || isServer ? 365 : undefined,
@@ -36,21 +40,32 @@ export async function storeEncryptedItem(
     return;
   }
 
-  const storage = location === "local" ? getStorage() : getSessionStorage();
+  // 'local' and 'any' → localStorage (persistent)
+  // 'session'         → sessionStorage (tab-scoped)
+  const storage =
+    location === 'local' || location === 'any' ? getStorage() : getSessionStorage();
+
   if (storage) {
     storage.setItem(key, encryptedValue);
   }
 }
 
 /**
- * Retrieves and decrypts an item from `localStorage`, `sessionStorage`, or cookies.
- * When location is 'any', checks in order: sessionStorage, localStorage, cookies.
- * Cookies are automatically checked in SSR environments.
+ * Retrieves and decrypts a value from storage.
  *
- * @param {string} key - The key of the item to retrieve.
- * @param {string} secretKey - The secret key to use for decryption.
- * @param {LocationPreference} location - The storage location to search: 'local', 'session', 'cookie', or 'any' (checks session, local, cookie in that order).
- * @returns {Promise<string | null>} A promise that resolves with the decrypted value, or `null` if the item is not found or decryption fails.
+ * Search order by location:
+ *
+ * | location  | search order                              |
+ * |-----------|-------------------------------------------|
+ * | 'cookie'  | cookies only                              |
+ * | 'local'   | localStorage only                         |
+ * | 'session' | sessionStorage only                       |
+ * | 'any'     | sessionStorage → localStorage → cookies   |
+ *
+ * In SSR, cookies are always checked first (localStorage / sessionStorage
+ * are not available on the server).
+ *
+ * Returns null if the key is not found or decryption fails.
  */
 export async function getDecryptedItem(
   key: string,
@@ -59,40 +74,57 @@ export async function getDecryptedItem(
 ): Promise<string | null> {
   let encryptedData: string | null = null;
 
-  if (location === "cookie" || isServer) {
+  // ── cookies ─────────────────────────────────────────────────────────────
+  if (location === 'cookie' || isServer) {
     const cookieStorage = getCookieStorage();
     encryptedData = cookieStorage.getItem(key);
     if (encryptedData) {
       try {
         return await decrypt(encryptedData, secretKey);
-      } catch (error) {
+      } catch {
         return null;
       }
     }
-    if (location === "cookie") {
-      return null;
-    }
+    // Explicit 'cookie' location stops here — don't fall through
+    if (location === 'cookie') return null;
   }
 
-  if (location === "session" || location === "any") {
-    const sessionStorage = getSessionStorage();
-    encryptedData = sessionStorage?.getItem(key) || null;
+  // ── sessionStorage ───────────────────────────────────────────────────────
+  if (location === 'session' || location === 'any') {
+    const ss = getSessionStorage();
+    encryptedData = ss?.getItem(key) ?? null;
     if (encryptedData) {
       try {
         return await decrypt(encryptedData, secretKey);
-      } catch (error) {
+      } catch {
         return null;
       }
     }
   }
 
-  if (location === "local" || location === "any") {
-    const storage = getStorage();
-    encryptedData = storage?.getItem(key) || null;
+  // ── localStorage ─────────────────────────────────────────────────────────
+  if (location === 'local' || location === 'any') {
+    const ls = getStorage();
+    encryptedData = ls?.getItem(key) ?? null;
     if (encryptedData) {
       try {
         return await decrypt(encryptedData, secretKey);
-      } catch (error) {
+      } catch {
+        return null;
+      }
+    }
+  }
+
+  // ── cookies fallback for 'any' on client ─────────────────────────────────
+  // Checked last so that localStorage/sessionStorage take precedence,
+  // but cookies stored explicitly with location='cookie' are still found.
+  if (location === 'any' && !isServer) {
+    const cookieStorage = getCookieStorage();
+    encryptedData = cookieStorage.getItem(key);
+    if (encryptedData) {
+      try {
+        return await decrypt(encryptedData, secretKey);
+      } catch {
         return null;
       }
     }

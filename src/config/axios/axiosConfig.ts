@@ -4,30 +4,23 @@ import axios, {
   AxiosInstance,
   CancelTokenSource,
   InternalAxiosRequestConfig,
-} from "axios";
+} from 'axios';
 
-import { AxiosServiceOptions } from "@/types/AxiosServiceOptions";
-import { getAuthToken } from "@/services/credentials";
+import { AxiosServiceOptions } from '@/types/AxiosServiceOptions';
+import { getAuthToken } from '@/services/credentials';
+import { getSessionPersistence } from '@config/global/sessionConfig';
+import { getAppKey } from '@/config/global';
+import { handleError } from '@utils/errors';
+import { getEndpointsConfig } from '@config/global/endpointsConfig';
+import { refreshTokens } from '@/services';
+import { createAxiosFetcher } from '@/fetchers/axios';
 
-import { getAppKey } from "@/config/global";
-import { handleError } from "@utils/errors";
-import { getEndpointsConfig } from "@config/global/endpointsConfig";
-
-import { refreshTokens } from "@/services";
-import { createAxiosFetcher } from "@/fetchers/axios";
-
-declare module "axios" {
+declare module 'axios' {
   interface InternalAxiosRequestConfig {
     _retry?: boolean;
   }
 }
 
-/**
- * A service class that encapsulates a customizable Axios instance with built-in interceptors
- * for handling authentication, token refreshing, and request cancellation. It is designed to
- * streamline API communication by automatically attaching authorization headers and managing
- * token refresh logic for 401 Unauthorized responses.
- */
 export class AxiosService {
   private readonly instance: AxiosInstance;
   private cancelTokenSource: CancelTokenSource;
@@ -40,10 +33,6 @@ export class AxiosService {
     reject: (reason: AxiosError | Error) => void;
   }[] = [];
 
-  /**
-   * Creates an instance of AxiosService.
-   * @param {AxiosServiceOptions} options - Configuration options for the Axios instance, such as `baseURL`, `timeout`, and custom `headers`.
-   */
   constructor(options: AxiosServiceOptions) {
     this.cancelTokenSource = axios.CancelToken.source();
 
@@ -51,11 +40,11 @@ export class AxiosService {
     this.refreshTokenUrl = endpointsConfig.REFRESH;
 
     this.instance = axios.create({
-      baseURL: options.baseURL ?? "",
+      baseURL: options.baseURL ?? '',
       timeout: options.timeout ?? 30000,
       headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
         ...options.headers,
       },
       withCredentials: options.withCredentials ?? false,
@@ -66,35 +55,40 @@ export class AxiosService {
     }
   }
 
-  private processQueue(
-    error: AxiosError | null,
-    token: string | null = null
-  ): void {
+  /**
+   * Resolves or rejects all queued promises waiting for a token refresh.
+   *
+   * Fix: if both error and token are null (edge case), the queue is still
+   * cleared to avoid permanently hanging promises.
+   */
+  private processQueue(error: AxiosError | Error | null, token: string | null = null): void {
     this.failedQueue.forEach((prom) => {
       if (error) {
         prom.reject(error);
       } else if (token) {
         prom.resolve(token);
+      } else {
+        // Neither error nor token — reject with a clear message rather than hanging
+        prom.reject(new Error('[arex-core] Token refresh completed but no token was produced.'));
       }
     });
     this.failedQueue = [];
   }
 
-  private setAuthHeader(
-    config: InternalAxiosRequestConfig,
-    token: string
-  ): void {
+  private setAuthHeader(config: InternalAxiosRequestConfig, token: string): void {
     if (config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
   }
 
   private initializeInterceptors() {
+    // ── Request: attach Authorization using the session's storage location ──
     this.instance.interceptors.request.use(
-      async (
-        config: InternalAxiosRequestConfig
-      ): Promise<InternalAxiosRequestConfig> => {
-        const token = await getAuthToken(getAppKey(), "any");
+      async (config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> => {
+        // Use persistence preference (not hardcoded "any") so the token is
+        // found regardless of whether it was stored in cookies, localStorage, etc.
+        const persistence = await getSessionPersistence();
+        const token = await getAuthToken(getAppKey(), persistence);
         if (token) {
           this.setAuthHeader(config, token);
         }
@@ -108,6 +102,7 @@ export class AxiosService {
       }
     );
 
+    // ── Response: handle 401 with token refresh ──────────────────────────
     this.instance.interceptors.response.use(
       (response: AxiosResponse) => {
         this.activeRequests--;
@@ -116,27 +111,22 @@ export class AxiosService {
       async (error: AxiosError) => {
         this.activeRequests--;
 
+        // Do not attempt refresh in SSR — storage is unavailable
         if (typeof window === 'undefined') {
           return Promise.reject(error);
         }
 
         const originalRequest = error.config;
-
-        const isAuthError =
-          axios.isAxiosError(error) && error.response?.status === 401;
+        const isAuthError  = axios.isAxiosError(error) && error.response?.status === 401;
         const isRefreshCall = originalRequest?.url === this.refreshTokenUrl;
-        const isRetry = originalRequest?._retry === true;
+        const isRetry       = originalRequest?._retry === true;
 
-        if (!isAuthError || isRefreshCall || isRetry) {
+        if (!isAuthError || isRefreshCall || isRetry || !originalRequest) {
           handleError(error);
           return Promise.reject(error);
         }
 
-        if (!originalRequest) {
-          handleError(error);
-          return Promise.reject(error);
-        }
-
+        // Queue concurrent requests while a refresh is already in progress
         if (this.isRefreshing) {
           return new Promise<string>((resolve, reject) => {
             this.failedQueue.push({ resolve, reject });
@@ -145,9 +135,7 @@ export class AxiosService {
               this.setAuthHeader(originalRequest, newToken);
               return this.instance(originalRequest);
             })
-            .catch((err) => {
-              return Promise.reject(err);
-            });
+            .catch((err) => Promise.reject(err));
         }
 
         this.isRefreshing = true;
@@ -156,19 +144,18 @@ export class AxiosService {
         try {
           const fetcher = createAxiosFetcher(this.instance);
           await refreshTokens(fetcher);
-          const newToken = await getAuthToken(getAppKey(), "any");
 
-          if (newToken) {
-            this.processQueue(null, newToken);
-            this.setAuthHeader(originalRequest, newToken);
-          } else {
-            const refreshError = new Error(
-              "New token not found after refresh."
-            );
-            this.processQueue(refreshError as AxiosError, null);
+          const persistence = await getSessionPersistence();
+          const newToken = await getAuthToken(getAppKey(), persistence);
+
+          if (!newToken) {
+            const refreshError = new Error('[arex-core] New token not found after refresh.');
+            this.processQueue(refreshError, null);
             throw refreshError;
           }
 
+          this.processQueue(null, newToken);
+          this.setAuthHeader(originalRequest, newToken);
           this.isRefreshing = false;
           return this.instance(originalRequest);
         } catch (refreshError) {
@@ -181,43 +168,23 @@ export class AxiosService {
     );
   }
 
-  /**
-   * Returns the number of active (in-flight) requests.
-   * @returns {number} The number of active requests.
-   */
   public getActiveRequests(): number {
     return this.activeRequests;
   }
 
-  /**
-   * Returns the underlying Axios instance.
-   * @returns {AxiosInstance} The Axios instance.
-   */
   public getAxiosInstance(): AxiosInstance {
     return this.instance;
   }
 
-  /**
-   * Cancels all ongoing requests made by this Axios instance.
-   */
   public cancelAllRequests() {
-    this.cancelTokenSource.cancel("Operation canceled by the user.");
+    this.cancelTokenSource.cancel('Operation canceled by the user.');
     this.cancelTokenSource = axios.CancelToken.source();
   }
 
-  /**
-   * Sets a default header for all subsequent requests.
-   * @param {string} key - The header key.
-   * @param {string} value - The header value.
-   */
   public setHeader(key: string, value: string) {
     this.instance.defaults.headers.common[key] = value;
   }
 
-  /**
-   * Removes a default header.
-   * @param {string} key - The header key to remove.
-   */
   public removeHeader(key: string) {
     delete this.instance.defaults.headers.common[key];
   }
